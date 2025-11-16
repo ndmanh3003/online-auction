@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="tel"],
+  input[type="number"],
+  input[type="search"],
+  textarea,
+  select {
+    @apply rounded-2xl;
+  }
+  
+  button,
+  .btn,
+  [type="button"],
+  [type="submit"],
+  [type="reset"] {
+    @apply rounded-2xl;
+  }
+}
