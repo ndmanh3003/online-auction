@@ -12,6 +12,9 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Địa chỉ là bắt buộc'],
     trim: true,
   },
+  dateOfBirth: {
+    type: Date,
+  },
   email: {
     type: String,
     required: [true, 'Email là bắt buộc'],

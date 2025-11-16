@@ -23,3 +23,15 @@ export const getProfile = (req, res) => {
     title: 'Thông tin cá nhân - Đấu giá',
   });
 };
+
+export const getChangePassword = (req, res) => {
+  res.render('changePassword', {
+    title: 'Đổi mật khẩu - Đấu giá',
+  });
+};
+
+export const getChangeEmail = (req, res) => {
+  res.render('changeEmail', {
+    title: 'Đổi email - Đấu giá',
+  });
+};
