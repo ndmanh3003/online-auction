@@ -1,0 +1,86 @@
+<div class="container mx-auto px-4 py-12 max-w-2xl">
+    <div class="bg-white rounded-lg shadow-lg dark:bg-gray-800 p-8">
+        <h2 class="mb-8 text-3xl font-bold text-gray-900 dark:text-white text-center">Thông tin cá nhân</h2>
+        
+        <div id="loading" class="text-center py-8">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <p class="mt-2 text-gray-600 dark:text-gray-400">Đang tải thông tin...</p>
+        </div>
+
+        <form id="profileForm" class="space-y-6 hidden">
+            <div>
+                <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Họ và tên</label>
+                <input 
+                    type="text" 
+                    id="name" 
+                    name="name" 
+                    readonly
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white cursor-not-allowed"
+                    placeholder="Họ và tên"
+                />
+            </div>
+
+            <div>
+                <label for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Email</label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    readonly
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white cursor-not-allowed"
+                    placeholder="Email"
+                />
+            </div>
+
+            <div>
+                <label for="address" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Địa chỉ</label>
+                <input 
+                    type="text" 
+                    id="address" 
+                    name="address" 
+                    readonly
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white cursor-not-allowed"
+                    placeholder="Địa chỉ"
+                />
+            </div>
+
+            <div>
+                <label for="emailVerified" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Trạng thái email</label>
+                <div class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <span id="emailVerified"></span>
+                </div>
+            </div>
+
+            <div>
+                <label for="createdAt" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Ngày tạo tài khoản</label>
+                <input 
+                    type="text" 
+                    id="createdAt" 
+                    name="createdAt" 
+                    readonly
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white cursor-not-allowed"
+                    placeholder="Ngày tạo"
+                />
+            </div>
+
+            <div>
+                <label for="updatedAt" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cập nhật lần cuối</label>
+                <input 
+                    type="text" 
+                    id="updatedAt" 
+                    name="updatedAt" 
+                    readonly
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white cursor-not-allowed"
+                    placeholder="Ngày cập nhật"
+                />
+            </div>
+        </form>
+
+        <div id="error" class="hidden text-center py-8">
+            <p class="text-red-600 dark:text-red-500"></p>
+        </div>
+    </div>
+</div>
+
+<script src="/js/profile.js"></script>
+
