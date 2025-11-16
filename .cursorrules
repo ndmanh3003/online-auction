@@ -1,0 +1,182 @@
+# Code Style Rules
+
+## General Principles
+- Không viết comment trên đầu mỗi hàm hoặc luồng xử lý
+- Viết code ngắn gọn, rõ ràng, dễ đọc
+- Code chuẩn production, không phải development style
+- Tên biến, hàm, class dùng tiếng Anh
+- UI text, error messages, validation messages dùng tiếng Việt
+
+## Backend (Node.js/Express)
+
+### ES Modules
+- Sử dụng ES6+ modules (`import`/`export`)
+- Không dùng `require()` hay `module.exports`
+- Import path phải có extension `.js`
+
+### Async/Await
+- Luôn dùng `async/await` thay vì callback hoặc `.then()`
+- Xử lý error với `try-catch`
+- Không để promise unhandled
+
+### Error Handling
+- Mọi async function phải có try-catch
+- Sử dụng errorHandler middleware tập trung
+- Trả về error message rõ ràng cho client
+- Không expose internal errors ra client
+- Log errors đầy đủ cho debugging
+- HTTP status code phù hợp (400, 401, 403, 404, 500)
+
+### Input Validation
+- Validate input trước khi xử lý
+- Sử dụng express-validator cho API routes
+- Mongoose schema validation cho database
+- Validation messages bằng tiếng Việt
+- Sanitize input để tránh XSS
+
+### Code Organization
+- Routes tách riêng file trong `src/routes/`
+- Controllers trong `src/controllers/`
+- Models trong `src/models/`
+- Middleware trong `src/middleware/`
+- Utils/helpers trong `src/utils/`
+- Config trong `src/config/`
+- Mỗi file chỉ export những gì cần thiết
+
+### Environment Variables
+- Không hardcode giá trị
+- Tất cả config từ environment variables
+- Sử dụng `.env` file (không commit vào git)
+- Validate required env vars khi khởi động
+
+## Database (MongoDB/Mongoose)
+
+### Schemas
+- Mongoose schemas với validation đầy đủ
+- Required fields với message tiếng Việt
+- Unique constraints cho email và các field cần unique
+- Index cho các field thường query
+- Timestamps: `{ timestamps: true }` khi cần
+- Select password: `select: false` cho password field
+
+### Pre/Middleware Hooks
+- Hash password trong `pre('save')` hook
+- Sử dụng `isModified()` để tránh hash lại password không cần thiết
+
+### Queries
+- Sử dụng lean() khi không cần Mongoose document
+- Projection để chỉ lấy fields cần thiết
+- Error handling cho database operations
+
+## Security
+
+### Authentication & Authorization
+- Hash password với bcryptjs (salt rounds: 10)
+- JWT token với expiry time
+- Store JWT trong httpOnly cookie
+- Verify JWT trong auth middleware
+- Check permissions trước khi thực hiện action
+
+### Protection
+- Rate limiting cho API endpoints
+- Helmet cho security headers
+- CSP (Content Security Policy) configuration
+- Input validation và sanitization
+- reCaptcha cho form đăng ký và forms quan trọng
+- CORS configuration nếu cần
+
+## Frontend (JavaScript)
+
+### File Organization
+- Mỗi page/feature có file JS riêng
+- File JS đặt trong `public/js/`
+- Naming: camelCase (register.js, login.js)
+- Load script ở cuối view file, không load trong layout
+
+### DOM Manipulation
+- Sử dụng `DOMContentLoaded` để đảm bảo DOM ready
+- Check element tồn tại trước khi thao tác
+- Cache DOM elements thay vì query nhiều lần
+
+### Event Handling
+- Prevent default cho form submit và button click
+- Clear previous errors/messages trước khi validate
+- Disable buttons khi đang xử lý (loading state)
+- Reset buttons sau khi hoàn thành
+
+### API Calls
+- Sử dụng `fetch` với async/await
+- Error handling đầy đủ với try-catch
+- Show loading state cho user
+- Clear messages cũ trước khi show messages mới
+- Timeout cho messages (auto hide sau 5 giây)
+
+### Validation
+- Validate phía client trước khi gửi request
+- Show error ngay dưới field tương ứng
+- Email regex validation
+- Password strength check
+- Clear errors khi user nhập lại
+
+## Views (Handlebars)
+
+### File Organization
+- Layout trong `views/layouts/`
+- Pages trong `views/`
+- Partials trong `views/partials/`
+- Naming: camelCase (register.hbs, home.hbs)
+
+### Template Structure
+- Sử dụng layout chung (main.hbs)
+- Tái sử dụng partials cho components chung
+- Pass data rõ ràng từ controller
+- UI text tiếng Việt
+
+### Styling
+- Sử dụng Tailwind CSS utility classes
+- Dark mode support khi cần
+- Responsive design (mobile-first)
+- Consistent spacing và colors
+
+## Naming Conventions
+
+### Files
+- Backend files: camelCase (userModel.js, authRoutes.js, homeController.js)
+- Frontend JS: camelCase (register.js, main.js)
+- View files: camelCase (register.hbs, home.hbs)
+
+### Variables & Functions
+- camelCase cho variables và functions
+- Descriptive names, không viết tắt không cần thiết
+- Boolean: prefix với `is`, `has`, `should` (isValid, hasError)
+
+### Constants
+- UPPER_SNAKE_CASE cho constants
+- Đặt trong file config hoặc top level
+
+### Models/Classes
+- PascalCase cho Model names và Classes
+- Singular form (User, not Users)
+
+### Routes
+- lowercase with hyphens (/register, /api/auth, /dang-ky)
+- RESTful khi có thể (/api/users/:id)
+
+## Code Quality
+
+### Readability
+- Functions ngắn gọn, một nhiệm vụ
+- Extract logic phức tạp thành helper functions
+- Avoid deep nesting (max 3 levels)
+- Early returns để giảm nesting
+
+### Performance
+- Lazy loading khi có thể
+- Cache expensive operations
+- Optimize database queries
+- Minify CSS/JS trong production
+
+### Maintainability
+- Consistent code style trong toàn bộ project
+- Update code style khi cần thiết
+- Refactor khi thấy code duplicate
