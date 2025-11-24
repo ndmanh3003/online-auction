@@ -1,23 +1,23 @@
-import express from 'express';
-import { body, validationResult } from 'express-validator';
-import { AppDataSource } from '../config/database.js';
-import { User } from '../entities/User.js';
-import { OTP } from '../entities/OTP.js';
-import { sendOTPEmail } from '../config/email.js';
-import { generateOTP, isOTPExpired } from '../utils/otp.js';
-import { verifyRecaptcha } from '../utils/recaptcha.js';
-import { generateToken } from '../utils/jwt.js';
+import express from "express";
+import { body, validationResult } from "express-validator";
+import asyncHandler from "express-async-handler";
+import { AppDataSource } from "../config/database.js";
+import { User } from "../entities/User.js";
+import { OTP } from "../entities/OTP.js";
+import { sendOTPEmail } from "../config/email.js";
+import { generateOTP, isOTPExpired } from "../utils/otp.js";
+import { verifyRecaptcha } from "../utils/recaptcha.js";
+import { generateToken } from "../utils/jwt.js";
 
 const router = express.Router();
 
-router.post('/send-otp',
-  [
-    body('email').isEmail().normalizeEmail(),
-  ],
-  async (req, res) => {
+router.post(
+  "/send-otp",
+  [body("email").isEmail().normalizeEmail()],
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ message: 'Invalid data' });
+      throw new Error("Invalid data");
     }
 
     const { email } = req.body;
@@ -25,76 +25,77 @@ router.post('/send-otp',
     const userRepository = AppDataSource.getRepository(User);
     const otpRepository = AppDataSource.getRepository(OTP);
 
-    const existingUser = await userRepository.findOne({ 
-      where: { email: email.toLowerCase().trim() } 
+    const existingUser = await userRepository.findOne({
+      where: { email },
     });
     if (existingUser) {
-      return res.status(400).json({ message: 'Email already in use' });
+      throw new Error("Email already in use");
     }
 
     const otp = generateOTP();
     const emailSent = await sendOTPEmail(email, otp);
-    
+
     if (!emailSent) {
-      return res.status(500).json({ message: 'Failed to send email' });
+      throw new Error("Failed to send email");
     }
 
-    const otpEntity = otpRepository.create({ 
-      email: email.toLowerCase().trim(), 
-      otp 
+    const otpEntity = otpRepository.create({
+      email: email.toLowerCase().trim(),
+      otp,
     });
     await otpRepository.save(otpEntity);
 
     res.json({});
-  }
+  }),
 );
 
-router.post('/register',
+router.post(
+  "/register",
   [
-    body('name').trim().notEmpty(),
-    body('address').trim().notEmpty(),
-    body('email').isEmail().normalizeEmail(),
-    body('password').isLength({ min: 6 }),
-    body('otp').notEmpty(),
-    body('recaptchaToken').notEmpty(),
+    body("name").trim().notEmpty(),
+    body("address").trim().notEmpty(),
+    body("email").isEmail().normalizeEmail(),
+    body("password").isLength({ min: 6 }),
+    body("otp").notEmpty(),
+    body("recaptchaToken").notEmpty(),
   ],
-  async (req, res) => {
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ message: 'Invalid data' });
+      throw new Error("Invalid data");
     }
 
     const { name, address, email, password, otp, recaptchaToken } = req.body;
 
     const isValidRecaptcha = await verifyRecaptcha(recaptchaToken);
     if (!isValidRecaptcha) {
-      return res.status(400).json({ message: 'Invalid reCaptcha' });
+      throw new Error("Invalid reCaptcha");
     }
 
     const userRepository = AppDataSource.getRepository(User);
     const otpRepository = AppDataSource.getRepository(OTP);
 
-    const existingUser = await userRepository.findOne({ 
-      where: { email: email.toLowerCase().trim() } 
+    const existingUser = await userRepository.findOne({
+      where: { email: email.toLowerCase().trim() },
     });
     if (existingUser) {
-      return res.status(400).json({ message: 'Email already in use' });
+      throw new Error("Email already in use");
     }
 
-    const otpRecord = await otpRepository.findOne({ 
+    const otpRecord = await otpRepository.findOne({
       where: { email: email.toLowerCase().trim() },
-      order: { created_at: 'DESC' }
+      order: { created_at: "DESC" },
     });
     if (!otpRecord || otpRecord.verified) {
-      return res.status(400).json({ message: 'Invalid or already used OTP' });
+      throw new Error("Invalid or already used OTP");
     }
 
     if (isOTPExpired(otpRecord.created_at)) {
-      return res.status(400).json({ message: 'OTP expired' });
+      throw new Error("OTP expired");
     }
 
     if (otpRecord.otp !== otp) {
-      return res.status(400).json({ message: 'Invalid OTP' });
+      throw new Error("Invalid OTP");
     }
 
     const user = userRepository.create({
@@ -112,10 +113,10 @@ router.post('/register',
 
     const token = generateToken(user.id);
 
-    res.cookie('token', token, {
+    res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -126,43 +127,51 @@ router.post('/register',
         email: user.email,
       },
     });
-  }
+  }),
 );
 
-router.post('/login',
-  [
-    body('email').isEmail().normalizeEmail(),
-    body('password').notEmpty(),
-  ],
-  async (req, res) => {
+router.post(
+  "/login",
+  [body("email").isEmail().normalizeEmail(), body("password").notEmpty()],
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ message: 'Invalid data' });
+      throw new Error("Invalid data");
     }
 
     const { email, password } = req.body;
 
     const userRepository = AppDataSource.getRepository(User);
 
-    const user = await userRepository.findOne({ 
+    const user = await userRepository.findOne({
       where: { email: email.toLowerCase().trim() },
-      select: ['id', 'name', 'email', 'password', 'address', 'date_of_birth', 'email_verified', 'created_at', 'updated_at']
+      select: [
+        "id",
+        "name",
+        "email",
+        "password",
+        "address",
+        "date_of_birth",
+        "email_verified",
+        "created_at",
+        "updated_at",
+      ],
     });
     if (!user) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+      throw new Error("Invalid email or password");
     }
 
     const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+      throw new Error("Invalid email or password");
     }
 
     const token = generateToken(user.id);
 
-    res.cookie('token', token, {
+    res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -173,18 +182,21 @@ router.post('/login',
         email: user.email,
       },
     });
-  }
+  }),
 );
 
-router.post('/logout', async (req, res) => {
-  res.cookie('token', '', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    maxAge: 0,
-  });
+router.post(
+  "/logout",
+  asyncHandler(async (req, res) => {
+    res.cookie("token", "", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 0,
+    });
 
-  res.json({});
-});
+    res.json({});
+  }),
+);
 
 export default router;
