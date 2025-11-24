@@ -7,26 +7,28 @@
     <title>{{title}}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap"
+          rel="stylesheet">
+    <link href="/css/input.css" rel="stylesheet" type="text/css"/>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" type="text/css"/>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/just-validate@latest/dist/just-validate.production.min.js"></script>
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body class="min-h-screen flex flex-col bg-base-200">
-    {{> main/header}}
-    
-    <div class="flex-grow">
-        {{{body}}}
-    </div>
-    
-    {{> main/footer}}
-    
-    <script src="/js/root.js"></script>
-    <script src="/js/main.js"></script>
-    {{#if viewName}}
+{{> main/header}}
+
+<div class="flex-grow">
+    {{{body}}}
+</div>
+
+{{> main/footer}}
+
+<script src="/js/root.js"></script>
+<script src="/js/main.js"></script>
+{{#if viewName}}
     <script src="/js/{{viewName}}.js" defer></script>
-    {{/if}}
+{{/if}}
 </body>
 </html>
 
