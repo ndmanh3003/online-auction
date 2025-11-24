@@ -1,37 +1,35 @@
-export const getHome = (req, res) => {
-  res.render('home', {
-    title: 'Trang chủ - Đấu giá',
-    recaptchaSiteKey: process.env.RECAPTCHA_SITE_KEY,
-  });
-};
+import asyncHandler from 'express-async-handler';
+import { AppDataSource } from '../config/database.js';
+import { User } from '../entities/User.js';
 
 export const getRegister = (req, res) => {
   res.render('register', {
-    title: 'Đăng ký - Đấu giá',
+    title: 'Register - Auction',
     recaptchaSiteKey: process.env.RECAPTCHA_SITE_KEY,
+    viewName: 'register',
   });
 };
 
 export const getLogin = (req, res) => {
   res.render('login', {
-    title: 'Đăng nhập - Đấu giá',
+    title: 'Login - Auction',
+    viewName: 'login',
   });
 };
 
-export const getProfile = (req, res) => {
+export const getProfile = asyncHandler(async (req, res) => {
+  const userRepository = AppDataSource.getRepository(User);
+
+  const user = await userRepository.findOne({
+    where: { id: req.userId },
+  });
+  if (!user) {
+    throw new Error('User not found');
+  }
+
   res.render('profile', {
-    title: 'Thông tin cá nhân - Đấu giá',
+    title: 'Profile - Auction',
+    viewName: 'profile',
+    user,
   });
-};
-
-export const getChangePassword = (req, res) => {
-  res.render('changePassword', {
-    title: 'Đổi mật khẩu - Đấu giá',
-  });
-};
-
-export const getChangeEmail = (req, res) => {
-  res.render('changeEmail', {
-    title: 'Đổi email - Đấu giá',
-  });
-};
+});

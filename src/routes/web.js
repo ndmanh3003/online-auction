@@ -1,16 +1,17 @@
 import express from 'express';
-import { getHome, getRegister, getLogin, getProfile, getChangePassword, getChangeEmail } from '../controllers/homeController.js';
+import { getRegister, getLogin, getProfile } from '../controllers/homeController.js';
 import { requireAuth, optionalAuth } from '../middleware/auth.js';
 
 const router = express.Router();
 
 router.use(optionalAuth);
 
-router.get('/', getHome);
-router.get('/dang-ky', getRegister);
-router.get('/dang-nhap', getLogin);
-router.get('/thong-tin', requireAuth, getProfile);
-router.get('/doi-mat-khau', requireAuth, getChangePassword);
-router.get('/doi-email', requireAuth, getChangeEmail);
+router.get('/', (req, res) => {
+  res.redirect('/login');
+});
+
+router.get('/register', getRegister);
+router.get('/login', getLogin);
+router.get('/profile', requireAuth, getProfile);
 
 export default router;

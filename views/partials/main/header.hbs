@@ -1,0 +1,28 @@
+<nav class="navbar bg-base-100 shadow-md">
+    <div class="container mx-auto px-4">
+        <div class="flex-1">
+            <a href="/" class="text-2xl font-bold text-primary">Auction</a>
+        </div>
+        <div class="flex-none">
+            {{#if user}}
+                <div class="dropdown dropdown-end">
+                    <div tabindex="0" role="button" class="btn btn-ghost">
+                        <span>{{user.name}}</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
+                    <ul tabindex="0"
+                        class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 shadow-lg border border-base-300 p-2">
+                        <li><a href="/profile">Profile</a></li>
+                        <li><button id="logoutBtn" class="text-error w-full text-left">Logout</button></li>
+                    </ul>
+                </div>
+            {{else}}
+                <a href="/login" class="btn btn-primary">Đăng nhập</a>
+            {{/if}}
+        </div>
+    </div>
+</nav>
+
