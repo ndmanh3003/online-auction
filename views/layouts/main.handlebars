@@ -1,0 +1,133 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Auction System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Momo+Signature&family=Momo+Trust+Sans:wght@200..800&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <style>
+      * {
+        font-family: 'Momo Trust Sans', sans-serif;
+      }
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6 {
+        font-family: 'Momo Signature', cursive;
+      }
+      .font-momo-signature {
+        font-family: 'Momo Signature', cursive;
+      }
+    </style>
+    {{{_sections.css}}}
+  </head>
+  <body>
+    {{#if err_messages}}
+      <div class="fixed top-4 right-4 z-50 space-y-3" id="errorAlerts">
+        {{#each err_messages}}
+          <div
+            role="alert"
+            class="flex items-center gap-3 px-6 py-4 bg-red-50 border border-red-200 rounded-2xl shadow-[0_4px_20px_rgba(239,68,68,0.15)] max-w-md"
+          >
+            <i class="fas fa-exclamation-circle text-red-600 shrink-0 text-xl"></i>
+            <span class="flex-1 text-red-900 font-medium">{{this}}</span>
+            <button
+              onclick="this.parentElement.remove()"
+              class="text-red-400 hover:text-red-600 transition-colors"
+            >
+              <i class="fas fa-times text-lg"></i>
+            </button>
+          </div>
+        {{/each}}
+      </div>
+    {{/if}}
+    <div id="windowErrorAlert" class="fixed top-4 right-4 z-50 hidden">
+      <div
+        role="alert"
+        class="flex items-center gap-3 px-6 py-4 bg-red-50 border border-red-200 rounded-2xl shadow-[0_4px_20px_rgba(239,68,68,0.15)] max-w-md"
+      >
+        <i class="fas fa-exclamation-circle text-red-600 shrink-0 text-xl"></i>
+        <span id="windowErrorText" class="flex-1 text-red-900 font-medium"></span>
+        <button
+          onclick="document.getElementById('windowErrorAlert').classList.add('hidden')"
+          class="text-red-400 hover:text-red-600 transition-colors"
+        >
+          <i class="fas fa-times text-lg"></i>
+        </button>
+      </div>
+    </div>
+    <header class="bg-white border-b border-gray-200/60 shadow-sm sticky top-0 z-40">
+      <div class="max-w-[2000px] mx-auto px-6">
+        <div class="flex items-center justify-between h-16">
+          <div class="flex items-center">
+            <a href="/" class="flex items-center">
+              <img
+                src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Logo_of_Twitter.svg/1245px-Logo_of_Twitter.svg.png"
+                alt="Logo"
+                class="h-8 w-8 object-contain"
+              />
+            </a>
+          </div>
+          <div class="flex items-center">
+            {{#if isAuthenticated}}
+              <a
+                href="/account/profile"
+                class="flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-gray-50 transition-all duration-300 ease-out group"
+              >
+                <span class="text-gray-900 font-medium group-hover:text-blue-600 transition-colors font-momo-signature">
+                  {{authUser.name}}
+                </span>
+                <div class="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-full group-hover:bg-blue-200 transition-colors">
+                  <i class="fas fa-user text-blue-600 text-sm"></i>
+                </div>
+              </a>
+            {{else}}
+              <a
+                href="/auth/login"
+                class="px-6 py-3 bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
+              >
+                Login
+              </a>
+            {{/if}}
+          </div>
+        </div>
+      </div>
+    </header>
+    <main class="max-w-[2000px] mx-auto px-6">
+      {{{body}}}
+    </main>
+    {{{_sections.js}}}
+    <script>
+      ;(function () {
+        if (window.errorMessage) {
+          const alertEl = document.getElementById('windowErrorAlert')
+          const textEl = document.getElementById('windowErrorText')
+          const backendErrors = document.getElementById('errorAlerts')
+          if (alertEl && textEl) {
+            textEl.textContent = window.errorMessage
+            if (backendErrors) {
+              alertEl.style.top = backendErrors.children.length * 88 + 'px'
+            } else {
+              alertEl.style.top = '16px'
+            }
+            alertEl.classList.remove('hidden')
+          }
+        }
+      })()
+    </script>
+  </body>
+</html>

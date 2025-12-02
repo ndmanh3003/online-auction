@@ -1,0 +1,68 @@
+<div class="max-w-2xl mx-auto my-20 p-8 bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60">
+  <h2 class="text-[28px] font-semibold text-gray-900 text-center mb-8">
+    Edit Profile
+  </h2>
+  <form
+    method="post"
+    id="frmEdit"
+    class="space-y-6"
+  >
+    <div class="relative mb-6">
+      <input
+        type="text"
+        id="name"
+        name="name"
+        class="w-full px-4 py-4 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
+        placeholder="Full Name"
+        value="{{authUser.name}}"
+        required
+      />
+    </div>
+    <div class="relative mb-6">
+      <input
+        type="email"
+        id="email"
+        name="email"
+        class="w-full px-4 py-4 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
+        placeholder="Email"
+        value="{{authUser.email}}"
+        required
+      />
+    </div>
+    <div class="relative mb-6">
+      <input
+        type="date"
+        id="dob"
+        name="dob"
+        class="w-full px-4 py-4 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
+        {{#if authUser.dob}}
+          value="{{formatDate authUser.dob}}"
+        {{/if}}
+      />
+    </div>
+    <div class="relative mb-6">
+      <input
+        type="text"
+        id="address"
+        name="address"
+        class="w-full px-4 py-4 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
+        placeholder="Address"
+        value="{{authUser.address}}"
+      />
+    </div>
+    <button
+      type="submit"
+      class="w-full px-6 py-4 bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
+    >
+      Update Profile
+    </button>
+  </form>
+  <div class="text-center mt-6">
+    <a
+      href="javascript:history.back();"
+      class="text-sm text-gray-600 hover:underline"
+    >
+      Back
+    </a>
+  </div>
+</div>

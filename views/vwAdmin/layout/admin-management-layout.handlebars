@@ -1,0 +1,10 @@
+{{#> management-layout
+  menuTitle='Admin Menu'
+  menuItems=(menuItems
+    (menuItem 'seller-requests' 'Seller Requests' '/admin/seller-requests' 'fas fa-user-check')
+    (menuItem 'categories' 'Categories' '/admin/categories' 'fas fa-folder')
+  )
+  activeMenu=activeMenu
+}}
+  {{> @partial-block}}
+{{/management-layout}}
