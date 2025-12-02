@@ -1,4 +1,5 @@
 import Category from '../models/Category.js';
+import Product from '../models/Product.js';
 import * as dropdownService from './dropdown.service.js';
 
 function buildParentIdQuery(parentId) {
@@ -26,6 +27,20 @@ export async function findAll(page = 1, limit = 10, parentId = null) {
       totalPages: Math.ceil(total / limit),
     },
   };
+}
+
+export async function findAllWithSubcategories() {
+  const parents = await Category.find({ parentId: null }).sort({ name: 1 });
+  const result = await Promise.all(
+    parents.map(async (parent) => {
+      const children = await Category.find({ parentId: parent._id }).sort({ name: 1 });
+      return {
+        ...parent.toObject(),
+        subcategories: children,
+      };
+    })
+  );
+  return result;
 }
 
 export async function findById(id) {
@@ -70,10 +85,5 @@ export async function hasSubcategories(categoryId) {
 }
 
 export async function countProductsByCategory(categoryId) {
-  // This will be used when Product model is created
-  // For now, return 0 to allow deletion
-  // TODO: Implement when Product model exists
-  // const Product = mongoose.model('Product');
-  // return await Product.countDocuments({ categoryId });
-  return 0;
+  return await Product.countDocuments({ categoryId });
 }

@@ -1,0 +1,118 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <div class="text-center mb-12">
+    <h1 class="text-[48px] font-semibold text-gray-900 mb-4">Online Auction</h1>
+    <p class="text-gray-600 text-lg">Discover amazing products and start bidding today</p>
+  </div>
+  <div class="mb-16">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-[28px] font-semibold text-gray-900">Ending Soon</h2>
+      <a
+        href="/products"
+        class="text-blue-600 hover:text-blue-700 font-medium transition-colors"
+      >
+        View All →
+      </a>
+    </div>
+    {{#if endingSoon.length}}
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+        {{#each endingSoon}}
+          <a
+            href="/products/{{_id}}"
+            class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 overflow-hidden hover:scale-105 transition-all duration-300 ease-out"
+          >
+            <img
+              src="{{images.[0]}}"
+              alt="{{name}}"
+              class="w-full h-48 object-cover"
+            />
+            <div class="p-4">
+              <h3 class="text-gray-900 font-semibold mb-2 truncate">{{name}}</h3>
+              <p class="text-gray-600 text-sm mb-2">{{categoryId.name}}</p>
+              <p class="text-blue-600 font-bold text-lg">${{format_currency currentPrice}}</p>
+              <p class="text-gray-500 text-sm mt-2">Ends: {{formatDate endTime}}</p>
+            </div>
+          </a>
+        {{/each}}
+      </div>
+    {{else}}
+      <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-12 text-center">
+        <p class="text-gray-600 text-lg">No products ending soon.</p>
+      </div>
+    {{/if}}
+  </div>
+  <div class="mb-16">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-[28px] font-semibold text-gray-900">Most Popular</h2>
+      <a
+        href="/products"
+        class="text-blue-600 hover:text-blue-700 font-medium transition-colors"
+      >
+        View All →
+      </a>
+    </div>
+    {{#if mostBids.length}}
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+        {{#each mostBids}}
+          <a
+            href="/products/{{_id}}"
+            class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 overflow-hidden hover:scale-105 transition-all duration-300 ease-out"
+          >
+            <img
+              src="{{images.[0]}}"
+              alt="{{name}}"
+              class="w-full h-48 object-cover"
+            />
+            <div class="p-4">
+              <h3 class="text-gray-900 font-semibold mb-2 truncate">{{name}}</h3>
+              <p class="text-gray-600 text-sm mb-2">{{categoryId.name}}</p>
+              <p class="text-blue-600 font-bold text-lg">${{format_currency currentPrice}}</p>
+              <p class="text-gray-500 text-sm mt-2">{{bidCount}} bids</p>
+            </div>
+          </a>
+        {{/each}}
+      </div>
+    {{else}}
+      <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-12 text-center">
+        <p class="text-gray-600 text-lg">No popular products yet.</p>
+      </div>
+    {{/if}}
+  </div>
+  <div class="mb-16">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-[28px] font-semibold text-gray-900">Highest Price</h2>
+      <a
+        href="/products"
+        class="text-blue-600 hover:text-blue-700 font-medium transition-colors"
+      >
+        View All →
+      </a>
+    </div>
+    {{#if highestPrice.length}}
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+        {{#each highestPrice}}
+          <a
+            href="/products/{{_id}}"
+            class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 overflow-hidden hover:scale-105 transition-all duration-300 ease-out"
+          >
+            <img
+              src="{{images.[0]}}"
+              alt="{{name}}"
+              class="w-full h-48 object-cover"
+            />
+            <div class="p-4">
+              <h3 class="text-gray-900 font-semibold mb-2 truncate">{{name}}</h3>
+              <p class="text-gray-600 text-sm mb-2">{{categoryId.name}}</p>
+              <p class="text-blue-600 font-bold text-lg">${{format_currency currentPrice}}</p>
+              <p class="text-gray-500 text-sm mt-2">Ends: {{formatDate endTime}}</p>
+            </div>
+          </a>
+        {{/each}}
+      </div>
+    {{else}}
+      <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-12 text-center">
+        <p class="text-gray-600 text-lg">No products available.</p>
+      </div>
+    {{/if}}
+  </div>
+</div>
+

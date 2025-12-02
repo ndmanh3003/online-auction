@@ -1,0 +1,193 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12">
+    <div>
+      <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 overflow-hidden mb-4">
+        <img
+          src="{{product.images.[0]}}"
+          alt="{{product.name}}"
+          id="mainImage"
+          class="w-full h-96 object-cover"
+        />
+      </div>
+      <div class="grid grid-cols-4 gap-4">
+        {{#each product.images}}
+          <img
+            src="{{this}}"
+            alt="Product image"
+            class="w-full h-24 object-cover rounded-2xl cursor-pointer border-2 border-transparent hover:border-blue-600 transition-all"
+            onclick="document.getElementById('mainImage').src='{{this}}'"
+          />
+        {{/each}}
+      </div>
+    </div>
+    <div>
+      <h1 class="text-[36px] font-semibold text-gray-900 mb-4">{{product.name}}</h1>
+      <a
+        href="/products?categoryId={{product.categoryId._id}}"
+        class="inline-block text-blue-600 hover:underline mb-6"
+      >
+        {{product.categoryId.name}}
+      </a>
+      <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-6 mb-6">
+        <div class="space-y-4">
+          <div class="flex justify-between items-center">
+            <span class="text-gray-600">Current Price:</span>
+            <span class="text-blue-600 font-bold text-2xl">${{format_currency product.currentPrice}}</span>
+          </div>
+          {{#if product.buyNowPrice}}
+            <div class="flex justify-between items-center">
+              <span class="text-gray-600">Buy Now Price:</span>
+              <span class="text-green-600 font-bold text-xl">${{format_currency product.buyNowPrice}}</span>
+            </div>
+          {{/if}}
+          <div class="flex justify-between items-center">
+            <span class="text-gray-600">Number of Bids:</span>
+            <span class="text-gray-900 font-semibold">{{bidCount}}</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-gray-600">Ends:</span>
+            <span class="text-gray-900 font-semibold">{{formatDate product.endTime}}</span>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-6 mb-6">
+        <h3 class="text-gray-900 font-semibold mb-4">Seller Information</h3>
+        <p class="text-gray-600">{{product.sellerId.name}}</p>
+        <p class="text-gray-500 text-sm">{{product.sellerId.email}}</p>
+      </div>
+      {{#if topBidder}}
+        <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-6 mb-6">
+          <h3 class="text-gray-900 font-semibold mb-4">Current Top Bidder</h3>
+          <p class="text-gray-600">{{topBidder.name}}</p>
+        </div>
+      {{/if}}
+      {{#if isAuthenticated}}
+        <div class="flex gap-4">
+          <form
+            method="post"
+            action="/bidder/watchlist/{{product._id}}"
+            class="flex-1"
+          >
+            {{#if isInWatchlist}}
+              <input type="hidden" name="_method" value="DELETE">
+              <button
+                type="submit"
+                class="w-full px-6 py-4 bg-gray-600 text-white rounded-xl shadow-[0_4px_20px_rgba(75,85,99,0.3)] hover:bg-gray-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
+              >
+                Remove from Watchlist
+              </button>
+            {{else}}
+              <button
+                type="submit"
+                class="w-full px-6 py-4 bg-yellow-600 text-white rounded-xl shadow-[0_4px_20px_rgba(202,138,4,0.3)] hover:bg-yellow-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
+              >
+                Add to Watchlist
+              </button>
+            {{/if}}
+          </form>
+          <a
+            href="/bidder/bid/{{product._id}}"
+            class="flex-1 text-center px-6 py-4 bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
+          >
+            Place Bid
+          </a>
+        </div>
+      {{else}}
+        <a
+          href="/auth/login"
+          class="block text-center px-6 py-4 bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
+        >
+          Login to Bid
+        </a>
+      {{/if}}
+      <div class="mt-4">
+        <a
+          href="/products/{{product._id}}/bids"
+          class="block text-center px-6 py-4 bg-white text-gray-900 border border-gray-200/60 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] hover:bg-gray-50 hover:scale-105 transition-all duration-300 ease-out font-medium"
+        >
+          View Bid History
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-8 mb-12">
+    <h2 class="text-[28px] font-semibold text-gray-900 mb-6">Description</h2>
+    <div class="text-gray-600 prose max-w-none">
+      {{{product.description}}}
+    </div>
+  </div>
+  <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-8 mb-12">
+    <h2 class="text-[28px] font-semibold text-gray-900 mb-6">Questions & Answers</h2>
+    {{#if isAuthenticated}}
+      <form
+        method="post"
+        action="/bidder/question/{{product._id}}"
+        class="mb-8"
+      >
+        <div class="relative mb-4">
+          <textarea
+            name="question"
+            rows="3"
+            class="w-full px-4 py-4 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
+            placeholder="Ask a question about this product..."
+            required
+          ></textarea>
+        </div>
+        <button
+          type="submit"
+          class="px-6 py-3 bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
+        >
+          Submit Question
+        </button>
+      </form>
+    {{/if}}
+    {{#if questions.length}}
+      <div class="space-y-6">
+        {{#each questions}}
+          <div class="border-b border-gray-200 pb-6 last:border-b-0">
+            <div class="flex items-start gap-4 mb-4">
+              <div class="flex-1">
+                <p class="text-gray-900 font-medium">{{askerId.name}}</p>
+                <p class="text-gray-600 mt-2">{{question}}</p>
+                <p class="text-gray-400 text-sm mt-1">{{formatDate createdAt}}</p>
+              </div>
+            </div>
+            {{#if answer}}
+              <div class="ml-8 bg-blue-50 rounded-2xl p-4">
+                <p class="text-gray-900 font-medium mb-2">Seller's Response:</p>
+                <p class="text-gray-600">{{answer}}</p>
+                <p class="text-gray-400 text-sm mt-1">{{formatDate answeredAt}}</p>
+              </div>
+            {{/if}}
+          </div>
+        {{/each}}
+      </div>
+    {{else}}
+      <p class="text-gray-500 text-center py-8">No questions yet. Be the first to ask!</p>
+    {{/if}}
+  </div>
+  {{#if relatedProducts.length}}
+    <div class="mb-12">
+      <h2 class="text-[28px] font-semibold text-gray-900 mb-6">Related Products</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+        {{#each relatedProducts}}
+          <a
+            href="/products/{{_id}}"
+            class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 overflow-hidden hover:scale-105 transition-all duration-300 ease-out"
+          >
+            <img
+              src="{{images.[0]}}"
+              alt="{{name}}"
+              class="w-full h-48 object-cover"
+            />
+            <div class="p-4">
+              <h3 class="text-gray-900 font-semibold mb-2 truncate">{{name}}</h3>
+              <p class="text-blue-600 font-bold">${{format_currency currentPrice}}</p>
+            </div>
+          </a>
+        {{/each}}
+      </div>
+    </div>
+  {{/if}}
+</div>
+

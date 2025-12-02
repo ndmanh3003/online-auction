@@ -3,6 +3,9 @@ import bcrypt from 'bcryptjs';
 import * as userService from '../services/user.service.js';
 import * as otpService from '../services/otp.service.js';
 import * as sellerRequestService from '../services/seller-request.service.js';
+import * as bidService from '../services/bid.service.js';
+import * as ratingService from '../services/rating.service.js';
+import * as productService from '../services/product.service.js';
 import * as emailService from '../utils/email.js';
 import { generateOTP } from '../utils/otp.js';
 
@@ -133,6 +136,60 @@ router.post('/request-seller', async function (req, res) {
   await sellerRequestService.create(userId);
 
   res.redirect('/account/profile');
+});
+
+router.get('/bids', async function (req, res) {
+  const page = parseInt(req.query.page) || 1;
+  const result = await bidService.findActiveBidsByUser(req.session.authUser._id, page, 10);
+
+  res.render('vwAccount/bids', {
+    ...result,
+  });
+});
+
+router.get('/won', async function (req, res) {
+  const page = parseInt(req.query.page) || 1;
+  const result = await bidService.findWonByUser(req.session.authUser._id, page, 10);
+
+  res.render('vwAccount/won', {
+    ...result,
+  });
+});
+
+router.get('/ratings', async function (req, res) {
+  const page = parseInt(req.query.page) || 1;
+  const result = await ratingService.findByUserId(req.session.authUser._id, page, 10);
+  const stats = await ratingService.calculateUserRating(req.session.authUser._id);
+
+  res.render('vwAccount/ratings', {
+    ...result,
+    stats,
+  });
+});
+
+router.post('/rate/:productId', async function (req, res) {
+  const { rating, comment } = req.body;
+  const product = await productService.findById(req.params.productId);
+
+  if (!product) {
+    return res.error('Product not found.');
+  }
+
+  const ratingValue = parseInt(rating);
+  if (ratingValue !== 1 && ratingValue !== -1) {
+    return res.error('Invalid rating value.');
+  }
+
+  await ratingService.createOrUpdate(
+    req.params.productId,
+    req.session.authUser._id,
+    product.sellerId,
+    ratingValue,
+    comment || '',
+    'bidder_to_seller'
+  );
+
+  res.redirect('/account/won');
 });
 
 export default router;

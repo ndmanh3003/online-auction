@@ -28,3 +28,26 @@ export async function verifyEmail(id) {
 export async function updateRole(id, role) {
   return await User.findByIdAndUpdate(id, { role }, { new: true });
 }
+
+export async function findAll(page = 1, limit = 10) {
+  const skip = (page - 1) * limit;
+  const total = await User.countDocuments();
+  const items = await User.find()
+    .select('-password')
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
+  return {
+    items,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
+}
+
+export async function remove(id) {
+  return await User.findByIdAndDelete(id);
+}
