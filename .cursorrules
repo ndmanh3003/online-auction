@@ -1,596 +1,370 @@
 # Cursor Rules for Express + Handlebars Project
 
+## 🔴 CRITICAL: CODE CONSISTENCY WORKFLOW
+
+**BEFORE writing ANY code, you MUST:**
+
+1. **Read 1-2 related files first** to understand the existing style
+   - Writing a route? Read another route file in the same folder
+   - Writing a service? Read another service file
+   - Writing a view? Read another view in the same folder
+   - Writing a util? Read another util file
+
+2. **Match the existing patterns EXACTLY:**
+   - Same indentation (2 spaces for .handlebars, standard for .js)
+   - Same naming conventions (camelCase, kebab-case)
+   - Same error handling approach (`res.error()` or `res.locals.err_messages`)
+   - Same HTML attribute formatting (each on separate line)
+   - Same Tailwind class patterns (Apple-like design)
+   - Same async/await patterns (`return await` in services)
+
+3. **Verify consistency:**
+   - Does your code look identical in style to existing files?
+   - Are you using the same helper functions/utils?
+   - Are you following the same route→service→model flow?
+
+**DO NOT write code without reading related files first!**
+
+---
+
 ## Project Overview
-This is an Express.js 5 application using Handlebars templating, MongoDB with Mongoose, and TailwindCSS for styling. All code, comments, and UI text must be in English.
+
+Express.js 5 + Handlebars + MongoDB/Mongoose + TailwindCSS. All code, comments, UI in **English only**.
+
+**Stack:** Session-based auth (no JWT), bcryptjs, express-validator, method-override, nodemailer, reCAPTCHA.
 
 ---
 
 ## Architecture Patterns
 
-### 1. Express Route Structure
-- Use ES6 modules (`import`/`export`)
-- Routes use `async function(req, res)` for handlers that need async operations
-- Route handlers follow pattern: `router.METHOD('/path', [middleware], async function(req, res) { ... })`
-- **Use proper HTTP methods**: POST for create, PUT for update, DELETE for delete
-- **method-override is configured** in `app.js` - allows PUT/DELETE via `_method` hidden input in forms
-- Use middleware for authentication: `isAuth`, `isAdmin`, `isSeller`, `isBidder`
-- Always use `res.render()` for Handlebars views, `res.redirect()` for navigation
-- Pass data to views via render options: `res.render('viewName', { data })`
-- GET routes that don't need async can use regular `function(req, res)`
+### Routes (`/routes/*.route.js`)
+```javascript
+// Pattern: router.METHOD('/path', [middleware], async function(req, res))
+import express from 'express';
+import * as service from '../services/resource.service.js';
+import { isAuth, isAdmin } from '../middlewares/auth.mdw.js';
 
-### 2. Service Layer Pattern
-- All database operations go through service files in `/services`
-- Services use Mongoose models imported from `/models`
-- Service functions are pure database operations (no business logic)
-- Export functions individually: `export async function functionName() { ... }`
-- Use `return await` for all database operations (consistent pattern)
-- Always use async/await, never return promises directly
-- Service functions should handle email normalization (lowercase, trim) when needed
-- **Service function naming conventions**:
-  - `findById(id)` - Get single record by ID
-  - `findByEmail(email)` - Get single record by email (for User)
-  - `findByName(name)` - Get single record by name
-  - `findAll(page, limit, filters)` - Get paginated list
-  - `findAllPending(page, limit)` - Get filtered paginated list
-  - `add(data)` or `create(data)` - Create new record
-  - `update(id, data)` - Update existing record
-  - `remove(id)` - Delete record (avoid using `delete` keyword)
-  - `updateStatus(id, status)` - Update specific field
-  - `updatePassword(id, password)` - Update password
-  - `updateRole(id, role)` - Update user role
-- **Pagination return pattern**:
-  ```javascript
+const router = express.Router();
+
+// Sync route (no async needed)
+router.get('/path', function (req, res) {
+  res.render('view');
+});
+
+// Async route
+router.post('/path', isAuth, async function (req, res) {
+  const data = await service.findById(id);
+  if (!data) return res.error('Not found.');
+  res.redirect('/success');
+});
+
+export default router;
+```
+
+**Rules:**
+- HTTP methods: POST (create), PUT (update), DELETE (delete)
+- Use `res.error('msg')` for errors (redirects back automatically)
+- Use `res.render('view', { data })` for views
+- Use `res.redirect('/path')` for navigation
+- **NEVER pass `authUser`** - already in `res.locals.authUser`
+- GET routes without async: `function(req, res)`
+- Route index: `/routes/index.js` mounts all routers
+- Admin routes: `/routes/admin/index.js` mounts admin routers
+
+### Services (`/services/*.service.js`)
+```javascript
+// Pattern: Pure DB operations, export individual async functions
+import Model from '../models/Model.js';
+
+export async function findById(id) {
+  return await Model.findById(id);
+}
+
+export async function findAll(page = 1, limit = 10) {
+  const skip = (page - 1) * limit;
+  const items = await Model.find().sort({ createdAt: -1 }).skip(skip).limit(limit);
+  const total = await Model.countDocuments();
   return {
     items,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-    },
+    pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
   };
-  ```
+}
 
-### 3. Middleware Pattern
-- Middleware files in `/middlewares/` with `.mdw.js` extension
-- Export individual functions: `export function middlewareName(req, res, next) { ... }`
-- Call `next()` when passing, redirect/render when failing
-- **Authentication middleware** (`/middlewares/auth.mdw.js`):
-  - `isAuth`: Checks `req.session.isAuthenticated`, stores `req.session.retUrl = req.originalUrl`, redirects to `/auth/login`
-  - `isAdmin`: Checks `req.session.authUser?.role === 'admin'`, renders `403` if not admin
-  - `isSeller`: Checks `req.session.authUser?.role === 'seller'` or `'admin'`, renders `403` if not seller/admin
-- **Error middleware** (`/middlewares/error.mdw.js`):
-  - Provides `res.error(message)` method for simple error handling
-  - Automatically sets `req.session.err_messages` and redirects back
-  - Example:
-    ```javascript
-    export function handleError(req, res, next) {
-      res.error = function (message) {
-        req.session.err_messages = Array.isArray(message) ? message : [message];
-        return redirectBack(req, res);
-      };
-      next();
-    }
-    ```
-- **Middleware pattern**:
-  ```javascript
-  export function isAuth(req, res, next) {
-    if (!req.session.isAuthenticated) {
-      req.session.retUrl = req.originalUrl;
-      return res.redirect('/auth/login');
-    }
-    next();
-  }
-  ```
+export async function create(data) {
+  const entity = new Model(data);
+  return await entity.save();
+}
 
-### 4. Session Management
-- User data stored in `req.session.authUser`
-- Authentication flag: `req.session.isAuthenticated`
-- Access user in views via `res.locals.authUser` (set in app.js middleware)
-- Always update session when user data changes
-- **NEVER pass `user` or `authUser` in `res.render()`** - it's already available in all views via `res.locals.authUser`
-- Only pass additional data needed for the view (e.g., `sellerRequest`, `requests`, etc.)
-- In views, always use `{{authUser}}` instead of `{{user}}`
-- When setting `req.session.authUser`, always set the full user object directly: `req.session.authUser = user` - do NOT selectively choose fields or convert `_id` to string
-- **Handlebars is configured with `allowProtoPropertiesByDefault: true` and `allowProtoMethodsByDefault: true`** - Mongoose objects can be passed directly to views without conversion
-- Pass Mongoose objects directly: `res.render('view', { data: mongooseDoc })`
+export async function update(id, data) {
+  return await Model.findByIdAndUpdate(id, data, { new: true });
+}
 
-### 5. Error Handling
-- **Backend validation is primary** - all validation must be done server-side
-- **HTML5 native attributes allowed** - use `required`, `type`, `step`, etc. on inputs for UX (browser-native validation)
-- HTML5 attributes provide immediate feedback but do NOT replace backend validation
-- Pass errors to views via `res.locals.err_messages` (array) for display
-- Use standard HTTP status codes (404, 403, etc.)
-- Error display handled in main layout template
-- **Flash middleware** in `app.js` automatically reads `req.session.err_messages` and sets to `res.locals.err_messages` on each request
-- **Error middleware** (`error.mdw.js`) provides `res.error()` method for simple error handling
-
-#### Error Display Pattern
-- **Simple error handling**: Use `res.error('message')` for all validation errors and logic errors - automatically sets error in session and redirects back
-- **DO NOT validate or handle errors in complex ways** - just throw error with `res.error()` when logic is invalid
-- **DO NOT use `redirectBack()` in controllers** - use `res.error()` instead
-- **When rendering** (for form errors that need to stay on same page): Use `res.locals.err_messages = ['error1', 'error2']` then `res.render('view')` - errors displayed immediately
-- **Window errors**: Set `window.errorMessage` in JavaScript, automatically displayed on page load
-- Multiple errors display as stacked alerts (one per error)
-- Error alerts appear fixed top-right with close button
-- If both errors exist, window error appears below backend errors
-- Error alert structure:
-  - Red background: `bg-red-50`
-  - Red border: `border-red-200`
-  - Red text: `text-red-900`
-  - Rounded corners: `rounded-2xl`
-  - Soft shadow: `shadow-[0_4px_20px_rgba(239,68,68,0.15)]`
-- **Error example** (preferred pattern):
-```javascript
-router.post('/action', async function(req, res) {
-  if (!item) {
-    return res.error('Item not found.');
-  }
-  if (!item.isValid) {
-    return res.error('Item is not valid.');
-  }
-  // Continue with logic...
-});
+export async function remove(id) {
+  return await Model.findByIdAndDelete(id);
+}
 ```
-- **Render example** (only when need to stay on same page):
+
+**Naming conventions:**
+- `findById(id)`, `findByEmail(email)`, `findByName(name)` - Single record
+- `findAll(page, limit, filters)` - Paginated list
+- `create(data)` or `add(data)` - Create new
+- `update(id, data)` - Update existing
+- `remove(id)` - Delete (avoid `delete` keyword)
+- `updateStatus()`, `updatePassword()`, `updateRole()` - Specific updates
+
+**Always return pagination:** `{ items, pagination: { page, limit, total, totalPages } }`
+
+### Middleware (`/middlewares/*.mdw.js`)
 ```javascript
-router.post('/login', async function(req, res) {
-  if (!user) {
-    res.locals.err_messages = ['Invalid email or password.'];
-    return res.render('vwAuth/login');
+// Export individual functions
+export function isAuth(req, res, next) {
+  if (!req.session.isAuthenticated) {
+    req.session.retUrl = req.originalUrl;
+    return res.redirect('/auth/login');
   }
-});
+  next();
+}
+
+export function isAdmin(req, res, next) {
+  if (req.session.authUser?.role !== 'admin') {
+    return res.render('403');
+  }
+  next();
+}
+
+// Error middleware (in app.js)
+export function handleError(req, res, next) {
+  res.error = function (message) {
+    req.session.err_messages = Array.isArray(message) ? message : [message];
+    return redirectBack(req, res);
+  };
+  next();
+}
 ```
-- **Client-side example** (in Handlebars `{{#section "js"}}`):
+
+### Utils (`/utils/*.js`)
 ```javascript
-window.errorMessage = 'Password confirmation does not match.';
-// Page will automatically display this error on load
+// Pure utility functions - no business logic
+export function generateOTP() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+export function redirectBack(req, res, fallback = '/') {
+  const referer = req.get('Referer');
+  return res.redirect(referer || fallback);
+}
+
+export async function sendOTPEmail(email, code, type) {
+  // Email sending logic
+  try {
+    await transporter.sendMail({ from, to: email, subject, text });
+    return true;
+  } catch (error) {
+    console.error('Email error:', error);
+    return false;
+  }
+}
 ```
+
+**Utils:** `otp.js`, `email.js`, `redirect.js`, `recaptcha.js`, `pagination.js`, `db.js`
+
+### Models (`/models/*.js`)
+```javascript
+// Mongoose schemas with timestamps
+import mongoose from 'mongoose';
+
+const schema = new mongoose.Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  role: { type: String, enum: ['bidder', 'seller', 'admin'], default: 'bidder' },
+  parentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', default: null },
+}, { timestamps: true }); // Auto createdAt/updatedAt
+
+export default mongoose.model('Model', schema);
+```
+
+**Rules:**
+- Always `timestamps: true` (auto `createdAt`/`updatedAt`)
+- Use `enum` for role/status fields
+- Use `ref` for ObjectId references
+- Use `default` for optional fields
 
 ---
 
-## Handlebars Templates
+## Session Management
 
-### 1. Template Structure
-- Views in `/views` directory
-- Layout: `/views/layouts/main.handlebars`
-- Use sections for CSS/JS: `{{#section "css"}}...{{/section}}` and `{{#section "js"}}...{{/section}}`
-- Access global data: `{{isAuthenticated}}`, `{{authUser}}`, `{{lcCategories}}`
-- Use helpers: `{{format_currency value}}`, `{{formatDate date}}`, `{{#for from to incr}}...{{/for}}`
-- **Indentation**: All Handlebars templates (.handlebars files) must use **2 spaces** for indentation (not tabs, not 4 spaces)
-- **No blank lines**: Remove all unnecessary blank lines in Handlebars files - keep code compact and consistent
-- **Consistent formatting**: All .handlebars files follow a single uniform style without excessive whitespace
-- **HTML element formatting rules**:
-  - Each HTML attribute must be on a separate line
-  - Applies to ALL elements: `<form>`, `<input>`, `<select>`, `<button>`, `<textarea>`, `<a>`, `<div>` (when having multiple attributes)
-  - Opening tag on first line, attributes indented by 2 spaces, closing `>` on same line as last attribute
-  - Example:
-    ```handlebars
+```javascript
+// Set session
+req.session.isAuthenticated = true;
+req.session.authUser = user; // Full Mongoose object
+
+// Access in routes
+const userId = req.session.authUser._id;
+
+// Access in views
+{{authUser.name}} // Already in res.locals.authUser
+
+// Temporary data
+req.session.registerData = { name, email, password };
+delete req.session.registerData; // Cleanup after use
+```
+
+**Rules:**
+- **NEVER pass `authUser` to `res.render()`** - already in `res.locals`
+- Pass Mongoose objects directly (configured to allow proto properties)
+- Update session when user data changes
+
+---
+
+## Error Handling
+
+**Preferred pattern (redirects back):**
+```javascript
+if (!item) return res.error('Item not found.');
+```
+
+**For forms (stays on page):**
+```javascript
+res.locals.err_messages = ['Invalid email or password.'];
+return res.render('vwAuth/login');
+```
+
+**Client-side (JS):**
+```javascript
+window.errorMessage = 'Password mismatch.';
+// Auto-displays on page load
+```
+
+**Error display:** Fixed top-right, red alerts, `bg-red-50 border-red-200 text-red-900 rounded-2xl`
+
+---
+
+## Handlebars Templates (`/views/*.handlebars`)
+
+### Formatting Rules (STRICT)
+```handlebars
+{{!-- 2 spaces indentation, NO blank lines --}}
+<form
+  method="post"
+  action="/path"
+  id="formId"
+  class="space-y-6"
+>
+  <div class="relative mb-6">
+    <label for="name" class="block text-sm font-medium text-gray-900 mb-2">Name</label>
     <input
       type="text"
       id="name"
       name="name"
-      class="w-full px-4 py-4..."
+      class="w-full px-4 py-4 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
       placeholder="Enter name"
+      {{#if user}}
+        value="{{user.name}}"
+      {{/if}}
       required
     />
-    ```
-- **Handlebars logic formatting**:
-  - Break inline conditionals into multi-line blocks for clarity
-  - Each Handlebars block on separate line when inside HTML attributes
-  - ❌ Bad: `value="{{#if category}}{{category.name}}{{/if}}"`
-  - ✅ Good:
-    ```handlebars
-    {{#if category}}
-      value="{{category.name}}"
-    {{/if}}
-    ```
-- **Form element formatting**:
-  - All `<form>` elements must have attributes on separate lines
-  - Example:
-    ```handlebars
-    <form
-      method="post"
-      action="/path"
-      id="formId"
-      class="space-y-6"
-    >
-    ```
-
-### 2. Template Naming
-- View directories: `vwAccount/`, `vwAdmin/`
-- File names: lowercase with hyphens (e.g., `register.handlebars`, `login.handlebars`, `seller-requests.handlebars`)
-- View paths match route structure: `/auth/login` → `vwAccount/login.handlebars`
-
-### 3. Form Handling
-- **Use proper HTTP methods** - POST for create, PUT for update, DELETE for delete
-- **method-override is configured** - use `method="post"` with hidden `_method` input for PUT/DELETE
-- Forms use `method="post"` with standard HTML form submission
-- **Backend validation is primary** - all validation must be done server-side using express-validator
-- **HTML5 native attributes are allowed** - use `required`, `name`, `type`, `step` (for numbers), `min`, `max`, `pattern`, etc. on form inputs for better UX and browser-native validation
-- These HTML5 attributes provide immediate user feedback but do NOT replace backend validation
-- Form fields use standard `name` attributes matching backend expectations
-- Submit buttons use `type="submit"`
-- **Delete actions require confirmation** - always add `onsubmit="return confirm('Are you sure you want to delete this item?');"` to delete forms
-- Example: `<input type="text" name="username" required />` - `required` improves UX, but backend must still validate
-- Example create form:
-```handlebars
-<form method="post" action="/admin/resource/create">
-  <!-- form fields -->
-  <button type="submit">Create</button>
+  </div>
+  <button
+    type="submit"
+    class="w-full px-6 py-4 bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
+  >
+    Submit
+  </button>
 </form>
 ```
-- Example edit form (with PUT method):
+
+**MUST follow:**
+- **Each HTML attribute on separate line** (form, input, select, button, a, div)
+- **2 spaces indentation** (not tabs, not 4 spaces)
+- **NO blank lines** - keep compact
+- **Handlebars logic on separate lines** (not inline)
+- ❌ Bad: `<input type="text" id="name" name="name" class="..." required />`
+- ✅ Good: Each attribute on new line (see example above)
+
+### Form Methods
 ```handlebars
-<form method="post" action="/admin/resource/{{resource._id}}">
+{{!-- POST for create --}}
+<form method="post" action="/admin/resource">
+
+{{!-- PUT for update --}}
+<form method="post" action="/admin/resource/{{id}}">
   <input type="hidden" name="_method" value="PUT">
-  <!-- form fields -->
-  <button type="submit">Update</button>
-</form>
-```
-- Example delete form (with DELETE method):
-```handlebars
-<form method="post" action="/admin/resource/{{id}}" onsubmit="return confirm('Are you sure you want to delete this item?');">
+
+{{!-- DELETE (with confirmation) --}}
+<form
+  method="post"
+  action="/admin/resource/{{id}}"
+  onsubmit="return confirm('Are you sure?');"
+>
   <input type="hidden" name="_method" value="DELETE">
-  <button type="submit">Delete</button>
-</form>
 ```
+
+### Validation
+- **Backend validation is PRIMARY** (express-validator)
+- **HTML5 attributes for UX only**: `required`, `type`, `step`, `min`, `max`, `pattern`
+- Backend MUST validate even if HTML5 validates
 
 ---
 
-## Database Patterns (MongoDB/Mongoose)
+## UI/UX Design System (Apple-like)
 
-### 1. Query Patterns
-- Use Mongoose models: `Model.find()`, `Model.findById()`, `Model.findOne()`
-- Common operations:
-  - `findByX(value)`: Single record lookup using `.findOne({ field: value })`
-  - `findById(id)`: Get by ID using `.findById(id)`
-  - `add(entity)`: Insert new record using `new Model(entity).save()`
-  - `update(id, entity)`: Update existing record using `.findByIdAndUpdate(id, entity, { new: true })`
-  - `updateMany(filter, update)`: Bulk update using `.updateMany(filter, update)`
-- Use `.findOne()` for single record queries
-- Populate related documents: `.populate('field', 'select fields')`
-- Sort results: `.sort({ field: -1 })` (use `createdAt` for timestamps, not custom date fields)
-- Always use `{ new: true }` option with `findByIdAndUpdate` to return updated document
-- **Pagination is default** - all list queries should support pagination with `page` and `limit` parameters
-- Pagination pattern: return `{ data, pagination: { page, limit, total, totalPages } }` from service functions
+### Design Tokens
+```css
+/* Containers */
+bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60
 
-### 2. Database Connection
-- Connection config in `/utils/db.js`
-- Use Mongoose: `import mongoose from 'mongoose'`
-- Models in `/models` directory
-- Always use async/await for database operations
-- Import models: `import ModelName from '../models/ModelName.js'`
+/* Buttons - Primary/Action */
+bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] 
+hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out
 
-### 3. Mongoose Schema Patterns
-- Always use `timestamps: true` in schema options for automatic `createdAt` and `updatedAt`
-- Do NOT manually define `createdAt` field when using `timestamps: true`
-- Use `enum` for role/status fields: `enum: ['value1', 'value2']`
-- Use `default` values for optional fields
-- Use `ref` for ObjectId references: `ref: 'ModelName'`
-- Use `index: { expireAfterSeconds: 0 }` for TTL indexes (e.g., OTP expiration)
+/* Buttons - Destructive (delete, deny) */
+bg-red-600 text-white border border-red-600 rounded-xl 
+shadow-[0_4px_20px_rgba(239,68,68,0.3)] hover:bg-red-700 hover:scale-105
+
+/* Inputs */
+w-full px-4 py-4 border border-gray-200/60 rounded-2xl 
+focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300
+
+/* Typography */
+Titles: text-[28px] font-semibold text-gray-900
+Body: text-gray-600
+```
+
+**Rules:**
+- **Pure Tailwind only** - NO custom CSS, NO DaisyUI
+- **Lots of whitespace** - generous padding/margins
+- **Large rounded corners** - `rounded-2xl`, `rounded-3xl`
+- **Soft shadows** - `shadow-[0_4px_20px_rgba(...)]`
+- **Smooth transitions** - `transition-all duration-300 ease-out`
+- **Always include hover scale** - `hover:scale-105`
 
 ---
 
-## UI/UX Guidelines (Apple-like Design)
+## Pagination (Default for ALL lists)
 
-### 1. Design Philosophy
-- **Clean, minimal, premium** aesthetic like Apple.com
-- **Lots of whitespace** - generous padding and margins
-- **Large rounded corners**: `rounded-2xl` or `rounded-3xl`
-- **Soft shadows**: `shadow-[0_4px_20px_rgba(0,0,0,0.08)]`
-- **Smooth transitions**: `transition-all duration-300 ease-out`
-- **Subtle gradients**: `from-gray-50 to-white`, `from-slate-50`
-- **Thin borders**: `border border-gray-200/60`
-
-### 2. Typography
-- Font: Inter or SF Pro style (system fonts: `font-sans`)
-- Titles: `text-[28px] font-semibold text-gray-900`
-- Body text: `text-gray-600`
-- Use semantic HTML with Tailwind classes
-
-### 3. Buttons
-- **Primary/Action buttons and links**: blue background (Tailwind blue-600), white text - this is the default for all action buttons
-- **Destructive buttons** (logout, delete, deny): red background with red border - keep red for destructive actions
-- Hover effects: `hover:bg-blue-700` + `hover:scale-105` + shadow (always include scale effect)
-- Shape: `rounded-xl`
-- Example pattern for primary buttons:
-```handlebars
-<button type="submit" class="w-full px-6 py-4 bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium">
-  Submit
-</button>
-```
-- Example pattern for action links:
-```handlebars
-<a href="/path" class="px-6 py-3 bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium">
-  Action Link
-</a>
-```
-
-### 4. Form Inputs (iOS-style Floating Labels)
-- Floating label style (iOS form aesthetic)
-- Focus state: `focus:ring-2 focus:ring-black/10`
-- Large padding, rounded corners
-- Use HTML5 native attributes: `required`, `type`, `step` (for numbers), `min`, `max`, etc.
-- Example pattern:
-```handlebars
-<div class="relative mb-6">
-  <label for="username" class="block text-sm font-medium text-gray-900 mb-2">Username</label>
-  <input type="text" id="username" name="username" 
-    class="w-full px-4 py-4 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900" 
-    placeholder="Enter username"
-    required />
-</div>
-```
-- For number inputs with step:
-```handlebars
-<input type="number" id="price" name="price" 
-  class="w-full px-4 py-4 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900" 
-  placeholder="Enter price"
-  step="0.01"
-  min="0"
-  required />
-```
-
-### 5. Layout & Spacing
-- Grid-based layouts
-- Spacing: `gap-6` (24px) or `gap-8` (32px)
-- Container: `max-w-7xl mx-auto px-6` or similar
-- Section padding: `py-12` or `py-16`
-
-### 6. Code Rules for UI
-- **Use pure Tailwind** - NO custom CSS unless absolutely necessary
-- **NO DaisyUI** - use only Tailwind utility classes
-- Keep components modular & reusable
-- Keep all classes short, clear, and consistent
-- Use Tailwind's responsive utilities: `md:`, `lg:`, etc.
-
-### 7. Card/Container Pattern
-```handlebars
-<div class="max-w-2xl mx-auto my-20 p-8 bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60">
-  <!-- Content -->
-</div>
-```
-
----
-
-## Code Style & Conventions
-
-### 1. Language
-- **All code, comments, and UI text in English**
-- Variable names, function names, comments: English only
-- User-facing text: English only
-
-### 2. Naming Conventions
-- Functions: camelCase (`findByUsername`, `isAuthenticated`)
-- Files: lowercase with hyphens (`account.route.js`, `auth.mdw.js`)
-- Database tables: lowercase, plural (`users`, `courses`)
-- Handlebars views: lowercase with hyphens (`signup.handlebars`)
-
-### 3. Code Organization
-- **Routes**: `/routes/*.route.js`
-  - Main route index: `/routes/index.js` - imports and mounts all sub-routers
-  - Sub-route index: `/routes/admin/index.js` - imports and mounts admin sub-routers
-  - Route files follow pattern: `resource.route.js` (e.g., `auth.route.js`, `account.route.js`)
-  - Admin routes in `/routes/admin/` directory (e.g., `categories.route.js`, `seller-requests.route.js`)
-- **Services**: `/services/*.service.js`
-  - Follow pattern: `resource.service.js` (e.g., `user.service.js`, `category.service.js`)
-  - Export individual async functions
-- **Models**: `/models/*.js` (Mongoose schemas)
-  - Follow pattern: `ResourceName.js` (e.g., `User.js`, `Category.js`)
-- **Middleware**: `/middlewares/*.mdw.js`
-  - Follow pattern: `name.mdw.js` (e.g., `auth.mdw.js`, `error.mdw.js`)
-  - Export individual functions
-- **Views**: `/views/vw*/`
-  - Organized by feature: `vwAuth/`, `vwAccount/`, `vwAdmin/`
-- **Utils**: `/utils/*.js` (utility functions)
-  - Examples: `otp.js`, `email.js`, `db.js`, `pagination.js`, `redirect.js`, `recaptcha.js`
-  - Pure utility functions - no business logic
-  - Export individual functions (sync or async)
-- Never duplicate utility functions - create shared utils instead
-
-### 4. Async/Await
-- Always use `async/await` for asynchronous operations
-- Use `return await` in service functions for consistency
-- Use `try/catch` only when specific error handling is needed (e.g., email sending)
-- Let Express handle default errors for validation failures
-- GET routes that don't need async can use regular `function(req, res)`
-
-### 5. Comments
-- **Minimize comments** - code should be self-explanatory through clear naming and structure
-- **Only comment when absolutely necessary** - for complex business logic, non-obvious algorithms, or critical edge cases
-- **Avoid obvious comments** - don't comment what the code clearly shows (e.g., `// Allow empty string`, `// Convert to string`, `// Check if exists`)
-- **Code should be self-documenting** - use descriptive variable names and function names instead of comments
-- **Long code is fine** - prefer longer, clear code over short code with comments
-- **TODO comments are acceptable** - for future implementation notes
-
----
-
-## Validation & Security
-
-### 1. Validation Rules
-- **Backend validation is primary** - validate all inputs server-side using express-validator
-- **HTML5 native attributes allowed** - use `required`, `type`, `step`, `min`, `max`, `pattern` on inputs for UX improvement
-- HTML5 attributes provide browser-native validation feedback but do NOT replace backend validation
-- Use express-validator with `body()` validation chain
-- Chain validation in one line, do NOT use `withMessage()` - use default messages
-- Validation middleware: `handleValidationErrors(viewName, getViewData?)` in `/middlewares/validation.mdw.js`
-- All validation errors collected in array: `res.locals.err_messages = ['error1', 'error2']`
-- Return errors immediately to the same view with `res.render()`
-- **Validation example**:
-```javascript
-import { body } from 'express-validator';
-import { handleValidationErrors } from '../middlewares/validation.mdw.js';
-
-router.post('/register', [
-  body('name').trim().isLength({ min: 2, max: 100 }),
-  body('email').trim().isEmail().normalizeEmail(),
-  body('password').isLength({ min: 6, max: 50 }),
-  body('confirmPassword').custom((value, { req }) => {
-    if (value !== req.body.password) {
-      throw new Error('Password confirmation does not match.');
-    }
-    return true;
-  }),
-  handleValidationErrors('vwAccount/register'),
-], async function(req, res) {
-  // Route handler
-});
-```
-
-### 2. Authentication
-- Use `bcryptjs` for password hashing: `bcrypt.hashSync(password, 10)`
-- Compare passwords: `bcrypt.compareSync(plainPassword, hashedPassword)`
-- Store hashed passwords only
-- Session-based authentication (no JWT)
-- User roles: `'bidder'`, `'seller'`, `'admin'`
-
-### 3. Security Best Practices
-- Mongoose handles parameterized queries automatically
-- Sanitize user inputs via express-validator (`.trim()`, `.normalizeEmail()`)
-- Use `express.urlencoded({ extended: true })` for form data
-- Set secure session cookies in production
-
----
-
-## Common Patterns
-
-### 1. Utility Functions Pattern
-**Utils are pure utility functions with no business logic**
-- **OTP Generation** (`/utils/otp.js`):
-  ```javascript
-  export function generateOTP() {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-  }
-  ```
-- **Email Service** (`/utils/email.js`):
-  ```javascript
-  export async function sendOTPEmail(email, code, type) {
-    const subject = type === 'email_verification' ? 'Email Verification Code' : 'Password Reset Code';
-    const text = `Your code is: ${code}. This code will expire in 10 minutes.`;
-    try {
-      await transporter.sendMail({ from, to: email, subject, text });
-      return true;
-    } catch (error) {
-      console.error('Email sending error:', error);
-      return false;
-    }
-  }
-  ```
-- **Redirect Utility** (`/utils/redirect.js`):
-  ```javascript
-  export function redirectBack(req, res, fallback = '/') {
-    const referer = req.get('Referer') || req.get('referer');
-    if (referer) {
-      return res.redirect(referer);
-    }
-    return res.redirect(fallback);
-  }
-  ```
-- **Usage in routes**:
-  ```javascript
-  import { generateOTP } from '../utils/otp.js';
-  import * as emailService from '../utils/email.js';
-  
-  const otpCode = generateOTP();
-  await otpService.createOTP(email, otpCode, 'email_verification');
-  await emailService.sendOTPEmail(email, otpCode, 'email_verification');
-  ```
-
-### 2. Form Submission Pattern with Validation
-```javascript
-import { body } from 'express-validator';
-import { handleValidationErrors } from '../middlewares/validation.mdw.js';
-
-router.post('/path', [
-  body('field').trim().isLength({ min: 2, max: 100 }),
-  body('email').trim().isEmail().normalizeEmail(),
-  handleValidationErrors('vwAccount/view-name'),
-], async function(req, res) {
-  // Process form data from req.body
-  // Additional business logic validation
-  // Save to database via service
-  // Redirect or render with result
-});
-```
-
-### 3. Protected Route Pattern
-```javascript
-router.get('/protected', isAuth, async function(req, res) {
-  // Access req.session.authUser
-  // DO NOT pass authUser - it's already in res.locals.authUser
-  const additionalData = await getSomeData();
-  res.render('view', { additionalData });
-});
-```
-
-### 4. Admin Route Pattern
-```javascript
-router.get('/admin', isAuth, isAdmin, async function(req, res) {
-  // Admin-only logic
-  res.render('vwAdmin/view-name', { data });
-});
-```
-
-### 5. Session Data Pattern
-```javascript
-// Store temporary data in session
-req.session.registerData = { name, email, password };
-req.session.forgotPasswordEmail = { email };
-req.session.emailChangeData = { userId, newEmail };
-
-// Clean up after use
-delete req.session.registerData;
-```
-
-### 6. Error Handling Pattern
-```javascript
-// Use res.error() for simple error handling (preferred)
-return res.error('Error message here.');
-
-// For rendering with errors on same page
-res.locals.err_messages = ['Error message here.'];
-return res.render('vwAccount/view-name');
-
-// Multiple errors (from validation)
-// Automatically handled by handleValidationErrors middleware
-```
-
-### 7. Pagination Pattern
-**All list views must have pagination by default** - 10 items per page
-- Service function pattern:
+**Service:**
 ```javascript
 export async function findAll(page = 1, limit = 10) {
   const skip = (page - 1) * limit;
-  const items = await Model.find().sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit);
+  const items = await Model.find().sort({ createdAt: -1 }).skip(skip).limit(limit);
   const total = await Model.countDocuments();
-  return {
-    items,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-    },
-  };
+  return { items, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } };
 }
 ```
-- Route pattern:
+
+**Route:**
 ```javascript
-router.get('/list', async function(req, res) {
+router.get('/', async function(req, res) {
   const page = parseInt(req.query.page) || 1;
   const result = await service.findAll(page, 10);
-  res.render('view', { 
-    ...result,
-  });
+  res.render('view', { ...result });
 });
 ```
-- View pattern (use Handlebars `pagination` helper):
+
+**View:**
 ```handlebars
 {{#if items.length}}
-  <!-- Table or list content -->
+  {{!-- Content --}}
   <div class="p-6">
     {{{pagination pagination.page pagination.totalPages pagination.total}}}
   </div>
@@ -602,27 +376,11 @@ router.get('/list', async function(req, res) {
 {{/if}}
 ```
 
-### 8. Route Index Pattern
-**Main route index** (`/routes/index.js`) - imports and mounts all routers:
-```javascript
-import express from 'express';
-import authRouter from './auth.route.js';
-import accountRouter from './account.route.js';
-import adminRouter from './admin/index.js';
-import { isAuth, isAdmin } from '../middlewares/auth.mdw.js';
+---
 
-const router = express.Router();
+## Admin Patterns
 
-router.use('/auth', authRouter);
-router.use('/account', isAuth, accountRouter);
-router.use('/admin', isAuth, isAdmin, adminRouter);
-
-export default router;
-```
-
-### 9. Admin Route Patterns
-**Admin routes use nested router structure** - admin index in `/routes/admin/index.js`, sub-routers in `/routes/admin/`
-- Admin index pattern (`/routes/admin/index.js`):
+### Admin Index (`/routes/admin/index.js`)
 ```javascript
 import express from 'express';
 import sellerRequestsRouter from './seller-requests.route.js';
@@ -640,186 +398,146 @@ router.use('/categories', categoriesRouter);
 export default router;
 ```
 
-- **Admin list route pattern** (index page):
+### Admin CRUD Pattern
 ```javascript
-router.get('/', isAuth, isAdmin, async function(req, res) {
+// List
+router.get('/', async function(req, res) {
   const page = parseInt(req.query.page) || 1;
   const result = await service.findAll(page, 10);
-  
-  res.render('vwAdmin/resource/index', { 
-    items: result.data,
-    pagination: result.pagination ? {
-      page: result.pagination.page,
-      totalPages: result.pagination.totalPages,
-      baseUrl: '/admin/resource',
-      total: result.pagination.total,
-    } : null,
-  });
+  res.render('vwAdmin/resource/index', { ...result });
 });
-```
-- **DO NOT pass redundant data** - views should check `items.length` directly, not `hasData`
-- **DO NOT pass unused data** - avoid `actionButton`, `showForm`, `backUrl` if views hardcode these values
 
-- **Admin form route pattern** (create):
-  - **Separate views required** - create and edit must have separate view files
-  - Create view: `vwAdmin/resource/create.handlebars`
-  - Edit view: `vwAdmin/resource/edit.handlebars`
-  - **DO NOT use shared form view** - always create separate views for create and edit
-```javascript
-router.get('/create', isAuth, isAdmin, function(req, res) {
+// Create GET
+router.get('/create', function(req, res) {
   res.render('vwAdmin/resource/create');
 });
 
-router.post('/create', [
-  body('field').trim().isLength({ min: 1, max: 100 }),
-  handleValidationErrors('vwAdmin/resource/create', (req) => {
-    return { 
-      resource: {
-        field: req.body.field || '',
-      },
-    };
-  }),
-], isAuth, isAdmin, async function(req, res) {
+// Create POST
+router.post('/create', async function(req, res) {
   await service.create(req.body);
   res.redirect('/admin/resource');
 });
-```
 
-- **Admin form route pattern** (edit):
-  - **Use PUT method** - route must use `router.put('/:id', ...)` not `router.post('/:id/edit', ...)`
-  - **Separate edit view** - use `vwAdmin/resource/edit.handlebars` not shared form
-```javascript
-router.get('/:id/edit', isAuth, isAdmin, async function(req, res) {
+// Edit GET
+router.get('/:id/edit', async function(req, res) {
   const resource = await service.findById(req.params.id);
-  if (!resource) {
-    return res.status(404).render('404');
-  }
-  res.render('vwAdmin/resource/edit', { 
-    resource,
-  });
+  if (!resource) return res.status(404).render('404');
+  res.render('vwAdmin/resource/edit', { resource });
 });
 
-router.put('/:id', [
-  body('field').trim().isLength({ min: 1, max: 100 }),
-  handleValidationErrors('vwAdmin/resource/edit', async (req) => {
+// Update PUT
+router.put('/:id', async function(req, res) {
     const resource = await service.findById(req.params.id);
-    if (!resource) {
-      return { resource: null };
-    }
-    return { 
-      resource: {
-        _id: resource._id,
-        field: req.body.field || resource.field,
-      },
-    };
-  }),
-], isAuth, isAdmin, async function(req, res) {
-  const { id } = req.params;
-  const resource = await service.findById(id);
-  if (!resource) {
-    return res.status(404).render('404');
-  }
-  await service.update(id, req.body);
+  if (!resource) return res.status(404).render('404');
+  await service.update(req.params.id, req.body);
+  res.redirect('/admin/resource');
+});
+
+// Delete DELETE
+router.delete('/:id', async function(req, res) {
+  const resource = await service.findById(req.params.id);
+  if (!resource) return res.error('Resource not found.');
+  await service.remove(req.params.id);
   res.redirect('/admin/resource');
 });
 ```
 
-- **Admin delete route pattern**:
-  - **Use DELETE method** - route must use `router.delete('/:id', ...)` not `router.post('/:id/delete', ...)`
-```javascript
-router.delete('/:id', isAuth, isAdmin, async function(req, res) {
-  const { id } = req.params;
-  const resource = await service.findById(id);
-  if (!resource) {
-    res.locals.err_messages = ['Resource not found.'];
-    return res.redirect('/admin/resource');
-  }
-  // Additional validation (e.g., check if resource can be deleted)
-  await service.remove(id);
-  res.redirect('/admin/resource');
-});
-```
-
-- **Admin action route pattern** (approve/deny):
-```javascript
-router.post('/:id/action', isAuth, isAdmin, async function(req, res) {
-  const resourceId = req.params.id;
-  const resource = await service.findById(resourceId);
-  
-  if (!resource || resource.status !== 'expected-status') {
-    res.locals.err_messages = ['Resource not found or already processed.'];
-    return res.redirect('/admin/resource');
-  }
-  
-  await service.updateStatus(resourceId, 'new-status', req.session.authUser._id);
-  res.redirect('/admin/resource');
-});
-```
-
-- **Admin view layout pattern**:
-  - Use `{{#> admin-management-layout activeMenu='menu-key'}}` for all admin views
-  - Layout uses `management-layout` partial with sidebar navigation
-  - Menu items defined in layout using `menuItem` helper: `(menuItem 'key' 'Label' '/url' 'icon-class')`
-  - Active menu determined by `activeMenu` parameter matching menu item `key`
-
-- **Admin view structure**:
-  - List views: Title + Action button (if needed) → Table/List → Pagination
-  - Form views: Title + Back link → Form → Submit button
-  - Use `{{#if items.length}}` to check if data exists (not `hasData`)
-  - Empty state: centered icon + message in card container
-
----
-
-## File Structure Reference
-```
-/
-├── app.js                 # Main Express app, middleware setup
-├── routes/                # Route handlers
-│   ├── auth.route.js
-│   ├── account.route.js
-│   ├── admin.route.js
-│   └── ...
-├── services/              # Database operations
-│   ├── user.service.js
-│   ├── otp.service.js
-│   ├── seller-request.service.js
-│   └── ...
-├── models/                # Mongoose models
-│   ├── User.js
-│   ├── OTP.js
-│   ├── SellerRequest.js
-│   └── ...
-├── middlewares/           # Express middleware
-│   ├── auth.mdw.js
-│   └── validation.mdw.js
-├── utils/                 # Utilities
-│   ├── db.js             # Mongoose connection
-│   ├── email.js          # Email service (nodemailer)
-│   └── otp.js            # OTP generation utility
-└── views/                 # Handlebars templates
-    ├── layouts/
-    │   └── main.handlebars
-    └── vw*/
+**Admin View Layout:**
+```handlebars
+{{#> admin-management-layout activeMenu='categories'}}
+  <div class="mb-8">
+    <h1 class="text-[36px] font-semibold text-gray-900">Title</h1>
+  </div>
+  {{!-- Content --}}
+{{/admin-management-layout}}
 ```
 
 ---
 
-## Important Reminders
-1. **Backend validation is primary** - all validation must be done server-side using express-validator. HTML5 native attributes (`required`, `type`, `step`, etc.) are allowed for UX but do NOT replace backend validation
-2. **NO DaisyUI** - use Tailwind only
-3. **Apple-like UI** - clean, minimal, premium, lots of whitespace
-4. **English only** - code, comments, UI text
-5. **Use express-validator** - chain validation in one line, no `withMessage()`, use default messages
-6. **Multiple errors** - use `res.locals.err_messages` (array) not `err_message` (string)
-7. **MongoDB/Mongoose** - not PostgreSQL/Knex
-8. **Backend validation is primary** - validate server-side. HTML5 native attributes allowed for UX
-9. **Use timestamps: true** - don't manually define `createdAt` in Mongoose schemas
-10. **No duplicate code** - extract shared utilities (e.g., `generateOTP`) to `/utils`
-11. **Consistent async pattern** - use `return await` in service functions
-12. **Session cleanup** - always `delete` session data after use
-13. **Delete confirmation required** - always add `onsubmit="return confirm('...');"` to delete forms
-14. **Pagination is default** - all list views must have pagination (10 items per page)
-15. **Use proper HTTP methods** - POST for create, PUT for update, DELETE for delete. Use method-override with `_method` hidden input in forms
-16. **Separate create/edit views** - always create separate view files (`create.handlebars` and `edit.handlebars`), never use shared form view
-17. **Act as senior engineer** - write clean, maintainable, production-ready code
+## Code Style
 
+### Naming Conventions
+- **Functions:** camelCase (`findByUsername`, `isAuthenticated`)
+- **Files:** kebab-case (`account.route.js`, `auth.mdw.js`, `login.handlebars`)
+- **DB collections:** lowercase plural (`users`, `categories`)
+- **Mongoose models:** PascalCase (`User.js`, `Category.js`)
+
+### Organization
+```
+/routes/*.route.js          # Routes (auth, account, admin/*)
+/services/*.service.js      # DB operations (user, category, otp)
+/models/*.js                # Mongoose schemas (User, Category, OTP)
+/middlewares/*.mdw.js       # Middleware (auth, error)
+/utils/*.js                 # Utilities (otp, email, redirect, pagination)
+/views/vw*/*.handlebars     # Views by feature (vwAuth, vwAccount, vwAdmin)
+```
+
+### Async/Await
+- Always use `async/await`
+- Services: `return await Model.find()`
+- Routes: `async function(req, res)`
+- Utils: `async` only when needed
+
+### Comments
+- **Minimize comments** - code should be self-explanatory
+- **Only comment complex logic** - algorithms, edge cases
+- **No obvious comments** - don't state what code shows
+- **TODO comments OK** - for future notes
+
+---
+
+## Security & Validation
+
+### Validation (express-validator)
+```javascript
+import { body } from 'express-validator';
+import { handleValidationErrors } from '../middlewares/validation.mdw.js';
+
+router.post('/register', [
+  body('name').trim().isLength({ min: 2, max: 100 }),
+  body('email').trim().isEmail().normalizeEmail(),
+  body('password').isLength({ min: 6, max: 50 }),
+  handleValidationErrors('vwAuth/register'),
+], async function(req, res) {
+  // Handler
+});
+```
+
+### Authentication
+- **bcryptjs:** `bcrypt.hashSync(password, 10)`, `bcrypt.compareSync(plain, hashed)`
+- **Session-based:** No JWT
+- **Roles:** `'bidder'`, `'seller'`, `'admin'`
+
+---
+
+## Quick Reference Files
+
+**Before coding, read these for reference:**
+- Routes: `/routes/auth.route.js`, `/routes/admin/categories.route.js`
+- Services: `/services/user.service.js`, `/services/category.service.js`
+- Views: `/views/vwAuth/login.handlebars`, `/views/vwAdmin/categories/index.handlebars`
+- Utils: `/utils/otp.js`, `/utils/email.js`, `/utils/redirect.js`
+
+---
+
+## Critical Reminders
+
+1. ✅ **Read 1-2 related files before writing code**
+2. ✅ **Match existing style exactly** (indentation, naming, patterns)
+3. ✅ **Backend validation is primary** (HTML5 for UX only)
+4. ✅ **Use `res.error()` for errors** (not manual redirectBack)
+5. ✅ **Never pass `authUser` to views** (already in `res.locals`)
+6. ✅ **Separate create/edit views** (no shared forms)
+7. ✅ **Use proper HTTP methods** (POST/PUT/DELETE)
+8. ✅ **All lists have pagination** (10 items/page)
+9. ✅ **Each HTML attribute on separate line**
+10. ✅ **Pure Tailwind only** (no DaisyUI, no custom CSS)
+11. ✅ **Apple-like design** (whitespace, rounded corners, soft shadows)
+12. ✅ **Delete forms need confirmation** (`onsubmit="return confirm(...)"`)
+13. ✅ **Timestamps: true** (no manual `createdAt`)
+14. ✅ **English only** (code, comments, UI)
+15. ✅ **Act as senior engineer** (clean, maintainable, production-ready)
+
+---
+
+**Remember: CONSISTENCY IS KEY. Always read existing files first to match the style!**
