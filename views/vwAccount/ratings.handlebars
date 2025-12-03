@@ -1,0 +1,63 @@
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <div class="mb-8">
+    <h1 class="text-[36px] font-semibold text-gray-900 mb-6">My Ratings</h1>
+    <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-6">
+      <div class="grid grid-cols-3 gap-6 text-center">
+        <div>
+          <p class="text-gray-600 mb-2">Total Ratings</p>
+          <p class="text-gray-900 font-bold text-3xl">{{stats.total}}</p>
+        </div>
+        <div>
+          <p class="text-gray-600 mb-2">Positive</p>
+          <p class="text-green-600 font-bold text-3xl">{{stats.positive}}</p>
+        </div>
+        <div>
+          <p class="text-gray-600 mb-2">Rating Score</p>
+          <p class="text-blue-600 font-bold text-3xl">{{stats.percent}}%</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  {{#if items.length}}
+    <div class="space-y-6 mb-8">
+      {{#each items}}
+        <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-6">
+          <div class="flex items-start gap-4">
+            <div class="flex-shrink-0">
+              {{#if (eq rating 1)}}
+                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <i class="fas fa-thumbs-up text-green-600 text-xl"></i>
+                </div>
+              {{else}}
+                <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                  <i class="fas fa-thumbs-down text-red-600 text-xl"></i>
+                </div>
+              {{/if}}
+            </div>
+            <div class="flex-1">
+              <div class="flex justify-between items-start mb-2">
+                <div>
+                  <p class="text-gray-900 font-semibold">From: {{fromUserId.name}}</p>
+                  <p class="text-gray-600 text-sm">Product: {{productId.name}}</p>
+                </div>
+                <p class="text-gray-400 text-sm">{{formatDate createdAt}}</p>
+              </div>
+              {{#if comment}}
+                <p class="text-gray-600 mt-2">{{comment}}</p>
+              {{/if}}
+            </div>
+          </div>
+        </div>
+      {{/each}}
+    </div>
+    <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-6">
+      {{{pagination pagination.page pagination.totalPages pagination.total}}}
+    </div>
+  {{else}}
+    <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-12 text-center">
+      <i class="fas fa-star text-gray-400 text-6xl mb-4"></i>
+      <p class="text-gray-600 text-lg">You haven't received any ratings yet.</p>
+    </div>
+  {{/if}}
+</div>
+

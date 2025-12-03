@@ -1,0 +1,40 @@
+<div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <div class="mb-8">
+    <h1 class="text-[36px] font-semibold text-gray-900 mb-2">Append Description</h1>
+    <p class="text-gray-600">{{product.name}}</p>
+    <a
+      href="/products/{{product._id}}"
+      class="text-blue-600 hover:underline mt-2 inline-block"
+    >
+      ← Back to Product
+    </a>
+  </div>
+  <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-8">
+    <form
+      method="post"
+      action="/seller/products/{{product._id}}/append"
+      class="space-y-6"
+    >
+      <div class="relative mb-6">
+        <label for="description" class="block text-sm font-medium text-gray-900 mb-2">Additional Description</label>
+        <textarea
+          id="description"
+          name="description"
+          rows="8"
+          class="w-full px-4 py-4 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
+          placeholder="Enter additional information to append to the description"
+          required
+          autofocus
+        ></textarea>
+        <p class="text-gray-500 text-sm mt-2">This will be added to the existing description with a timestamp.</p>
+      </div>
+      <button
+        type="submit"
+        class="w-full px-6 py-4 bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
+      >
+        Append Description
+      </button>
+    </form>
+  </div>
+</div>
+

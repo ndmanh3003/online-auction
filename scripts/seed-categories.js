@@ -3,14 +3,8 @@ import './../utils/db.js';
 import Category from '../models/Category.js';
 import mongoose from 'mongoose';
 
-const seedCategories = async () => {
+export const seedCategories = async () => {
   try {
-    if (mongoose.connection.readyState === 0) {
-      await new Promise(resolve => {
-        mongoose.connection.once('connected', resolve);
-      });
-    }
-
     console.log('Starting category seed...');
 
     await Category.deleteMany({});
@@ -99,11 +93,9 @@ const seedCategories = async () => {
 
     console.log(`Total categories created: ${await Category.countDocuments()}`);
 
-    process.exit(0);
+    return { collectibles, art, luxury };
   } catch (error) {
     console.error('Error seeding categories:', error);
-    process.exit(1);
+    throw error;
   }
 };
-
-seedCategories();

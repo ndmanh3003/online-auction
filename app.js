@@ -9,6 +9,7 @@ import { handleError } from './middlewares/error.mdw.js';
 import './utils/db.js';
 import { paginationHelper } from './utils/pagination.js';
 import routes from './routes/index.js';
+import './jobs/auction-end.job.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
