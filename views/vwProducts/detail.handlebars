@@ -62,11 +62,11 @@
         </div>
       {{/if}}
       {{#if isAuthenticated}}
-        <div>
+        <div class="flex gap-2">
           <form
             method="post"
             action="/bidder/watchlist/{{product._id}}"
-            class="inline-block w-[calc(50%-0.25rem)] mr-2"
+            class="flex-1"
           >
             {{#if isInWatchlist}}
               <input type="hidden" name="_method" value="DELETE">
@@ -84,9 +84,10 @@
                 Add to Watchlist
               </button>
             {{/if}}
-          </form><a
+          </form>
+          <a
             href="/bidder/bid/{{product._id}}"
-            class="inline-block w-[calc(50%-0.25rem)] text-center px-6 py-4 bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
+            class="flex-1 h-fit text-center px-6 py-4 bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
           >
             Place Bid
           </a>
