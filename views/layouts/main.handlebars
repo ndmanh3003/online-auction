@@ -86,13 +86,13 @@
             {{#if isAuthenticated}}
               <a
                 href="/bidder/watchlist"
-                class="px-4 py-2 text-gray-700 hover:text-blue-600 transition-colors font-medium"
+                class="px-4 py-2 {{#if (startsWith req.path '/bidder/watchlist')}}text-blue-600 font-semibold{{else}}text-gray-700 hover:text-blue-600{{/if}} transition-colors font-medium"
               >
                 Watchlist
               </a>
               <a
                 href="/account/bids"
-                class="px-4 py-2 text-gray-700 hover:text-blue-600 transition-colors font-medium"
+                class="px-4 py-2 {{#if (startsWith req.path '/account/bids')}}text-blue-600 font-semibold{{else}}text-gray-700 hover:text-blue-600{{/if}} transition-colors font-medium"
               >
                 My Bids
               </a>

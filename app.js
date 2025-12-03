@@ -44,6 +44,10 @@ const handlebarsEngine = engine({
       const bStr = b && typeof b.toString === 'function' ? b.toString() : b;
       return aStr === bStr;
     },
+    startsWith(str, prefix) {
+      if (!str || !prefix) return false;
+      return String(str).startsWith(String(prefix));
+    },
     ne(a, b) {
       const aStr = a && typeof a.toString === 'function' ? a.toString() : a;
       const bStr = b && typeof b.toString === 'function' ? b.toString() : b;
