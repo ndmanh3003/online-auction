@@ -173,18 +173,12 @@ export async function appendDescription(id, newDescription) {
   const product = await Product.findById(id);
   if (!product) return null;
 
-  const timestamp = new Date().toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
+  product.appendedDescriptions.push({
+    content: newDescription,
+    timestamp: new Date(),
   });
-  const appendedDescription = `${product.description}\n\n✏️ ${timestamp}\n\n- ${newDescription}`;
 
-  return await Product.findByIdAndUpdate(
-    id,
-    { description: appendedDescription },
-    { new: true }
-  );
+  return await product.save();
 }
 
 export async function updateCurrentPrice(id, newPrice) {

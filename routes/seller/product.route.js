@@ -79,7 +79,8 @@ router.get('/:id/append', async function (req, res) {
     return res.status(404).render('404');
   }
 
-  if (product.sellerId.toString() !== req.session.authUser._id.toString()) {
+  const sellerId = product.sellerId._id ? product.sellerId._id.toString() : product.sellerId.toString();
+  if (sellerId !== req.session.authUser._id.toString()) {
     return res.render('403');
   }
 
@@ -96,7 +97,8 @@ router.post('/:id/append', async function (req, res) {
     return res.error('Product not found.');
   }
 
-  if (product.sellerId.toString() !== req.session.authUser._id.toString()) {
+  const sellerId = product.sellerId._id ? product.sellerId._id.toString() : product.sellerId.toString();
+  if (sellerId !== req.session.authUser._id.toString()) {
     return res.render('403');
   }
 
@@ -112,7 +114,8 @@ router.post('/:productId/block/:bidderId', async function (req, res) {
     return res.error('Product not found.');
   }
 
-  if (product.sellerId.toString() !== req.session.authUser._id.toString()) {
+  const sellerId = product.sellerId._id ? product.sellerId._id.toString() : product.sellerId.toString();
+  if (sellerId !== req.session.authUser._id.toString()) {
     return res.render('403');
   }
 
@@ -129,7 +132,8 @@ router.post('/rate/:productId/:bidderId', async function (req, res) {
     return res.error('Product not found.');
   }
 
-  if (product.sellerId.toString() !== req.session.authUser._id.toString()) {
+  const sellerId = product.sellerId._id ? product.sellerId._id.toString() : product.sellerId.toString();
+  if (sellerId !== req.session.authUser._id.toString()) {
     return res.render('403');
   }
 
@@ -157,7 +161,8 @@ router.post('/cancel/:productId/:bidderId', async function (req, res) {
     return res.error('Product not found.');
   }
 
-  if (product.sellerId.toString() !== req.session.authUser._id.toString()) {
+  const sellerId = product.sellerId._id ? product.sellerId._id.toString() : product.sellerId.toString();
+  if (sellerId !== req.session.authUser._id.toString()) {
     return res.render('403');
   }
 

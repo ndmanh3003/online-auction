@@ -14,18 +14,16 @@
       method="post"
       action="/seller/products/{{product._id}}/append"
       class="space-y-6"
+      id="appendForm"
     >
       <div class="relative mb-6">
         <label for="description" class="block text-sm font-medium text-gray-900 mb-2">Additional Description</label>
-        <textarea
-          id="description"
-          name="description"
-          rows="8"
-          class="w-full px-4 py-4 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
-          placeholder="Enter additional information to append to the description"
-          required
-          autofocus
-        ></textarea>
+        <div
+          id="editor"
+          class="bg-white border border-gray-200/60 rounded-2xl"
+          style="min-height: 300px;"
+        ></div>
+        <input type="hidden" id="description" name="description" />
         <p class="text-gray-500 text-sm mt-2">This will be added to the existing description with a timestamp.</p>
       </div>
       <button
@@ -37,4 +35,43 @@
     </form>
   </div>
 </div>
+{{#section "css"}}
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+{{/section}}
+{{#section "js"}}
+  <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+  <script>
+    var quill = new Quill('#editor', {
+      theme: 'snow',
+      placeholder: 'Enter additional information to append to the description...',
+      modules: {
+        toolbar: [
+          [{ 'header': [1, 2, 3, false] }],
+          ['bold', 'italic', 'underline', 'strike'],
+          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+          [{ 'color': [] }, { 'background': [] }],
+          [{ 'align': [] }],
+          ['link', 'image'],
+          ['clean']
+        ]
+      }
+    });
+    
+    var form = document.getElementById('appendForm');
+    form.onsubmit = function(e) {
+      var descriptionInput = document.getElementById('description');
+      var content = quill.root.innerHTML;
+      var text = quill.getText().trim();
+      
+      if (!text || text === '' || content === '<p><br></p>') {
+        e.preventDefault();
+        alert('Please enter additional description');
+        return false;
+      }
+      
+      descriptionInput.value = content;
+      return true;
+    };
+  </script>
+{{/section}}
 

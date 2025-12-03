@@ -115,6 +115,20 @@
     <div class="text-gray-600 prose max-w-none">
       {{{product.description}}}
     </div>
+    {{#if product.appendedDescriptions.length}}
+      {{#each product.appendedDescriptions}}
+        <hr class="my-8 border-t border-gray-200">
+        <div class="mb-6">
+          <div class="flex items-center gap-2 mb-3">
+            <i class="fas fa-edit text-blue-600"></i>
+            <span class="text-gray-500 text-sm">{{formatDate timestamp}}</span>
+          </div>
+          <div class="text-gray-600 prose max-w-none">
+            {{{content}}}
+          </div>
+        </div>
+      {{/each}}
+    {{/if}}
   </div>
   <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-8 mb-12">
     <h2 class="text-[28px] font-semibold text-gray-900 mb-6">Questions & Answers</h2>

@@ -11,6 +11,18 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    appendedDescriptions: [
+      {
+        content: {
+          type: String,
+          required: true,
+        },
+        timestamp: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
     images: {
       type: [String],
       required: true,
