@@ -18,7 +18,7 @@ export function paginationHelper(currentPage, totalPages, total) {
     return `
       <a 
         href="javascript:void(0);" 
-        onclick="const url = new URL(window.location.href); url.searchParams.set('page', ${page}); window.location.href = url.toString(); return false;"
+        onclick="(function() { var loc = window.location; var params = new URLSearchParams(loc.search); params.set('page', ${page}); window.location.href = loc.pathname + '?' + params.toString(); })(); return false;"
         class="${containerClass} ${extraClass}"
       >${content}</a>`;
   };
