@@ -11,7 +11,7 @@
     </div>
   </div>
   {{#if items.length}}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
       {{#each items}}
         <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 overflow-hidden hover:scale-105 transition-all duration-300 ease-out">
           <a href="/products/{{_id}}">
@@ -66,9 +66,7 @@
         </div>
       {{/each}}
     </div>
-    <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-6">
-      {{{pagination pagination.page pagination.totalPages pagination.total}}}
-    </div>
+    {{{pagination pagination.page pagination.totalPages pagination.total}}}
   {{else}}
     <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-12 text-center">
       <i class="fas fa-box-open text-gray-400 text-6xl mb-4"></i>

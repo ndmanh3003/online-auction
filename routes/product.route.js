@@ -12,9 +12,9 @@ router.get('/', async function (req, res) {
 
   let result;
   if (categoryId) {
-    result = await productService.findByCategory(categoryId, page, 10);
+    result = await productService.findByCategory(categoryId, page, 6);
   } else {
-    result = await productService.findAll(page, 10);
+    result = await productService.findAll(page, 6);
   }
 
   const enrichedItems = await Promise.all(
