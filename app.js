@@ -65,7 +65,9 @@ const handlebarsEngine = engine({
       const d = new Date(date);
       const m = ('0' + (d.getMonth() + 1)).slice(-2);
       const day = ('0' + d.getDate()).slice(-2);
-      return `${d.getFullYear()}-${m}-${day}`;
+      const h = ('0' + d.getHours()).slice(-2);
+      const min = ('0' + d.getMinutes()).slice(-2);
+      return `${d.getFullYear()}-${m}-${day} ${h}:${min}`;
     },
     toString(value) {
       if (!value) return '';
@@ -86,6 +88,14 @@ const handlebarsEngine = engine({
     },
     pagination(currentPage, totalPages, total) {
       return paginationHelper(currentPage, totalPages, total);
+    },
+    isBlocked(blockedBidders, bidderId) {
+      if (!blockedBidders || !bidderId) return false;
+      const bidderIdStr = bidderId.toString ? bidderId.toString() : String(bidderId);
+      return blockedBidders.some(blocked => {
+        const blockedStr = blocked.toString ? blocked.toString() : String(blocked);
+        return blockedStr === bidderIdStr;
+      });
     },
   },
 });

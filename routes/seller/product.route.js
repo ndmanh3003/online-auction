@@ -25,9 +25,19 @@ router.get('/ended', async function (req, res) {
   const enrichedItems = await Promise.all(
     result.items.map(async (item) => {
       const topBid = await bidService.getTopBidder(item._id);
+      let rated = false;
+      if (topBid) {
+        const existingRating = await ratingService.findByProductAndUsers(
+          item._id,
+          req.session.authUser._id,
+          topBid.bidderId._id
+        );
+        rated = !!existingRating;
+      }
       return {
         ...item.toObject(),
         winner: topBid ? topBid.bidderId : null,
+        rated,
       };
     })
   );
@@ -47,12 +57,17 @@ router.get('/create', async function (req, res) {
 });
 
 router.post('/create', async function (req, res) {
-  const { name, images, categoryId, startPrice, stepPrice, buyNowPrice, description, duration, autoExtend, allowNonRatedBidders } = req.body;
+  const { name, images, categoryId, startPrice, stepPrice, buyNowPrice, description, endTime, autoExtend, allowNonRatedBidders } = req.body;
 
   const imagesArray = Array.isArray(images) ? images : images.split(',').map(img => img.trim());
 
   if (imagesArray.length < 3) {
     return res.error('At least 3 images are required.');
+  }
+
+  const endTimeDate = new Date(endTime);
+  if (endTimeDate <= new Date()) {
+    return res.error('Auction end time must be in the future.');
   }
 
   await productService.create({
@@ -64,7 +79,7 @@ router.post('/create', async function (req, res) {
     stepPrice: parseFloat(stepPrice),
     buyNowPrice: buyNowPrice ? parseFloat(buyNowPrice) : null,
     description: description.trim(),
-    duration: parseInt(duration),
+    endTime: endTimeDate,
     autoExtend: autoExtend === 'on',
     allowNonRatedBidders: allowNonRatedBidders === 'on',
   });

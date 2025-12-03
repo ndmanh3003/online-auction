@@ -60,11 +60,6 @@ const productSchema = new mongoose.Schema(
       default: null,
       min: 0,
     },
-    currentPrice: {
-      type: Number,
-      required: true,
-      min: 0,
-    },
     autoExtend: {
       type: Boolean,
       default: false,

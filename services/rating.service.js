@@ -31,6 +31,10 @@ export async function findExisting(productId, fromUserId, toUserId) {
   return await Rating.findOne({ productId, fromUserId, toUserId });
 }
 
+export async function findByProductAndUsers(productId, fromUserId, toUserId) {
+  return await findExisting(productId, fromUserId, toUserId);
+}
+
 export async function create(ratingData) {
   const rating = new Rating(ratingData);
   return await rating.save();

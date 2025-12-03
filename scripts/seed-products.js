@@ -83,7 +83,7 @@ export const seedProducts = async (sellers) => {
       autoExtend: false,
       allowNonRatedBidders: true,
       status: 'active',
-      endTime: new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000),
+      endTime: new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000),
     });
 
     products.push({
@@ -103,7 +103,7 @@ export const seedProducts = async (sellers) => {
       autoExtend: true,
       allowNonRatedBidders: true,
       status: 'active',
-      endTime: new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000),
+      endTime: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000),
     });
 
     products.push({
@@ -123,7 +123,7 @@ export const seedProducts = async (sellers) => {
       autoExtend: true,
       allowNonRatedBidders: false,
       status: 'active',
-      endTime: new Date(now.getTime() + 6 * 24 * 60 * 60 * 1000),
+      endTime: new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000),
     });
 
     products.push({
@@ -143,7 +143,7 @@ export const seedProducts = async (sellers) => {
       autoExtend: true,
       allowNonRatedBidders: true,
       status: 'active',
-      endTime: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000),
+      endTime: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000),
     });
 
     products.push({
@@ -163,7 +163,7 @@ export const seedProducts = async (sellers) => {
       autoExtend: false,
       allowNonRatedBidders: true,
       status: 'active',
-      endTime: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
+      endTime: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
     });
 
     products.push({
@@ -183,7 +183,7 @@ export const seedProducts = async (sellers) => {
       autoExtend: true,
       allowNonRatedBidders: true,
       status: 'active',
-      endTime: new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000),
+      endTime: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000),
     });
 
     products.push({
@@ -203,7 +203,7 @@ export const seedProducts = async (sellers) => {
       autoExtend: false,
       allowNonRatedBidders: true,
       status: 'active',
-      endTime: new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000),
+      endTime: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
     });
 
     products.push({
@@ -223,7 +223,7 @@ export const seedProducts = async (sellers) => {
       autoExtend: true,
       allowNonRatedBidders: true,
       status: 'active',
-      endTime: new Date(now.getTime() + 6 * 24 * 60 * 60 * 1000),
+      endTime: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000),
     });
 
     products.push({
@@ -243,7 +243,7 @@ export const seedProducts = async (sellers) => {
       autoExtend: true,
       allowNonRatedBidders: false,
       status: 'active',
-      endTime: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000),
+      endTime: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
     });
 
     products.push({
@@ -263,7 +263,7 @@ export const seedProducts = async (sellers) => {
       autoExtend: true,
       allowNonRatedBidders: false,
       status: 'active',
-      endTime: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
+      endTime: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000),
     });
 
     products.push({
@@ -283,7 +283,7 @@ export const seedProducts = async (sellers) => {
       autoExtend: false,
       allowNonRatedBidders: true,
       status: 'active',
-      endTime: new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000),
+      endTime: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
     });
 
     products.push({
@@ -303,7 +303,7 @@ export const seedProducts = async (sellers) => {
       autoExtend: true,
       allowNonRatedBidders: false,
       status: 'active',
-      endTime: new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000),
+      endTime: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000),
     });
 
     products.push({
@@ -323,7 +323,7 @@ export const seedProducts = async (sellers) => {
       autoExtend: true,
       allowNonRatedBidders: true,
       status: 'active',
-      endTime: new Date(now.getTime() + 6 * 24 * 60 * 60 * 1000),
+      endTime: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
     });
 
     products.push({
@@ -343,7 +343,7 @@ export const seedProducts = async (sellers) => {
       autoExtend: false,
       allowNonRatedBidders: true,
       status: 'active',
-      endTime: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000),
+      endTime: new Date(now.getTime() + 10 * 60 * 1000),
     });
 
     products.push({
@@ -363,7 +363,7 @@ export const seedProducts = async (sellers) => {
       autoExtend: true,
       allowNonRatedBidders: false,
       status: 'active',
-      endTime: new Date(now.getTime() + 8 * 24 * 60 * 60 * 1000),
+      endTime: new Date(now.getTime() + 10 * 60 * 1000),
     });
 
     products.push({
@@ -383,7 +383,7 @@ export const seedProducts = async (sellers) => {
       autoExtend: true,
       allowNonRatedBidders: true,
       status: 'active',
-      endTime: new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000),
+      endTime: new Date(now.getTime() + 10 * 60 * 1000),
     });
 
     products.push({
@@ -403,7 +403,7 @@ export const seedProducts = async (sellers) => {
       autoExtend: true,
       allowNonRatedBidders: true,
       status: 'active',
-      endTime: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
+      endTime: new Date(now.getTime() + 10 * 60 * 1000),
     });
 
     products.push({
@@ -423,7 +423,7 @@ export const seedProducts = async (sellers) => {
       autoExtend: false,
       allowNonRatedBidders: true,
       status: 'active',
-      endTime: new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000),
+      endTime: new Date(now.getTime() + 10 * 60 * 1000),
     });
 
     products.push({
@@ -443,7 +443,7 @@ export const seedProducts = async (sellers) => {
       autoExtend: true,
       allowNonRatedBidders: true,
       status: 'active',
-      endTime: new Date(now.getTime() + 6 * 24 * 60 * 60 * 1000),
+      endTime: new Date(now.getTime() + 10 * 60 * 1000),
     });
 
     const createdProducts = await Product.insertMany(products);

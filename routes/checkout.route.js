@@ -10,7 +10,7 @@ const router = express.Router();
 router.use(isAuth);
 
 router.get('/:productId', async function (req, res) {
-  const product = await productService.findByIdWithDetails(req.params.productId);
+  const product = await productService.findById(req.params.productId, false);
 
   if (!product) {
     return res.status(404).render('404');

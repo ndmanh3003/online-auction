@@ -1,6 +1,12 @@
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
   <div class="mb-8">
-    <h1 class="text-[36px] font-semibold text-gray-900">Create New Product</h1>
+    <h1 class="text-[36px] font-semibold text-gray-900 mb-2">Create New Product</h1>
+    <a
+      href="/seller/products"
+      class="text-blue-600 hover:underline mt-2 inline-block"
+    >
+      ← Back to My Products
+    </a>
   </div>
   <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-8">
     <form
@@ -90,16 +96,12 @@
           />
         </div>
         <div class="relative mb-6">
-          <label for="duration" class="block text-sm font-medium text-gray-900 mb-2">Duration (days)</label>
+          <label for="endTime" class="block text-sm font-medium text-gray-900 mb-2">Auction End Time</label>
           <input
-            type="number"
-            id="duration"
-            name="duration"
-            min="1"
-            max="30"
+            type="datetime-local"
+            id="endTime"
+            name="endTime"
             class="w-full px-4 py-4 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
-            placeholder="7"
-            value="7"
             required
           />
         </div>
@@ -149,6 +151,10 @@
 {{#section "js"}}
   <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
   <script>
+    var now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    document.getElementById('endTime').min = now.toISOString().slice(0, 16);
+    
     var quill = new Quill('#editor', {
       theme: 'snow',
       placeholder: 'Enter detailed product description...',
@@ -174,6 +180,13 @@
       if (!text || text === '' || content === '<p><br></p>') {
         e.preventDefault();
         alert('Please enter a product description');
+        return false;
+      }
+      
+      var endTime = new Date(document.getElementById('endTime').value);
+      if (endTime <= new Date()) {
+        e.preventDefault();
+        alert('Auction end time must be in the future');
         return false;
       }
       

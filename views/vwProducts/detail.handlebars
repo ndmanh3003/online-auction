@@ -42,7 +42,7 @@
           {{/if}}
           <div class="flex justify-between items-center">
             <span class="text-gray-600">Number of Bids:</span>
-            <span class="text-gray-900 font-semibold">{{bidCount}}</span>
+            <span class="text-gray-900 font-semibold">{{product.bidCount}}</span>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-gray-600">Ends:</span>
@@ -55,10 +55,10 @@
         <p class="text-gray-600">{{product.sellerId.name}}</p>
         <p class="text-gray-500 text-sm">{{product.sellerId.email}}</p>
       </div>
-      {{#if topBidder}}
+      {{#if product.topBidder}}
         <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-6 mb-6">
           <h3 class="text-gray-900 font-semibold mb-4">Current Top Bidder</h3>
-          <p class="text-gray-600">{{topBidder.name}}</p>
+          <p class="text-gray-600">{{product.topBidder.name}}</p>
         </div>
       {{/if}}
       {{#if isAuthenticated}}
@@ -155,9 +155,9 @@
         </button>
       </form>
     {{/if}}
-    {{#if questions.length}}
+    {{#if product.questions.length}}
       <div class="space-y-6">
-        {{#each questions}}
+        {{#each product.questions}}
           <div class="border-b border-gray-200 pb-6 last:border-b-0">
             <div class="flex items-start gap-4 mb-4">
               <div class="flex-1">
@@ -180,11 +180,11 @@
       <p class="text-gray-500 text-center py-8">No questions yet. Be the first to ask!</p>
     {{/if}}
   </div>
-  {{#if relatedProducts.length}}
+  {{#if product.relatedProducts.length}}
     <div class="mb-12">
       <h2 class="text-[28px] font-semibold text-gray-900 mb-6">Related Products</h2>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {{#each relatedProducts}}
+        {{#each product.relatedProducts}}
           <a
             href="/products/{{_id}}"
             class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 overflow-hidden hover:scale-105 transition-all duration-300 ease-out"
