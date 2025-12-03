@@ -51,6 +51,8 @@ router.post('/:productId', async function (req, res) {
   }
 
   try {
+    const previousTopBid = await bidService.getTopBidder(req.params.productId);
+
     const result = await bidService.placeBid(
       req.params.productId,
       req.session.authUser._id,
@@ -69,10 +71,44 @@ router.post('/:productId', async function (req, res) {
       updatedProduct,
       result.bid,
       topBid,
-      req.session.authUser
+      req.session.authUser,
+      previousTopBid
     );
 
     res.redirect(`/products/${req.params.productId}`);
+  } catch (error) {
+    return res.error(error.message);
+  }
+});
+
+router.post('/:productId/buy-now', async function (req, res) {
+  try {
+    const productData = await productService.findById(req.params.productId, false);
+
+    if (!productData) {
+      return res.error('Product not found.');
+    }
+
+    if (productData.status !== 'active') {
+      return res.error('This auction has ended.');
+    }
+
+    if (!productData.buyNowPrice) {
+      return res.error('This product does not have a buy now price.');
+    }
+
+    if (productData.sellerId._id.toString() === req.session.authUser._id.toString()) {
+      return res.error('You cannot buy your own product.');
+    }
+
+    const { product, bid } = await productService.buyNow(
+      req.params.productId,
+      req.session.authUser._id
+    );
+
+    await emailService.sendBuyNowEmail(product, req.session.authUser, product.sellerId);
+
+    res.redirect(`/checkout/${req.params.productId}`);
   } catch (error) {
     return res.error(error.message);
   }

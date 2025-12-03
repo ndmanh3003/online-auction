@@ -2,6 +2,7 @@ import Bid from '../models/Bid.js';
 import Product from '../models/Product.js';
 import * as ratingService from './rating.service.js';
 import * as productService from './product.service.js';
+import * as configService from './config.service.js';
 
 export async function findById(id) {
   return await Bid.findById(id).populate('bidderId', 'name email').populate('productId', 'name');
@@ -198,8 +199,8 @@ export async function placeBid(productId, bidderId, bidAmount, maxBidAmount = nu
   });
 
   if (product.autoExtend) {
-    const thresholdMinutes = parseInt(process.env.AUTO_EXTEND_THRESHOLD_MINUTES || '5');
-    const extendMinutes = parseInt(process.env.AUTO_EXTEND_DURATION_MINUTES || '10');
+    const thresholdMinutes = await configService.getValue('AUTO_EXTEND_THRESHOLD_MINUTES', 5);
+    const extendMinutes = await configService.getValue('AUTO_EXTEND_DURATION_MINUTES', 10);
     const thresholdTime = new Date(product.endTime.getTime() - thresholdMinutes * 60 * 1000);
 
     if (new Date() >= thresholdTime) {
@@ -221,7 +222,7 @@ export async function validateBidder(bidderId, product) {
     };
   }
 
-  const minRatingPercent = parseInt(process.env.MIN_BIDDER_RATING_PERCENT || '80');
+  const minRatingPercent = await configService.getValue('MIN_BIDDER_RATING_PERCENT', 80);
   if (rating.total > 0 && rating.percent < minRatingPercent) {
     return {
       valid: false,

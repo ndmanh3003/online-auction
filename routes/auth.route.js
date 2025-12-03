@@ -6,6 +6,7 @@ import * as emailService from '../utils/email.js';
 import { generateOTP } from '../utils/otp.js';
 import { verifyRecaptcha } from '../utils/recaptcha.js';
 import { isAuth } from '../middlewares/auth.mdw.js';
+import passport from '../middlewares/passport.mdw.js';
 
 const router = express.Router();
 
@@ -203,5 +204,24 @@ router.post('/reset-password', async function (req, res) {
 
   res.redirect('/auth/login');
 });
+
+router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+router.get(
+  '/google/callback',
+  passport.authenticate('google', { failureRedirect: '/auth/login' }),
+  function (req, res) {
+    req.session.isAuthenticated = true;
+    req.session.authUser = req.user;
+
+    if (req.user.role === 'admin') {
+      return res.redirect('/admin');
+    }
+
+    const retUrl = req.session.retUrl || '/';
+    delete req.session.retUrl;
+    res.redirect(retUrl);
+  }
+);
 
 export default router;

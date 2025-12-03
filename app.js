@@ -10,6 +10,7 @@ import './utils/db.js';
 import { paginationHelper } from './utils/pagination.js';
 import routes from './routes/index.js';
 import './jobs/auction-end.job.js';
+import passport from './middlewares/passport.mdw.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -115,6 +116,9 @@ app.use(
     }
   })
 );
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.use(handleError);
 app.use(function (req, res, next) {

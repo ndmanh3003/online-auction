@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import mongoose from 'mongoose';
 import './../utils/db.js';
+import * as configService from '../services/config.service.js';
 import { seedCategories } from './seed-categories.js';
 import { seedUsers } from './seed-users.js';
 import { seedProducts } from './seed-products.js';
@@ -21,6 +22,9 @@ const seedAll = async () => {
     }
 
     console.log('Connected to MongoDB\n');
+
+    await configService.seed();
+    console.log('✅ System configs seeded\n');
 
     await seedCategories();
     console.log('✅ Categories seeded\n');

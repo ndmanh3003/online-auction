@@ -51,3 +51,23 @@ export async function findAll(page = 1, limit = 10) {
 export async function remove(id) {
   return await User.findByIdAndDelete(id);
 }
+
+export async function findByGoogleId(googleId) {
+  return await User.findOne({ googleId });
+}
+
+export async function createFromOAuth(profile, provider) {
+  const userData = {
+    name: profile.displayName || profile.name || 'User',
+    email: profile.emails && profile.emails[0] ? profile.emails[0].value : `${provider}_${profile.id}@oauth.local`,
+    role: 'bidder',
+    isEmailVerified: true,
+  };
+
+  if (provider === 'google') {
+    userData.googleId = profile.id;
+  }
+
+  const newUser = new User(userData);
+  return await newUser.save();
+}

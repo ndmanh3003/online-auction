@@ -321,3 +321,35 @@ export async function countBySellerId(sellerId) {
   return await Product.countDocuments({ sellerId, status: 'active' });
 }
 
+export async function buyNow(productId, bidderId) {
+  const product = await Product.findById(productId).populate('sellerId', 'name email');
+  if (!product) {
+    throw new Error('Product not found');
+  }
+
+  if (product.status !== 'active') {
+    throw new Error('Auction has ended');
+  }
+
+  if (!product.buyNowPrice) {
+    throw new Error('This product does not have a buy now price');
+  }
+
+  if (product.sellerId._id.toString() === bidderId.toString()) {
+    throw new Error('Seller cannot buy their own product');
+  }
+
+  const bid = new Bid({
+    productId,
+    bidderId,
+    bidAmount: product.buyNowPrice,
+    maxBidAmount: null,
+    isAutoBid: false,
+  });
+  await bid.save();
+
+  await Product.findByIdAndUpdate(productId, { status: 'ended' });
+
+  return { product, bid };
+}
+

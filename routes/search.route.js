@@ -14,7 +14,8 @@ router.get('/', async function (req, res) {
   const result = await searchService.searchProducts(query, categoryId, sortBy, page, 6);
   const categories = await categoryService.findAllWithSubcategories();
 
-  const highlightMinutes = parseInt(process.env.NEW_PRODUCT_HIGHLIGHT_MINUTES || '10');
+  const configService = await import('../services/config.service.js');
+  const highlightMinutes = await configService.getValue('NEW_PRODUCT_HIGHLIGHT_MINUTES', 10);
   const highlightThreshold = new Date(Date.now() - highlightMinutes * 60 * 1000);
 
   const enrichedItems = await Promise.all(

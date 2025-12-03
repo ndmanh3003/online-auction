@@ -39,7 +39,7 @@ export async function sendOTPEmail(email, code, type) {
   }
 }
 
-export async function sendBidPlacedEmail(product, bid, topBid, currentUser) {
+export async function sendBidPlacedEmail(product, bid, topBid, currentUser, previousTopBid = null) {
   try {
     const sellerEmail = product.sellerId.email;
     const bidderEmail = currentUser.email;
@@ -58,6 +58,15 @@ export async function sendBidPlacedEmail(product, bid, topBid, currentUser) {
       subject: `Bid Confirmation: ${product.name}`,
       text: `Your bid of $${bid.bidAmount} has been successfully placed on "${product.name}".\n\nView product: ${productUrl}`,
     });
+
+    if (previousTopBid && previousTopBid.bidderId._id.toString() !== currentUser._id.toString()) {
+      await transporter.sendMail({
+        from: process.env.SMTP_USER || 'noreply@example.com',
+        to: previousTopBid.bidderId.email,
+        subject: `You Have Been Outbid: ${product.name}`,
+        text: `You have been outbid on "${product.name}".\n\nYour bid: $${previousTopBid.bidAmount}\nNew bid: $${bid.bidAmount}\n\nPlace a new bid: ${productUrl}`,
+      });
+    }
 
     return true;
   } catch (error) {
@@ -163,6 +172,32 @@ export async function sendQuestionAnsweredEmail(product, question, bids) {
         text: `A question about "${product.name}" has been answered by the seller.\n\nQuestion: ${question.question}\nAnswer: ${question.answer}\n\nView product: ${productUrl}`,
       });
     }
+
+    return true;
+  } catch (error) {
+    console.error('Email sending error:', error);
+    return false;
+  }
+}
+
+export async function sendBuyNowEmail(product, buyer, seller) {
+  try {
+    const checkoutUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/checkout/${product._id}`;
+    const productUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/products/${product._id}`;
+
+    await transporter.sendMail({
+      from: process.env.SMTP_USER || 'noreply@example.com',
+      to: seller.email,
+      subject: `Product Sold: ${product.name}`,
+      text: `Your product "${product.name}" has been purchased using Buy Now.\n\nBuyer: ${buyer.name}\nPrice: $${product.buyNowPrice}\n\nComplete the transaction: ${checkoutUrl}`,
+    });
+
+    await transporter.sendMail({
+      from: process.env.SMTP_USER || 'noreply@example.com',
+      to: buyer.email,
+      subject: `Purchase Confirmation: ${product.name}`,
+      text: `You have successfully purchased "${product.name}" using Buy Now.\n\nPrice: $${product.buyNowPrice}\n\nView product: ${productUrl}\nComplete your purchase: ${checkoutUrl}`,
+    });
 
     return true;
   } catch (error) {

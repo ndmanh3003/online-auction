@@ -62,35 +62,52 @@
         </div>
       {{/if}}
       {{#if isAuthenticated}}
-        <div class="flex gap-2">
-          <form
-            method="post"
-            action="/bidder/watchlist/{{product._id}}"
-            class="flex-1"
-          >
-            {{#if isInWatchlist}}
-              <input type="hidden" name="_method" value="DELETE">
+        <div class="space-y-2">
+          {{#if product.buyNowPrice}}
+            <form
+              method="post"
+              action="/bidder/bid/{{product._id}}/buy-now"
+              id="buyNowForm"
+              onsubmit="return confirm('Are you sure you want to buy this product for ${{format_currency product.buyNowPrice}}? This will end the auction immediately.');"
+            >
               <button
                 type="submit"
-                class="w-full px-6 py-4 bg-gray-600 text-white rounded-xl shadow-[0_4px_20px_rgba(75,85,99,0.3)] hover:bg-gray-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
+                class="w-full px-6 py-4 bg-green-600 text-white rounded-xl shadow-[0_4px_20px_rgba(22,163,74,0.3)] hover:bg-green-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
               >
-                Remove from Watchlist
+                Buy Now - ${{format_currency product.buyNowPrice}}
               </button>
-            {{else}}
-              <button
-                type="submit"
-                class="w-full px-6 py-4 bg-yellow-600 text-white rounded-xl shadow-[0_4px_20px_rgba(202,138,4,0.3)] hover:bg-yellow-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
-              >
-                Add to Watchlist
-              </button>
-            {{/if}}
-          </form>
-          <a
-            href="/bidder/bid/{{product._id}}"
-            class="flex-1 h-fit text-center px-6 py-4 bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
-          >
-            Place Bid
-          </a>
+            </form>
+          {{/if}}
+          <div class="flex gap-2">
+            <form
+              method="post"
+              action="/bidder/watchlist/{{product._id}}"
+              class="flex-1"
+            >
+              {{#if isInWatchlist}}
+                <input type="hidden" name="_method" value="DELETE">
+                <button
+                  type="submit"
+                  class="w-full px-6 py-4 bg-gray-600 text-white rounded-xl shadow-[0_4px_20px_rgba(75,85,99,0.3)] hover:bg-gray-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
+                >
+                  Remove from Watchlist
+                </button>
+              {{else}}
+                <button
+                  type="submit"
+                  class="w-full px-6 py-4 bg-yellow-600 text-white rounded-xl shadow-[0_4px_20px_rgba(202,138,4,0.3)] hover:bg-yellow-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
+                >
+                  Add to Watchlist
+                </button>
+              {{/if}}
+            </form>
+            <a
+              href="/bidder/bid/{{product._id}}"
+              class="flex-1 h-fit text-center px-6 py-4 bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
+            >
+              Place Bid
+            </a>
+          </div>
         </div>
       {{else}}
         <a
