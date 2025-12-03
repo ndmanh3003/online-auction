@@ -6,10 +6,12 @@ const router = express.Router();
 
 router.get('/', async function (req, res) {
   const page = parseInt(req.query.page) || 1;
-  const result = await sellerRequestService.findAllPending(page, 10);
+  const status = req.query.status || null;
+  const result = await sellerRequestService.findAll(page, 10, status);
 
   res.render('vwAdmin/seller-requests/index', {
     ...result,
+    selectedStatus: status,
   });
 });
 

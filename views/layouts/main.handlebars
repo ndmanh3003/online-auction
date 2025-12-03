@@ -121,6 +121,15 @@
                       Dashboard
                     </a>
                   {{/if}}
+                  {{#if (eq authUser.role 'seller')}}
+                    <a
+                      href="/seller/products"
+                      class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <i class="fas fa-box w-5"></i>
+                      My Products
+                    </a>
+                  {{/if}}
                   <a
                     href="/account/profile"
                     class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
