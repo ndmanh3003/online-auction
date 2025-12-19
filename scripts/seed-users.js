@@ -10,11 +10,11 @@ export const seedUsers = async () => {
     await User.deleteMany({});
     console.log('Cleared existing users');
 
-    const hashedPassword = bcrypt.hashSync('111111', 10);
+    const hashedPassword = bcrypt.hashSync('123456', 10);
 
     const admin = await User.create({
       name: 'Admin User',
-      email: 'admin@gmail.com',
+      email: 'admin@auction.com',
       password: hashedPassword,
       role: 'admin',
       isEmailVerified: true,
