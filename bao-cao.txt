@@ -1,687 +1,829 @@
+BÁO CÁO PHÂN TÍCH CHI TIẾT TẤT CẢ LỖI TRONG CODE
 ================================================================================
-                    BÁO CÁO KIỂM TRA LOGIC VÀ CHỨC NĂNG
-                  HỆ THỐNG ĐẤU GIÁ TRỰC TUYẾN - ONLINE AUCTION
-================================================================================
-
-📅 Ngày kiểm tra: 19/12/2025
-📋 Dựa trên: Đề bài chính thức (HackMD), file luu-y.txt và source code thực tế
-⚠️  LƯU Ý: TODO-LIST.TXT ĐÃ ĐƯỢC CẬP NHẬT DỰA TRÊN ĐỀ BÀI ĐÚNG
-
-================================================================================
-✅ PHẦN 1: CHỨC NĂNG ĐÃ LÀM ĐÚNG VÀ ĐẦY ĐỦ
+Ngày tạo: 19/12/2024
+Dựa trên: Đề bài HackMD + luu-y.txt (39 câu hỏi)
 ================================================================================
 
-1. USER – AUTH – ROLE
-   ✅ 1.1 Đăng ký / Đăng nhập
-       - Đăng ký với role mặc định = 'bidder' ✓
-       - Lưu thông tin: id, name, email, password_hash ✓
-       - Xác thực email với OTP ✓
-       - Tạo session khi đăng nhập thành công ✓
-       - reCAPTCHA protection ✓
-   
-   ⚠️ 1.1.1 Đăng nhập với Google OAuth (Bổ sung - Optional)
-       - CHƯA làm Google OAuth ❌
-       - Đây là tính năng bổ sung, KHÔNG bắt buộc theo đề bài
-       - Nếu làm thêm có thể cải thiện trải nghiệm người dùng
-   
-   ✅ 1.2 Phân quyền
-       - Có 3 roles: bidder, seller, admin ✓
-       - Middleware kiểm tra role: isAuth, isAdmin, isSeller ✓
+📊 TỔNG QUAN:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ ĐÃ LÀM ĐÚNG: 60%
+⚠️ THIẾU/SAI: 40%
+🔴 MẤT ĐIỂM ƯỚC TÍNH: 3.5 - 4.5 điểm (trên thang 10)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-2. PRODUCT / AUCTION ITEM
-   ✅ 3.1 Tạo sản phẩm đấu giá
-       - Thuộc tính bắt buộc: sellerId, name, description ✓
-       - startPrice, stepPrice, buyNowPrice (nullable) ✓
-       - endTime, status ✓
-       - Validate bid_step > 0 ✓ (min: 0 trong schema)
-       - Validate buyNowPrice >= startPrice ✓ (logic tự nhiên)
-   
-   ✅ 3.2 Trạng thái sản phẩm
-       - Có status: active, ended, cancelled ✓
-       - Chuyển trạng thái tự động qua background job ✓
+================================================================================
+PHẦN A: CÁC LỖI NGHIÊM TRỌNG (MẤT NHIỀU ĐIỂM)
+================================================================================
 
-3. LIST & SEARCH
-   ✅ 4.1 Hiển thị danh sách sản phẩm
-       - Hiển thị currentPrice (calculated) ✓
-       - Hiển thị buyNowPrice ✓
-       - Hiển thị thời gian còn lại ✓
-       - Hiển thị top bidder ✓
-       - MASK TÊN bidder: '****' + name.slice(-3) ✓✓✓
-   
-   ✅ 4.2 Hiển thị thời gian
-       - Có logic hiển thị relative time khi < 3 ngày ✓
-       - Hiển thị countdown ✓
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ LỖI #1: SELLER KHÔNG CÓ THỜI HẠN 7 NGÀY                                  ┃
+┃ 🔴 MỨC ĐỘ: CỰC KỲ NGHIÊM TRỌNG                                          ┃
+┃ 🔴 MẤT ĐIỂM: 1.5 - 2.0 điểm                                             ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-4. PRODUCT DETAIL
-   ✅ 5. Hiển thị chi tiết
-       - Hiển thị ảnh lớn ✓
-       - Hiển thị mô tả ✓
-       - Hiển thị lịch sử đấu giá (bid history) ✓
-       - Hiển thị Q&A ✓
-       - Hiển thị appendedDescriptions với timestamp ✓
+YÊU CẦU ĐỀ BÀI:
+───────────────
+• Seller có thời hạn 7 ngày (luu-y.txt câu 13-15)
+• Hết hạn → KHÔNG cho tạo sản phẩm mới
+• VẪN cho xử lý sản phẩm đã đăng
+• KHÔNG hạ quyền về bidder
 
-5. Q&A (COMMENT)
-   ✅ 6.1 Đặt câu hỏi
-       - Bất kỳ user nào cũng hỏi được ✓
-       - Lưu: productId, askerId, question, created_at ✓
-       - Gửi email thông báo seller ✓
-   
-   ✅ 6.2 Trả lời
-       - Kiểm tra current_user == seller ✓
-       - Lưu answer ✓
-       - Hiển thị công khai ✓
-       - Gửi email cho tất cả bidders ✓
+CODE HIỆN TẠI:
+─────────────
+File: models/User.js
+```javascript
+const userSchema = new mongoose.Schema({
+  name: String,
+  email: String,
+  password: String,
+  role: { type: String, enum: ['bidder', 'seller', 'admin'], default: 'bidder' },
+  // ❌ THIẾU: sellerStartDate
+  // ❌ THIẾU: sellerEndDate
+});
+```
 
-6. USER RATING
-   ✅ 7.1 Đánh giá người dùng
-       - Sau giao dịch kết thúc ✓
-       - Seller và Bidder đánh giá lẫn nhau ✓
-       - Dữ liệu: fromUserId, toUserId, rating (+1/-1), comment ✓
-       - Type: bidder_to_seller, seller_to_bidder ✓
-       - Tính rating percentage ✓
+File: routes/admin/seller-requests.route.js (line 27)
+```javascript
+await userService.updateRole(userId, 'seller');
+// ❌ THIẾU: Không set sellerStartDate = now
+// ❌ THIẾU: Không set sellerEndDate = now + 7 days
+```
 
-7. AUCTION CORE – LOGIC CỐT LÕI
-   ✅ 8.1 Điều kiện cho phép đấu giá
-       - Kiểm tra product.status == 'active' ✓
-       - Kiểm tra user.id != seller.id ✓
-       - Kiểm tra reputation (rating percentage) ✓
-       - Kiểm tra blocked bidders ✓
-   
-   ✅ 8.2 Bước giá (Bid Step)
-       - Validate: bidAmount >= currentPrice + stepPrice ✓
-   
-   ✅ 8.3 AUTO-BID (MAX BID)
-       - Người dùng nhập maxBidAmount ✓
-       - maxBidAmount ĐƯỢC LƯU trong DB (Bid model) ✓✓✓
-       - Logic auto-bid khi có người đấu cao hơn:
-         * IF maxB <= maxA → currentPrice = min(maxB+step, maxA) ✓
-         * IF maxB > maxA → currentPrice = min(maxA+step, maxB) ✓
-       - Người đang top đặt tiếp → update max_bid ✓
-       - isAutoBid flag ✓
+File: routes/seller/product.route.js
+```javascript
+router.post('/create', async function (req, res) {
+  // ❌ THIẾU: Kiểm tra seller còn hạn không
+  // ❌ THIẾU: IF current_time > sellerEndDate → reject
+  
+  const product = await productService.create({...});
+});
+```
 
-8. GIA HẠN PHIÊN ĐẤU GIÁ (ANTI-SNIPING)
-   ✅ 9. Auto-extend
-       - Kiểm tra autoExtend flag ✓
-       - IF bid_time >= end_time - threshold → extend ✓
-       - Gia hạn thêm extend_minutes ✓
-       - Config: AUTO_EXTEND_THRESHOLD_MINUTES, AUTO_EXTEND_DURATION_MINUTES ✓
+PHẢI SỬA:
+─────────
+✅ Thêm vào User model:
+```javascript
+sellerStartDate: { type: Date, default: null },
+sellerEndDate: { type: Date, default: null }
+```
 
-9. KẾT THÚC ĐẤU GIÁ
-   ✅ 11. Kết thúc tự động
-       - Background job chạy mỗi 10 phút ✓
-       - Kiểm tra now > endTime ✓
-       - Cập nhật status = 'ended' ✓
-       - Tìm winner = top_bidder ✓
-       - Tạo transaction ✓
-       - Gửi email thông báo ✓
+✅ Khi approve seller request:
+```javascript
+const now = new Date();
+const endDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+await userService.update(userId, {
+  role: 'seller',
+  sellerStartDate: now,
+  sellerEndDate: endDate
+});
+```
 
-10. GIAO DỊCH & HỦY
-    ✅ 12.1 Xác nhận giao dịch
-        - Buyer submit payment proof ✓
-        - Seller confirm payment ✓
-        - Buyer confirm delivery ✓
+✅ Middleware kiểm tra seller còn hạn:
+```javascript
+// middlewares/seller-active.mdw.js
+export default async function (req, res, next) {
+  const seller = await User.findById(req.session.authUser._id);
+  
+  if (seller.sellerEndDate && new Date() > seller.sellerEndDate) {
+    return res.error('Your seller permission has expired. Please request renewal.');
+  }
+  
+  next();
+}
+```
+
+✅ Áp dụng vào route tạo sản phẩm:
+```javascript
+// routes/seller/product.route.js
+import sellerActiveMdw from '../../middlewares/seller-active.mdw.js';
+
+router.post('/create', sellerActiveMdw, async function (req, res) {
+  // ... rest of code
+});
+```
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ LỖI #2: KHÔNG CÓ CHỨC NĂNG MUA NGAY (BUY NOW)                           ┃
+┃ 🔴 MỨC ĐỘ: NGHIÊM TRỌNG                                                 ┃
+┃ 🔴 MẤT ĐIỂM: 1.0 - 1.5 điểm                                             ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+YÊU CẦU ĐỀ BÀI:
+───────────────
+• Click "Mua ngay" → kết thúc đấu giá ngay lập tức (luu-y.txt câu 32)
+• IF max_bid >= buy_now_price → auto trigger buy now với confirm (luu-y.txt câu 33)
+• Status chuyển thành 'sold' (riêng biệt với 'ended')
+
+CODE HIỆN TẠI:
+─────────────
+File: models/Product.js
+```javascript
+status: {
+  type: String,
+  enum: ['active', 'ended', 'cancelled'],
+  // ❌ THIẾU: 'sold' status
+},
+buyNowPrice: {
+  type: Number,
+  default: null,
+  // ✅ CÓ field này
+}
+```
+
+File: views/vwProducts/detail.handlebars
+```handlebars
+{{#if product.buyNowPrice}}
+  <span>Buy Now Price: ${{format_currency product.buyNowPrice}}</span>
+  {{!-- ❌ THIẾU: Nút "Mua Ngay" --}}
+{{/if}}
+```
+
+File: routes/product.route.js
+```javascript
+// ❌ THIẾU: Route POST /products/:id/buy-now
+```
+
+File: services/bid.service.js (line 176)
+```javascript
+export async function placeBid(productId, bidderId, bidAmount, maxBidAmount = null) {
+  // ... logic bid
+  
+  // ❌ THIẾU: Kiểm tra maxBidAmount >= buyNowPrice
+  // ❌ THIẾU: IF maxBidAmount >= buyNowPrice → trigger buy now
+  
+  return { success: true, bid };
+}
+```
+
+PHẢI SỬA:
+─────────
+✅ Thêm status 'sold':
+```javascript
+// models/Product.js
+status: {
+  type: String,
+  enum: ['active', 'ended', 'cancelled', 'sold'],
+  default: 'active'
+}
+```
+
+✅ Tạo route buy now:
+```javascript
+// routes/product.route.js
+router.post('/:id/buy-now', async function (req, res) {
+  const product = await productService.findById(req.params.id);
+  
+  if (!product.buyNowPrice) {
+    return res.error('Buy now is not available for this product.');
+  }
+  
+  if (product.status !== 'active') {
+    return res.error('This auction has ended.');
+  }
+  
+  if (product.sellerId._id.toString() === req.session.authUser._id.toString()) {
+    return res.error('You cannot buy your own product.');
+  }
+  
+  // Chuyển status sang sold
+  await productService.update(product._id, {
+    status: 'sold',
+    endTime: new Date()
+  });
+  
+  // Tạo transaction
+  await transactionService.create({
+    productId: product._id,
+    buyerId: req.session.authUser._id,
+    sellerId: product.sellerId,
+    finalPrice: product.buyNowPrice,
+    type: 'buy_now'
+  });
+  
+  // Gửi email
+  await emailService.sendBuyNowEmail(product, req.session.authUser);
+  
+  res.redirect(`/checkout/${product._id}`);
+});
+```
+
+✅ Thêm nút mua ngay vào view:
+```handlebars
+<!-- views/vwProducts/detail.handlebars -->
+{{#if product.buyNowPrice}}
+  <div class="mt-4">
+    <p class="text-gray-600">Buy Now Price: 
+      <span class="text-green-600 font-bold text-xl">${{format_currency product.buyNowPrice}}</span>
+    </p>
     
-    ✅ 12.2 Seller hủy giao dịch
-        - Seller rate -1 cho bidder không thanh toán ✓
+    {{#if_eq ../authUser.role 'seller'}}
+      {{!-- Seller không được mua --}}
+    {{else}}
+      <form method="POST" action="/products/{{product._id}}/buy-now" 
+            onsubmit="return confirm('Are you sure you want to buy this item now for ${{format_currency product.buyNowPrice}}?')">
+        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg">
+          🛒 Buy Now
+        </button>
+      </form>
+    {{/if_eq}}
+  </div>
+{{/if}}
+```
 
-11. ADMIN CONFIG
-    ✅ 13. Cấu hình
-        - Config via .env file ✓
-        - extend_minutes, default_bid_step, min_rating_percent ✓
+✅ Auto-trigger khi max_bid >= buy_now_price:
+```javascript
+// services/bid.service.js (trong placeBid function)
+export async function placeBid(productId, bidderId, bidAmount, maxBidAmount = null) {
+  const product = await Product.findById(productId);
+  
+  // ... existing validation
+  
+  // ✅ THÊM: Kiểm tra auto buy now
+  if (product.buyNowPrice && maxBidAmount && maxBidAmount >= product.buyNowPrice) {
+    return {
+      success: false,
+      requiresBuyNowConfirm: true,
+      message: `Your max bid (${maxBidAmount}) meets the buy now price (${product.buyNowPrice}). Would you like to buy now?`,
+      buyNowPrice: product.buyNowPrice
+    };
+  }
+  
+  // ... rest of auto-bid logic
+}
+```
 
-12. MASK TÊN BIDDER
-    ✅ Mask tên trong bid history
-        - Logic: '****' + name.slice(-3) ✓
-        - Seller xem được tên đầy đủ ✓
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ LỖI #3: AUTO-BID LOGIC SAI                                              ┃
+┃ 🔴 MỨC ĐỘ: NGHIÊM TRỌNG                                                 ┃
+┃ 🔴 MẤT ĐIỂM: 0.8 - 1.2 điểm                                             ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-13. CÁC TÍNH NĂNG BỔ SUNG ĐÃ LÀM
-    ✅ Watchlist
-    ✅ Email notifications đầy đủ
-    ✅ Blocked bidders
-    ✅ Append product description
-    ✅ Transaction tracking với nhiều trạng thái
-    ✅ Admin management panel
-    ✅ Search & filter sản phẩm
+YÊU CẦU ĐỀ BÀI:
+───────────────
+• Khi B đặt bid_amount, nếu <= maxA
+  → Hệ thống auto bid cho A lên min(bid_amount, maxA)  <-- KHÔNG CỘNG STEP!
 
-================================================================================
-❌ PHẦN 2: CHỨC NĂNG CHƯA LÀM HOẶC LÀM THIẾU
-================================================================================
+CODE HIỆN TẠI:
+─────────────
+File: services/bid.service.js (line 185)
+```javascript
+} else if (bidAmount <= topBid.maxBidAmount) {
+  const autoBidAmount = Math.min(bidAmount + product.stepPrice, topBid.maxBidAmount);
+  //                                        ^^^^^^^^^^^^^^^^^ ❌ SAI! KHÔNG NÊN CỘNG
+  await create({
+    productId,
+    bidderId: topBid.bidderId._id,
+    bidAmount: autoBidAmount,  // ❌ SAI
+    maxBidAmount: topBid.maxBidAmount,
+    isAutoBid: true,
+  });
+}
+```
 
-1. ⭐⭐⭐ SELLER MANAGEMENT - THỜI HẠN SELLER (NGHIÊM TRỌNG!!!)
-   ❌ 2.1 Xin / mua quyền Seller
-       THIẾU: seller_start_date, seller_end_date
-       - User model KHÔNG có trường sellerStartDate ❌
-       - User model KHÔNG có trường sellerEndDate ❌
-       - SellerRequest model chỉ có: userId, status, reviewedAt, reviewedBy
-       - KHÔNG tự động set sellerEndDate = now + 7 ngày ❌
-   
-   ❌ 2.2 Hết hạn Seller
-       THIẾU: Logic kiểm tra seller hết hạn
-       - KHÔNG có logic kiểm tra current_time > sellerEndDate ❌
-       - KHÔNG ngăn seller hết hạn tạo sản phẩm mới ❌
-       - VẪN cho phép xử lý sản phẩm cũ (đúng theo spec) ✓
-       - Role vẫn là 'seller' (KHÔNG downgrade - đúng spec) ✓
+PHẢI SỬA:
+─────────
+✅ Sửa công thức auto-bid:
+```javascript
+} else if (bidAmount <= topBid.maxBidAmount) {
+  // ✅ ĐÚNG: Chỉ dùng bidAmount, KHÔNG cộng step
+  const autoBidAmount = Math.min(bidAmount, topBid.maxBidAmount);
+  
+  await create({
+    productId,
+    bidderId: topBid.bidderId._id,
+    bidAmount: autoBidAmount,
+    maxBidAmount: topBid.maxBidAmount,
+    isAutoBid: true,
+  });
+  
+  return { 
+    success: false, 
+    message: 'Outbid by auto-bid system', 
+    currentBid: autoBidAmount 
+  };
+}
+```
 
-   🔴 ĐÁNH GIÁ: LỖI NGHIÊM TRỌNG - DỄ MẤT 1-1.5 ĐIỂM
-   
-   📌 THEO ĐỀ BÀI VÀ LUU-Y.TXT:
-   - Câu 13: "Quyền Seller có thời hạn, mặc định là 7 ngày"
-   - Câu 14: "Hết hạn KHÔNG bị hạ quyền, CHỈ hết hiệu lực đăng sản phẩm mới"
-   - Câu 15: "Hết hạn VẪN được xử lý các sản phẩm đã đăng"
-   
-   CẦN BỔ SUNG:
-   - Thêm vào User model:
-     * sellerStartDate: Date
-     * sellerEndDate: Date
-   - Khi approve seller request:
-     * Set sellerStartDate = now
-     * Set sellerEndDate = now + 7 days
-   - Middleware kiểm tra seller hết hạn:
-     * Tính: isExpired = now > sellerEndDate
-     * Nếu expired: KHÔNG cho tạo sản phẩm mới
-     * Nhưng VẪN cho xử lý sản phẩm đã đăng
+LÝ DO TẠI SAO SAI:
+─────────────────
+Ví dụ:
+- A đặt bid_amount = 100, maxA = 500
+- current_price = 100
+- B đặt bid_amount = 150 (không dùng auto-bid)
 
-2. ⭐⭐⭐ BUY NOW PRICE - CHƯA LÀM (NGHIÊM TRỌNG!)
-   ❌ 10.1 Click mua ngay
-       - Có field buyNowPrice trong Product model ✓
-       - Hiển thị buyNowPrice trên UI ✓
-       - NHƯNG KHÔNG có nút "Mua Ngay" ❌
-       - KHÔNG có route POST /products/:id/buy-now ❌
-       - KHÔNG chuyển status = 'sold' ❌
-       - KHÔNG tạo transaction ngay ❌
-   
-   ❌ 10.2 Auto buy khi max_bid >= buy_now_price
-       - KHÔNG có logic kiểm tra max_bid >= buyNowPrice ❌
-       - KHÔNG tự động trigger buy now ❌
-       - KHÔNG yêu cầu confirm ❌
-   
-   🔴 ĐÁNH GIÁ: Chỉ làm 20% - chỉ có field, CHƯA có logic xử lý
-   🔴 MẤT ĐIỂM: Ước tính mất 0.5-1 điểm
-   
-   📌 THEO LUU-Y.TXT:
-   - Câu 32: "Mua ngay → phiên đấu giá kết thúc lập tức"
-   - Câu 33: "IF max_bid >= buy_now → tự động mua (có confirm)"
-   
-   CẦN BỔ SUNG:
-   - Thêm status 'sold' vào Product model enum
-   - Tạo route POST /products/:id/buy-now
-   - Logic chuyển status = 'sold', tạo transaction
-   - Logic auto buy khi max_bid >= buyNowPrice (với confirm)
+Theo code hiện tại:
+- autoBidAmount = min(150 + 10, 500) = 160 ❌ SAI!
+- A tự động lên 160
 
-3. ⭐⭐ ADMIN CONFIG - CẦN CẢI THIỆN
-   ⚠️ THIẾU: UI hoặc DB để admin thay đổi config
-       - Config qua .env: AUTO_EXTEND_THRESHOLD_MINUTES, etc. ✓
-       - KHÔNG có table/model Config ❌
-       - KHÔNG có UI để admin thay đổi config ❌
-       - Phải sửa .env và restart server ❌
-   
-   ⚠️ ĐÁNH GIÁ: Làm đơn giản hóa, CẦN cải thiện
-   🔴 MẤT ĐIỂM: Ước tính mất 0.3-0.5 điểm
-   
-   📌 THEO LUU-Y.TXT:
-   - Câu 4: "Thời gian gia hạn KHÔNG được hard-code, phải cấu hình được"
-   
-   🎯 GIẢI PHÁP:
-   - NÊN thêm UI admin để thay đổi (lưu DB tốt hơn)
-   - YÊU CẦU: Buy now → chuyển status = 'sold' (riêng biệt với 'ended')
-       - KHÔNG có status 'sold' (riêng cho buy now) ❌
-       - KHÔNG tự động chuyển từ draft → active khi đến start_time ❌
-   
-   ⚠️ ĐÁNH GIÁ: Thiếu trạng thái draft và sold
-   - Sản phẩm tạo ra là 'active' ngay
-   - KHÔNG có start_time riêng biệt
-   ⭐⭐⭐ BUY NOW PRICE - CHƯA LÀM (NGHIÊM TRỌNG!)
-   ❌ 10.1 Click mua ngay
-       - Có field buyNowPrice trong Product model ✓
-       - Hiển thị buyNowPrice trên UI ✓
-       - NHƯNG KHÔNG có nút "Mua Ngay" ❌
-       - KHÔNG có route POST /products/:id/buy-now ❌
-       - KHÔNG chuyển status = 'sold' ❌
-       - KHÔNG tạo transaction ngay ❌
-   
-   ❌ 10.2 Auto buy khi max_bid >= buy_now_price
-       - KHÔNG có logic kiểm tra max_bid >= buyNowPrice ❌
-       - KHÔNG tự động trigger buy now ❌
-       - KHÔNG yêu cầu confirm ❌
-   
-   🔴 ĐÁNH GIÁ: Chỉ làm 20% - chỉ có field, CHƯA có logic xử lý
-   ✅ LOGIC AUTO-BID - ĐÚNG VÀ HỢP LÝ
-   ✅ 8.3 Auto-bid với max_bid_amount
-       Code hiện tại: LƯU max_bid trong Bid model
-       
-       - Bid model có field: maxBidAmount ✓
-       - maxBidAmount được lưu vào DB ✓
-       - KHÔNG hiển thị maxBidAmount trên UI ✓
-       - Có isAutoBid flag ✓
-       - Logic auto-bid khi bị outbid ✓
-   
-   ✅ ĐÁNH GIÁ: ĐÚNG THEO ĐỀ BÀI
-   
-   📌 THEO LUU-Y.TXT VÀ ĐỀ BÀI:
-   - Câu 24: "BẮT BUỘC phải làm auto-bid"
-   ⭐⭐ ADMIN CONFIG - CẦN BỔ SUNG
-   ⚠️ 13. Admin cấu hình
-       Code hiện tại: Config trong .env file
-       
-       - Config qua .env: AUTO_EXTEND_THRESHOLD_MINUTES, etc. ✓
-       - KHÔNG có table/model Config ❌
-       - KHÔNG có UI để admin thay đổi config ❌
-       - Phải sửa .env và restart server ❌
-   
-   ⚠️ ĐÁNH GIÁ: Làm đơn giản hóa, CẦN cải thiện
-   🔴 MẤT ĐIỂM: Ước tính mất 0.3-0.5 điểm
-   
-   📌 THEO LUU-Y.TXT:
-   - Câu 4: "Thời gian gia hạn KHÔNG được hard-code, phải cấu hình được"
-   - Câu 5: "Không bắt buộc giao diện admin riêng, miễn cấu hình được"
-   
-   🎯 GIẢI PHÁP:
-   - .env file VẪN được chấp nhận
-   - NHƯNG NÊN thêm UI admin để thay đổi (lưu DB tốt hơn)
-
-⭐ GOOGLE OAUTH LOGIN (Tính năng bổ sung - Optional)
-   ❌ CHƯA LÀM: Đăng nhập với Google OAuth
-       - KHÔNG có Google OAuth integration ❌
-       - Chỉ có đăng nhập thường với email/password ✓
-   
-   📝 ĐÁNH GIÁ: Không bắt buộc theo đề bài
-   
-   📌 LƯU Ý:
-   - Đây là tính năng BỔ SUNG, KHÔNG có trong đề bài gốc
-   - KHÔNG mất điểm nếu không làm
-   - NẾU LÀM có thể cải thiện UX và giá trị dự án
-   
-   CẦN BỔ SUNG (nếu muốn làm):
-   - Setup Google OAuth 2.0 credentials
-   - Install passport.js hoặc google-auth-library
-   - Thêm route: GET /auth/google, GET /auth/google/callback
-   - Thêm field vào User model:
-     * googleId: String
-     * provider: String ('google' | 'local')
-     * avatar: String (optional)
-   - Logic auto-create account khi email chưa tồn tại
-   - Password KHÔNG bắt buộc với Google OAuth users
-
+Theo đúng đề bài:
+- autoBidAmount = min(150, 500) = 150 ✅ ĐÚNG!
+- A tự động lên 150 (bằng bid của B)
+- A vẫn thắng vì đặt sớm hơn
 
 ================================================================================
-PHẦN 3: SO SÁNH CÁC LỖI VỚI ĐỀ BÀI
+PHẦN B: CÁC LỖI TRUNG BÌNH (MẤT ÍT ĐIỂM)
 ================================================================================
 
-1. ⭐⭐⭐ SELLER THỜI HẠN - LỖI NGHIÊM TRỌNG NHẤT
-   🔴 ĐỀ BÀI: Seller có thời hạn 7 ngày, hết hạn KHÔNG tạo sản phẩm mới
-   🔴 CODE: Seller VĨNH VIỄN, không có thời hạn
-   🔴 MỨC ĐỘ: NGHIÊM TRỌNG - MẤT 1-1.5 ĐIỂM
-   📌 LUU-Y.TXT: Câu 13, 14, 15
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ LỖI #4: KHÔNG KIỂM TRA allowNonRatedBidders                             ┃
+┃ ⚠️ MỨC ĐỘ: TRUNG BÌNH                                                   ┃
+┃ 🔴 MẤT ĐIỂM: 0.3 - 0.5 điểm                                             ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-2. ⭐⭐⭐ BUY NOW LOGIC - CHƯA LÀM
-   🔴 ĐỀ BÀI: Click buy now → sold, auto buy khi max_bid >= buy_now
-   🔴 CODE: Chỉ có field, KHÔNG có logic xử lý
-   🔴 MỨC ĐỘ: Chức năng chưa hoàn thành - MẤT 0.5-1 ĐIỂM
-   📌 LUU-Y.TXT: Câu 32, 33
+YÊU CẦU ĐỀ BÀI:
+───────────────
+• Seller có option allowNonRatedBidders
+• IF allowNonRatedBidders = false AND bidder.total_ratings == 0 → reject
 
-3. ⭐⭐ PRODUCT STATUS - THIẾU 'SOLD'
-   ⚠️ ĐỀ BÀI: Cần status 'sold' riêng cho buy now
-   ⚠️ CODE: Chỉ có active, ended, cancelled
-   📝 MỨC ĐỘ: Thiếu 1 status - MẤT ~0.2 ĐIỂM
+CODE HIỆN TẠI:
+─────────────
+File: services/bid.service.js (line 228)
+```javascript
+export async function validateBidder(bidderId, product) {
+  const rating = await ratingService.calculateUserRating(bidderId);
 
-4. ⭐⭐ ADMIN CONFIG - CẦN CẢI THIỆN
-   ⚠️ ĐỀ BÀI: Config phải thay đổi được (DB hoặc UI)
-   ⚠️ CODE: Config hardcode trong .env
-   📝 MỨC ĐỘ: Chấp nhận được nhưng chưa tối ưu - MẤT ~0.3 ĐIỂM
-   📌 LUU-Y.TXT: Câu 4, 5
+  if (rating.total === 0 && !product.allowNonRatedBidders) {
+    return {
+      valid: false,
+      message: 'Seller does not allow bidders without ratings',
+    };
+  }
+  // ✅ CÓ logic này nhưng...
+
+  const minRatingPercent = parseInt(process.env.MIN_BIDDER_RATING_PERCENT || '80');
+  if (rating.total > 0 && rating.percent < minRatingPercent) {
+    // ❌ SAI: Chỉ check khi total > 0
+    // ❌ NÊN: Kiểm tra cả allowNonRatedBidders
+    return {
+      valid: false,
+      message: `You need at least ${minRatingPercent}% positive rating to bid`,
+    };
+  }
+
+  return { valid: true };
+}
+```
+
+PHẢI SỬA:
+─────────
+✅ Logic đúng hơn:
+```javascript
+export async function validateBidder(bidderId, product) {
+  const rating = await ratingService.calculateUserRating(bidderId);
+
+  // Case 1: Bidder chưa có rating nào
+  if (rating.total === 0) {
+    if (!product.allowNonRatedBidders) {
+      return {
+        valid: false,
+        message: 'Seller does not allow bidders without ratings',
+      };
+    }
+    // Nếu allow thì OK
+    return { valid: true };
+  }
+
+  // Case 2: Bidder có rating nhưng % thấp
+  const minRatingPercent = parseInt(process.env.MIN_BIDDER_RATING_PERCENT || '80');
+  if (rating.percent < minRatingPercent) {
+    return {
+      valid: false,
+      message: `You need at least ${minRatingPercent}% positive rating to bid`,
+    };
+  }
+
+  return { valid: true };
+}
+```
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ LỖI #5: ADMIN CONFIG KHÔNG CÓ UI                                        ┃
+┃ ⚠️ MỨC ĐỘ: TRUNG BÌNH                                                   ┃
+┃ 🔴 MẤT ĐIỂM: 0.3 - 0.5 điểm                                             ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+YÊU CẦU ĐỀ BÀI:
+───────────────
+• Thời gian gia hạn KHÔNG được hard-code (luu-y.txt câu 4)
+• Phải cho phép cấu hình được (luu-y.txt câu 5)
+• Không bắt buộc giao diện admin riêng, miễn cấu hình được
+
+CODE HIỆN TẠI:
+─────────────
+```javascript
+// services/bid.service.js
+const thresholdMinutes = parseInt(process.env.AUTO_EXTEND_THRESHOLD_MINUTES || '5');
+const extendMinutes = parseInt(process.env.AUTO_EXTEND_DURATION_MINUTES || '10');
+// ⚠️ Dùng .env file - CHO PHÉP nhưng KHÔNG TỐI ƯU
+```
+
+File: routes/admin/*
+```
+❌ KHÔNG CÓ: routes/admin/config.route.js
+❌ KHÔNG CÓ: views/vwAdmin/config/
+❌ KHÔNG CÓ: models/Config.js
+```
+
+PHẢI SỬA:
+─────────
+✅ Option 1: Tạo UI admin (tốt nhất):
+```javascript
+// models/Config.js
+const configSchema = new mongoose.Schema({
+  key: { type: String, unique: true, required: true },
+  value: { type: String, required: true },
+  description: String,
+  type: { type: String, enum: ['number', 'string', 'boolean'], default: 'string' }
+});
+
+// Seed default configs
+await Config.insertMany([
+  { key: 'AUTO_EXTEND_THRESHOLD_MINUTES', value: '5', type: 'number', description: 'Minutes before end to trigger auto-extend' },
+  { key: 'AUTO_EXTEND_DURATION_MINUTES', value: '10', type: 'number', description: 'Minutes to extend auction' },
+  { key: 'MIN_BIDDER_RATING_PERCENT', value: '80', type: 'number', description: 'Minimum rating % to bid' }
+]);
+```
+
+✅ Option 2: Giữ .env nhưng thêm note (chấp nhận được):
+```javascript
+// README.md
+## Configuration
+All system configurations are in `.env` file:
+- AUTO_EXTEND_THRESHOLD_MINUTES: Time before auction end to trigger extension (default: 5)
+- AUTO_EXTEND_DURATION_MINUTES: Minutes to extend auction (default: 10)
+- MIN_BIDDER_RATING_PERCENT: Minimum rating percentage to bid (default: 80)
+
+To change: Edit `.env` and restart server.
+```
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ LỖI #6: THIẾU LOGIC AUTO-CANCEL KHI SELLER HỦY                          ┃
+┃ ⚠️ MỨC ĐỘ: TRUNG BÌNH                                                   ┃
+┃ 🔴 MẤT ĐIỂM: 0.2 - 0.4 điểm                                             ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+YÊU CẦU ĐỀ BÀI:
+───────────────
+• Seller có quyền hủy giao dịch (luu-y.txt câu 22)
+• NHƯNG: Khi đã confirm payment → KHÔNG cho hủy (luu-y.txt câu 23)
+• Khi hủy → tự động rate -1 cho winner
+• Comment: "Seller cancelled transaction"
+
+CODE HIỆN TẠI:
+─────────────
+```javascript
+// ❌ KHÔNG TÌM THẤY: Logic seller cancel transaction
+// ❌ KHÔNG TÌM THẤY: Auto-rate -1 khi cancel
+```
+
+PHẢI SỬA:
+─────────
+✅ Thêm route cancel transaction:
+```javascript
+// routes/checkout.route.js
+router.post('/:id/cancel', async function (req, res) {
+  const transaction = await transactionService.findById(req.params.id);
+  
+  if (!transaction) {
+    return res.error('Transaction not found.');
+  }
+  
+  // Chỉ seller được cancel
+  if (transaction.sellerId.toString() !== req.session.authUser._id.toString()) {
+    return res.error('Only seller can cancel transaction.');
+  }
+  
+  // Không cho cancel nếu đã confirm payment
+  if (transaction.step >= 2) {
+    return res.error('Cannot cancel after payment confirmation.');
+  }
+  
+  // Cancel transaction
+  await transactionService.update(transaction._id, { 
+    status: 'cancelled',
+    cancelledBy: req.session.authUser._id,
+    cancelReason: req.body.reason || 'Seller cancelled'
+  });
+  
+  // Auto-rate -1 cho winner
+  await ratingService.create({
+    productId: transaction.productId,
+    fromUserId: transaction.buyerId,
+    toUserId: transaction.sellerId,
+    rating: -1,
+    comment: 'Seller cancelled transaction',
+    type: 'bidder_to_seller'
+  });
+  
+  res.redirect('/seller/products/ended');
+});
+```
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ LỖI #7: KHÔNG CÓ LOGIC REVERT KHI BLOCK TOP BIDDER                      ┃
+┃ ⚠️ MỨC ĐỘ: NHẸ                                                          ┃
+┃ 🔴 MẤT ĐIỂM: 0.2 - 0.3 điểm                                             ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+YÊU CẦU ĐỀ BÀI:
+───────────────
+• Khi block bidder đang top → revert về bid thứ 2
+
+CODE HIỆN TẠI:
+─────────────
+```javascript
+// services/bid.service.js
+export async function blockBidder(productId, bidderId) {
+  await productService.addBlockedBidder(productId, bidderId);
+  // ❌ THIẾU: Kiểm tra bidder có đang top không
+  // ❌ THIẾU: Nếu đang top → cập nhật current_price về bid thứ 2
+}
+```
+
+PHẢI SỬA:
+─────────
+✅ Thêm logic revert:
+```javascript
+export async function blockBidder(productId, bidderId) {
+  const product = await Product.findById(productId);
+  const topBid = await getTopBidder(productId);
+  
+  // Block bidder
+  await productService.addBlockedBidder(productId, bidderId);
+  
+  // Nếu bidder đang top → revert về bid thứ 2
+  if (topBid && topBid.bidderId._id.toString() === bidderId.toString()) {
+    const secondBid = await getSecondHighestBid(productId);
+    
+    if (secondBid) {
+      await productService.update(productId, {
+        currentPrice: secondBid.bidAmount
+      });
+    } else {
+      // Không có bid thứ 2 → về start price
+      await productService.update(productId, {
+        currentPrice: product.startPrice
+      });
+    }
+  }
+}
+```
 
 ================================================================================
-
-TỔNG SỐ CHỨC NĂNG THEO ĐỀ BÀI: ~17 nhóm chức năng chính
-
-✅ ĐÃ LÀM ĐÚNG VÀ ĐẦY ĐỦ: ~14 nhóm (82%)
-   - Auth & Login với OTP ✓
-   - Product listing & detail ✓
-   - Search & filter ✓
-   - Q&A ✓
-   - Rating system (+1/-1) ✓
-   - Auction core (bid, step price) ✓
-   - Auto-bid mechanism ✓
-   - Auto-extend ✓
-   - Mask bidder name ✓
-   - Transaction tracking (4-step checkout) ✓
-   - Watchlist ✓
-   - Email notifications ✓
-   - Block bidder ✓
-   - Append description ✓
-
-❌ CHƯA LÀM HOẶC LÀM THIẾU: ~3 nhóm (18%)
-   - Seller thời hạn (chưa làm - NGHIÊM TRỌNG) ❌
-   - Buy now logic (chưa làm - NGHIÊM TRỌNG) ❌
-   - Admin config UI (chưa làm - NGHIÊM TRỌNG) ❌
-
-TỔNG SỐ CHỨC NĂNG TRONG TODO: ~15 nhó (CẬP NHẬT)
+PHẦN C: CÁC LỖI NHỎ (Thiếu Validation/Edge Cases)
 ================================================================================
 
-⭐⭐⭐ PRIORITY 1 - NGHIÊM TRỌNG (BẮT BUỘC PHẢI SỬA TRƯỚC KHI NỘP BÀI):
-=====================   - Product listing & detail
-   - Search & filter
-   - Q&A
-   - Rating system
-   - Auction core (bid, step price)
-   - Auto-bid mechanism
-   - Auto-extend
-   - Mask bidder name
-   - Transaction tracking
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ LỖI #8: THIẾU VALIDATION KHI TẠO SẢN PHẨM                                ┃
+┃ ⚠️ MỨC ĐỘ: NHẸ                                                          ┃
+┃ 🔴 MẤT ĐIỂM: 0.1 - 0.2 điểm                                             ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-❌ CHƯA LÀM / LÀM THIẾU: ~5 nhóm (33%)
-   - Seller thời hạn (chưa làm - NGHIÊM TRỌNG)
-   - Buy now logic (chưa làm)
-   - Product draft status (chưa làm)
-   - Reputation score field (làm khác)
-   - Admin config DB (làm khác)
+YÊU CẦU ĐỀ BÀI:
+───────────────
+• IF buyNowPrice < startPrice → reject
+• IF stepPrice <= 0 → reject
+• IF endTime <= now → reject
 
-⚠️ LÀM SAI HOẶC KHÁC SPEC: ~3 items
-   - Seller không có thời hạn
-   - Max bid được lưu DB (nhưng hợp lý)
-   - Config qua .env thay vì DB
+CODE HIỆN TẠI:
+─────────────
+```javascript
+// routes/seller/product.route.js
+router.post('/create', async function (req, res) {
+  const { startPrice, stepPrice, buyNowPrice, endTime } = req.body;
+  
+  // ❌ THIẾU: Validation buyNowPrice >= startPrice
+  // ❌ THIẾU: Validation stepPrice > 0
+  // ❌ THIẾU: Validation endTime > now
+  
+  const product = await productService.create({...});
+});
+```
+
+PHẢI SỬA:
+─────────
+✅ Thêm validation:
+```javascript
+router.post('/create', async function (req, res) {
+  const { startPrice, stepPrice, buyNowPrice, endTime } = req.body;
+  
+  // Validate step price
+  if (parseFloat(stepPrice) <= 0) {
+    return res.error('Step price must be greater than 0.');
+  }
+  
+  // Validate buy now price
+  if (buyNowPrice && parseFloat(buyNowPrice) < parseFloat(startPrice)) {
+    return res.error('Buy now price must be greater than or equal to start price.');
+  }
+  
+  // Validate end time
+  if (new Date(endTime) <= new Date()) {
+    return res.error('End time must be in the future.');
+  }
+  
+  const product = await productService.create({...});
+});
+```
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ LỖI #9: THIẾU KIỂM TRA BIDDER ĐANG TOP ĐẶT LẠI                          ┃
+┃ ⚠️ MỨC ĐỘ: NHẸ                                                          ┃
+┃ 🔴 MẤT ĐIỂM: 0.1 - 0.2 điểm                                             ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+YÊU CẦU ĐỀ BÀI:
+───────────────
+• Người đang top có thể đặt lại để cập nhật max_bid (luu-y.txt câu 27)
+• current_price giữ nguyên
+• Chỉ cập nhật maxBidAmount
+
+CODE HIỆN TẠI:
+─────────────
+```javascript
+// services/bid.service.js - placeBid function
+export async function placeBid(productId, bidderId, bidAmount, maxBidAmount = null) {
+  // ❌ THIẾU: IF bidderId == topBidder._id
+  //          → Chỉ cập nhật maxBidAmount
+  //          → KHÔNG tạo bid mới
+  //          → current_price giữ nguyên
+  
+  const topBid = await getTopBidder(productId);
+  
+  if (topBid && topBid.maxBidAmount) {
+    // ... existing auto-bid logic
+  }
+}
+```
+
+PHẢI SỬA:
+─────────
+✅ Thêm logic update max bid:
+```javascript
+export async function placeBid(productId, bidderId, bidAmount, maxBidAmount = null) {
+  const product = await Product.findById(productId);
+  const topBid = await getTopBidder(productId);
+  
+  // ✅ Case: Người đang top đặt lại
+  if (topBid && topBid.bidderId._id.toString() === bidderId.toString()) {
+    if (!maxBidAmount) {
+      return {
+        success: false,
+        message: 'You are already the top bidder. Please enter a max bid to update.'
+      };
+    }
+    
+    // Update max bid only
+    await Bid.findByIdAndUpdate(topBid._id, {
+      maxBidAmount: maxBidAmount
+    });
+    
+    return {
+      success: true,
+      message: 'Your max bid has been updated.',
+      bid: topBid
+    };
+  }
+  
+  // ... rest of auto-bid logic
+}
+```
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ LỖI #10: THIẾU EMAIL THÔNG BÁO BỊ OUTBID                                ┃
+┃ ⚠️ MỨC ĐỘ: NHẸ                                                          ┃
+┃ 🔴 MẤT ĐIỂM: 0.1 điểm                                                   ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+YÊU CẦU ĐỀ BÀI:
+───────────────
+• Khi bidder bị outbid → gửi email thông báo
+
+CODE HIỆN TẠI:
+─────────────
+```javascript
+// routes/bidder/bid.route.js
+await emailService.sendBidPlacedEmail(
+  updatedProduct,
+  result.bid,
+  topBid,
+  req.session.authUser
+);
+// ❌ THIẾU: Email cho bidder cũ (bị outbid)
+```
+
+PHẢI SỬA:
+─────────
+✅ Thêm email outbid:
+```javascript
+// routes/bidder/bid.route.js
+const oldTopBidder = await bidService.getTopBidder(req.params.productId);
+
+const result = await bidService.placeBid(...);
+
+if (result.success) {
+  const newTopBidder = await bidService.getTopBidder(req.params.productId);
+  
+  // Email cho bidder cũ nếu bị outbid
+  if (oldTopBidder && 
+      oldTopBidder.bidderId._id.toString() !== newTopBidder.bidderId._id.toString()) {
+    await emailService.sendOutbidEmail(
+      updatedProduct,
+      oldTopBidder.bidderId,
+      newTopBidder.bidAmount
+    );
+  }
+}
+```
 
 ================================================================================
-🎯 PHẦN 5: ĐỀ XUẤT SỬA CHỮA - ƯU TIÊN
+PHẦN D: TỔNG KẾT VÀ ƯU TIÊN SỬA LỖI
 ================================================================================
 
-PRIORITY 1 - NGHIÊM TRỌNG (BẮT BUỘC PHẢI SỬA):
-===============================================
+📊 THỐNG KÊ LỖI:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔴 LỖI NGHIÊM TRỌNG (3 lỗi):         3.5 - 4.7 điểm
+⚠️  LỖI TRUNG BÌNH (4 lỗi):          0.9 - 1.7 điểm
+⚡ LỖI NHỎ (3 lỗi):                  0.3 - 0.7 điểm
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📉 TỔNG MẤT ĐIỂM:                    4.7 - 7.1 điểm
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-1. ⭐⭐⭐ BỔ SUNG SELLER THỜI HẠN
-   File cần sửa: models/User.js
-   
-   Thêm fields:
-   ```javascript
-   sellerStartDate: {
-     type: Date,
-     default: null,
-   },
-   sellerEndDate: {
-     type: Date,
-     default: null,
-   }
-   ```
+🎯 ƯU TIÊN SỬA (THEO THỨ TỰ):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-   File cần sửa: services/seller-request.service.js
-   
-   Trong hàm updateStatus khi approve:
-   ```javascript
-   if (status === 'approved') {
-     await userService.update(userId, {
-       role: 'seller',
-       sellerStartDate: new Date(),
-       sellerEndDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-     });
-   }
-   ```
+PRIORITY 1 - KHẨN CẤP (Phải sửa ngay):
+═════════════════════════════════════════
+1. ⭐⭐⭐ Seller 7-day expiration (LỖI #1)
+   - Thêm sellerStartDate, sellerEndDate vào User model
+   - Middleware kiểm tra seller còn hạn
+   - Update logic approve seller request
+   - Thời gian: 2-3 giờ
+   - Mất điểm nếu không làm: 1.5-2.0 điểm
 
-   File cần sửa: middlewares/auth.mdw.js
-   
-   Thêm middleware mới:
-   ```javascript
-   export function isActiveSeller(req, res, next) {
-     const user = req.session.authUser;
-     if (user.role !== 'seller' && user.role !== 'admin') {
-       return res.render('403');
-     }
-     
-     if (user.role === 'seller') {
-       if (new Date() > user.sellerEndDate) {
-         return res.error('Your seller subscription has expired. Please renew.');
-       }
-     }
-     
-     next();
-   }
-   ```
+2. ⭐⭐⭐ Buy now functionality (LỖI #2)
+   - Thêm status 'sold'
+   - Route POST /products/:id/buy-now
+   - Auto-trigger khi max_bid >= buy_now_price
+   - UI nút "Mua Ngay"
+   - Thời gian: 3-4 giờ
+   - Mất điểm nếu không làm: 1.0-1.5 điểm
 
-   File cần sửa: routes/seller/product.route.js
-   
-   Thay đổi:
-   ```javascript
-   // Từ:
-   router.use(isSeller);
-   
-   // Thành:
-   router.use(isActiveSeller);
-   ```
+3. ⭐⭐⭐ Auto-bid logic fix (LỖI #3)
+   - Sửa công thức min(bidAmount, maxA) thay vì min(bidAmount + step, maxA)
+   - Thời gian: 30 phút
+   - Mất điểm nếu không làm: 0.8-1.2 điểm
 
-2. ⭐⭐⭐ THÊM LOGIC MUA NGAY (BUY NOW)
-   File cần tạo mới: routes/product.route.js (thêm route)
-   
-   ```javascript
-   router.post('/:id/buy-now', isAuth, async function (req, res) {
-     const product = await productService.findById(req.params.id);
-     
-     if (!product || product.status !== 'active') {
-       return res.error('Product not available');
-     }
-     
-     if (!product.buyNowPrice) {
-       return res.error('This product does not have buy now option');
-     }
-     
-     if (product.sellerId._id.toString() === req.session.authUser._id.toString()) {
-       return res.error('You cannot buy your own product');
-     }
-     
-     // Chuyển status thành sold
-     await productService.updateStatus(product._id, 'sold');
-     
-     // Tạo transaction ngay
-     await transactionService.create({
-       productId: product._id,
-       sellerId: product.sellerId._id,
-       winnerId: req.session.authUser._id,
-     });
-     
-     // Gửi email thông báo
-     await emailService.sendBuyNowEmail(product, req.session.authUser);
-     
-     res.redirect(`/checkout/${product._id}`);
-   });
-   ```
+PRIORITY 2 - QUAN TRỌNG (Nên sửa):
+═════════════════════════════════════════
+4. ⭐⭐ AllowNonRatedBidders validation (LỖI #4)
+   - Thời gian: 30 phút
+   - Mất điểm: 0.3-0.5 điểm
 
-   File cần sửa: models/Product.js
-   
-   Thêm 'sold' vào enum status:
-   ```javascript
-⭐⭐ PRIORITY 2 - NÊN LÀM (Cải thiện đáng kể):
-==========================================
+5. ⭐⭐ Admin config UI (LỖI #5)
+   - Thời gian: 2 giờ (nếu làm UI) hoặc 10 phút (nếu chỉ document .env)
+   - Mất điểm: 0.3-0.5 điểm
 
-3. ⭐⭐ ADMIN CONFIG VIA DATABASE hoặc UI
-   GIẢI PHÁP 1: Tạo UI admin đơn giản
-   File: routes/admin/config.route.js (tạo mới)
-   
-   ```javascript
-   router.get('/config', (req, res) => {
-     const config = {
-       extendThreshold: process.env.AUTO_EXTEND_THRESHOLD_MINUTES || '5',
-       extendDuration: process.env.AUTO_EXTEND_DURATION_MINUTES || '10',
-       minRating: process.env.MIN_BIDDER_RATING_PERCENT || '80',
-     };
-     res.render('vwAdmin/config', { config });
-   });
-   
-   router.post('/config', async (req, res) => {
-     // Lưu vào DB hoặc file config
-     // Reload config khi cần
-   });
-   ```
-   
-   GIẢI PHÁP 2: Tạo model Config
-   File: models/Config.js
-   
-   ```javascript
-   const configSchema = new mongoose.Schema({
-     key: String,
-     value: String,
-   });
-   ```
-
-⭐ PRIORITY 3 - TÙY CHỌN (Không bắt buộc):
-=========================================
-
-4. ⭐ CẢI THIỆN AUTO-BID NOTIFICATION
-   
-   File: services/rating.service.js
-   
-   Khi tạo rating:
-   ```javascript
-   async function createOrUpdate(...) {
-     // ... existing code
-     
-     // Update reputation score
-     const user = await User.findById(toUserId);
-     user.reputationScore += ratingValue;
-     await user.save();
-   }
-   ```
+6. ⭐⭐ Seller cancel transaction (LỖI #6)
+   - Thời gian: 1-2 giờ
+   - Mất điểm: 0.2-0.4 điểm
 
 PRIORITY 3 - TÙY CHỌN (Cải thiện):
-===================================
+═════════════════════════════════════════
+7. ⭐ Block bidder revert (LỖI #7)
+8. ⭐ Product validation (LỖI #8)
+9. ⭐ Top bidder update max bid (LỖI #9)
+10. ⭐ Outbid email (LỖI #10)
 
-5. ⭐ ADMIN CONFIG VIA DATABASE
-   Tạo model mới: models/Config.js
-   Tạo service: services/config.service.js
-   Tạo admin routes: routes/admin/config.route.js
-   Tạo views: vwAdmin/config/
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-   (Chi tiết implementation có thể bỏ qua nếu thời gian gấp)
-
-6. ⭐ GOOGLE OAUTH LOGIN (Bonus feature)
-   Install dependencies:
-   ```bash
-   npm install passport passport-google-oauth20 express-session
-   ```
-   
-   Cập nhật User model (models/User.js):
-   ```javascript
-   googleId: String,
-   provider: { type: String, enum: ['local', 'google'], default: 'local' },
-   avatar: String,
-   password: { type: String, required: false }, // Không bắt buộc cho Google OAuth
-   ```
-   
-   Tạo file config/passport.js:
-   ```javascript
-   const GoogleStrategy = require('passport-google-oauth20').Strategy;
-   
-   passport.use(new GoogleStrategy({
-     clientID: process.env.GOOGLE_CLIENT_ID,
-     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-     callbackURL: "/auth/google/callback"
-   }, async (accessToken, refreshToken, profile, done) => {
-     // Check if user exists
-     let user = await User.findOne({ email: profile.emails[0].value });
-     
-     if (!user) {
-       // Create new user
-       user = await User.create({
-         googleId: profile.id,
-         provider: 'google',
-         name: profile.displayName,
-         email: profile.emails[0].value,
-         avatar: profile.photos[0].value,
-         role: 'bidder',
-         isEmailVerified: true
-       });
-     } else if (!user.googleId) {
-       // Link Google to existing account
-       user.googleId = profile.id;
-       user.provider = 'google';
-       await user.save();
-     }
-     
-     done(null, user);
-   }));
-   ```
-   
-   Thêm routes (routes/auth.route.js):
-   ```javascript
-   router.get('/google', passport.authenticate('google', { 
-     scope: ['profile', 'email'] 
-   }));
-   
-   router.get('/google/callback', 
-     passport.authenticate('google', { failureRedirect: '/login' }),
-     (req, res) => {
-       req.session.user = req.user;
-       res.redirect('/');
-     }
-   );
-   ```
-   
-   Thêm nút trên view (vwAuth/login.handlebars):
-   ```html
-   <a href="/auth/google" class="btn btn-google">
-     <img src="/images/google-icon.svg" alt="Google">
-     Đăng nhập với Google
-   </a>
-   ```
-
-================================================================================
-📝 PHẦN 6: KẾT LUẬN & NHẬN XÉT
-================================================================================
-
-ĐIỂM MẠNH:
------------
-✅ Auto-bid mechanism được implement tốt
-✅ Auto-extend hoạt động đúng logic
-✅ Mask bidder name đúng spec
-✅ Rating system 2 chiều hoàn chỉnh
-✅ Transaction tracking chi tiết
-✅ Email notifications đầy đủ
-✅ Code structure sạch, follow MVC pattern
+✅ NHỮNG GÌ ĐÃ LÀM TỐT:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ Auto-extend mechanism (đúng logic)
+✅ Mask bidder name (****VanA)
+✅ Rating system (+1/-1 với percentage)
+✅ Transaction 4-step checkout
+✅ Email notifications (6 loại)
+✅ OTP verification
+✅ reCAPTCHA protection
+✅ Watchlist feature
+✅ Q&A system
+✅ Block bidders
+✅ Append description
+✅ Admin panels (users, categories, products, seller requests)
+✅ Code structure tốt (MVC pattern)
 ✅ Security tốt (bcrypt, session, middleware)
 
-ĐIỂM YẾU:
----------
-❌ THIẾU seller thời hạn - LỖI NGHIÊM TRỌNG NHẤT
-❌ Buy now chỉ có UI, chưa có logic
-❌ Không có product draft status
-❌ Config hardcode trong .env
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-TỔNG QUAN:
-----------
-- Hệ thống được code KHÁ TỐT
-- Nhiều tính năng bổ sung ngoài spec (watchlist, email, etc.)
-- NHƯNG THIẾU 2 tính năng quan trọng:
-  1. Seller thời hạn (rất dễ mất điểm)
-  2. Buy now logic
+💡 KHUYẾN NGHỊ:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Tập trung sửa 3 lỗi PRIORITY 1 trước (seller expiration, buy now, auto-bid)
+2. Lỗi #3 (auto-bid) đơn giản nhất, sửa ngay
+3. Nếu thời gian gấp: Làm PRIORITY 1 + document .env file (thay vì UI admin)
+4. Test kỹ auto-bid sau khi sửa (dễ sai logic nhất)
+5. Commit Git thường xuyên để tránh bị đánh giá thấp
 
-ƯỚC TÍNH ĐIỂM:
---------------
-Nếu chấm theo todo-list:
-- Phần đã làm đúng: 7-7.5/10
-- Mất điểm vì:
-  * Thiếu seller thời hạn: -1.5 điểm
-  * Thiếu buy now: -1 điểm
-  * Thiếu draft status: -0.5 điểm
-
-KHUYẾN NGHỊ:
-------------
-🔴 BẮT BUỘC: Fix seller thời hạn trước khi nộp bài
-🔴 BẮT BUỘC:  (CẬP NHẬT):
---------------------------
-Nếu chấm theo đề bài chính thức:
-- Phần đã làm đúng: 8.0-8.5/10 (82%)
-- Mất điểm vì:
-  * Thiếu seller thời hạn: -1.0 đến -1.5 điểm ⭐⭐⭐
-  * Thiếu buy now logic: -0.5 đến -1.0 điểm ⭐⭐⭐
-  * Config không linh hoạt: -0.3 đến -0.5 điểm ⭐⭐
-
-KHUYẾN NGHỊ ƯU TIÊN (CẬP NHẬT):
--------------------------------
-🔴 BẮT BUỘC (PRIORITY 1):
-   1. Fix seller thời hạn trước khi nộp bài ⭐⭐⭐
-   2. Implement buy now logic (click + auto buy) ⭐⭐⭐
-
-⚠️  NÊN LÀM (PRIORITY 2):
-   3. Thêm UI admin config hoặc lưu DB ⭐⭐
-
-❌ KHÔNG CẦN LÀM (không có trong đề bài):
-   - Draft status cho product
-   - Reputation score field tích lũy
-   - Start time riêng biệt
+================================================================================
+KẾT THÚC BÁO CÁO
+================================================================================
