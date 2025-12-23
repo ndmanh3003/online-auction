@@ -42,7 +42,7 @@
           {{/if}}
           <div class="flex justify-between items-center">
             <span class="text-gray-600">Number of Bids:</span>
-            <span class="text-gray-900 font-semibold">{{bidCount}}</span>
+            <span class="text-gray-900 font-semibold">{{product.bidCount}}</span>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-gray-600">Ends:</span>
@@ -55,14 +55,14 @@
         <p class="text-gray-600">{{product.sellerId.name}}</p>
         <p class="text-gray-500 text-sm">{{product.sellerId.email}}</p>
       </div>
-      {{#if topBidder}}
+      {{#if product.topBidder}}
         <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-6 mb-6">
           <h3 class="text-gray-900 font-semibold mb-4">Current Top Bidder</h3>
-          <p class="text-gray-600">{{topBidder.name}}</p>
+          <p class="text-gray-600">{{product.topBidder.name}}</p>
         </div>
       {{/if}}
       {{#if isAuthenticated}}
-        <div class="flex gap-4">
+        <div class="flex gap-2">
           <form
             method="post"
             action="/bidder/watchlist/{{product._id}}"
@@ -87,7 +87,7 @@
           </form>
           <a
             href="/bidder/bid/{{product._id}}"
-            class="flex-1 text-center px-6 py-4 bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
+            class="flex-1 h-fit text-center px-6 py-4 bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
           >
             Place Bid
           </a>
@@ -115,6 +115,20 @@
     <div class="text-gray-600 prose max-w-none">
       {{{product.description}}}
     </div>
+    {{#if product.appendedDescriptions.length}}
+      {{#each product.appendedDescriptions}}
+        <hr class="my-8 border-t border-gray-200">
+        <div class="mb-6">
+          <div class="flex items-center gap-2 mb-3">
+            <i class="fas fa-edit text-blue-600"></i>
+            <span class="text-gray-500 text-sm">{{formatDate timestamp}}</span>
+          </div>
+          <div class="text-gray-600 prose max-w-none">
+            {{{content}}}
+          </div>
+        </div>
+      {{/each}}
+    {{/if}}
   </div>
   <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-8 mb-12">
     <h2 class="text-[28px] font-semibold text-gray-900 mb-6">Questions & Answers</h2>
@@ -141,9 +155,9 @@
         </button>
       </form>
     {{/if}}
-    {{#if questions.length}}
+    {{#if product.questions.length}}
       <div class="space-y-6">
-        {{#each questions}}
+        {{#each product.questions}}
           <div class="border-b border-gray-200 pb-6 last:border-b-0">
             <div class="flex items-start gap-4 mb-4">
               <div class="flex-1">
@@ -166,11 +180,11 @@
       <p class="text-gray-500 text-center py-8">No questions yet. Be the first to ask!</p>
     {{/if}}
   </div>
-  {{#if relatedProducts.length}}
+  {{#if product.relatedProducts.length}}
     <div class="mb-12">
       <h2 class="text-[28px] font-semibold text-gray-900 mb-6">Related Products</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-        {{#each relatedProducts}}
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {{#each product.relatedProducts}}
           <a
             href="/products/{{_id}}"
             class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 overflow-hidden hover:scale-105 transition-all duration-300 ease-out"

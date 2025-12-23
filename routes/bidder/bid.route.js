@@ -6,7 +6,7 @@ import * as emailService from '../../utils/email.js';
 const router = express.Router();
 
 router.get('/:productId', async function (req, res) {
-  const product = await productService.findByIdWithDetails(req.params.productId);
+  const product = await productService.findById(req.params.productId, false);
   if (!product) {
     return res.status(404).render('404');
   }
@@ -31,7 +31,7 @@ router.get('/:productId', async function (req, res) {
 
 router.post('/:productId', async function (req, res) {
   const { bidAmount, maxBidAmount } = req.body;
-  const product = await productService.findByIdWithDetails(req.params.productId);
+  const product = await productService.findById(req.params.productId, false);
 
   if (!product) {
     return res.error('Product not found.');
@@ -62,7 +62,7 @@ router.post('/:productId', async function (req, res) {
       return res.error(result.message);
     }
 
-    const updatedProduct = await productService.findByIdWithDetails(req.params.productId);
+    const updatedProduct = await productService.findById(req.params.productId, false);
     const topBid = await bidService.getTopBidder(req.params.productId);
 
     await emailService.sendBidPlacedEmail(

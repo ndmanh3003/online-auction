@@ -9,6 +9,7 @@ import { handleError } from './middlewares/error.mdw.js';
 import './utils/db.js';
 import { paginationHelper } from './utils/pagination.js';
 import routes from './routes/index.js';
+import './jobs/auction-end.job.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -43,6 +44,10 @@ const handlebarsEngine = engine({
       const bStr = b && typeof b.toString === 'function' ? b.toString() : b;
       return aStr === bStr;
     },
+    startsWith(str, prefix) {
+      if (!str || !prefix) return false;
+      return String(str).startsWith(String(prefix));
+    },
     ne(a, b) {
       const aStr = a && typeof a.toString === 'function' ? a.toString() : a;
       const bStr = b && typeof b.toString === 'function' ? b.toString() : b;
@@ -60,7 +65,9 @@ const handlebarsEngine = engine({
       const d = new Date(date);
       const m = ('0' + (d.getMonth() + 1)).slice(-2);
       const day = ('0' + d.getDate()).slice(-2);
-      return `${d.getFullYear()}-${m}-${day}`;
+      const h = ('0' + d.getHours()).slice(-2);
+      const min = ('0' + d.getMinutes()).slice(-2);
+      return `${d.getFullYear()}-${m}-${day} ${h}:${min}`;
     },
     toString(value) {
       if (!value) return '';
@@ -81,6 +88,14 @@ const handlebarsEngine = engine({
     },
     pagination(currentPage, totalPages, total) {
       return paginationHelper(currentPage, totalPages, total);
+    },
+    isBlocked(blockedBidders, bidderId) {
+      if (!blockedBidders || !bidderId) return false;
+      const bidderIdStr = bidderId.toString ? bidderId.toString() : String(bidderId);
+      return blockedBidders.some(blocked => {
+        const blockedStr = blocked.toString ? blocked.toString() : String(blocked);
+        return blockedStr === bidderIdStr;
+      });
     },
   },
 });

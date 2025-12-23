@@ -82,19 +82,75 @@
               />
             </a>
           </div>
-          <div class="flex items-center">
+          <div class="flex items-center gap-4">
             {{#if isAuthenticated}}
               <a
-                href="/account/profile"
-                class="flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-gray-50 transition-all duration-300 ease-out group"
+                href="/bidder/watchlist"
+                class="px-4 py-2 {{#if (startsWith req.path '/bidder/watchlist')}}text-blue-600 font-semibold{{else}}text-gray-700 hover:text-blue-600{{/if}} transition-colors font-medium"
               >
-                <span class="text-gray-900 font-medium group-hover:text-blue-600 transition-colors font-momo-signature">
-                  {{authUser.name}}
-                </span>
-                <div class="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-full group-hover:bg-blue-200 transition-colors">
-                  <i class="fas fa-user text-blue-600 text-sm"></i>
-                </div>
+                Watchlist
               </a>
+              <a
+                href="/account/bids"
+                class="px-4 py-2 {{#if (startsWith req.path '/account/bids')}}text-blue-600 font-semibold{{else}}text-gray-700 hover:text-blue-600{{/if}} transition-colors font-medium"
+              >
+                My Bids
+              </a>
+              <div class="relative">
+                <button
+                  id="profileMenuBtn"
+                  class="flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-gray-50 transition-all duration-300 ease-out group"
+                >
+                  <span class="text-gray-900 font-medium group-hover:text-blue-600 transition-colors font-momo-signature">
+                    {{authUser.name}}
+                  </span>
+                  <div class="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-full group-hover:bg-blue-200 transition-colors">
+                    <i class="fas fa-user text-blue-600 text-sm"></i>
+                  </div>
+                </button>
+                <div
+                  id="profileMenu"
+                  class="hidden absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.15)] border border-gray-200/60 pt-2"
+                >
+                  {{#if (eq authUser.role 'admin')}}
+                    <a
+                      href="/admin"
+                      class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <i class="fas fa-tachometer-alt w-5"></i>
+                      Dashboard
+                    </a>
+                  {{/if}}
+                  {{#if (eq authUser.role 'seller')}}
+                    <a
+                      href="/seller/products"
+                      class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <i class="fas fa-box w-5"></i>
+                      My Products
+                    </a>
+                  {{/if}}
+                  <a
+                    href="/account/profile"
+                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <i class="fas fa-user w-5"></i>
+                    Profile
+                  </a>
+                  <form
+                    method="post"
+                    action="/auth/logout"
+                  >
+                    <button
+                      type="submit"
+                      class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50 transition-colors"
+                    >
+                      <i class="fas fa-sign-out-alt w-5"></i>
+                      Logout
+                    </button>
+                  </form>
+                </div>
+              </div>
             {{else}}
               <a
                 href="/auth/login"
@@ -126,6 +182,20 @@
             }
             alertEl.classList.remove('hidden')
           }
+        }
+        const profileMenuBtn = document.getElementById('profileMenuBtn')
+        const profileMenu = document.getElementById('profileMenu')
+        if (profileMenuBtn && profileMenu) {
+          profileMenuBtn.addEventListener('click', function (e) {
+            e.stopPropagation()
+            profileMenu.classList.toggle('hidden')
+          })
+          document.addEventListener('click', function () {
+            profileMenu.classList.add('hidden')
+          })
+          profileMenu.addEventListener('click', function (e) {
+            e.stopPropagation()
+          })
         }
       })()
     </script>

@@ -11,6 +11,18 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    appendedDescriptions: [
+      {
+        content: {
+          type: String,
+          required: true,
+        },
+        timestamp: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
     images: {
       type: [String],
       required: true,
@@ -46,11 +58,6 @@ const productSchema = new mongoose.Schema(
     buyNowPrice: {
       type: Number,
       default: null,
-      min: 0,
-    },
-    currentPrice: {
-      type: Number,
-      required: true,
       min: 0,
     },
     autoExtend: {

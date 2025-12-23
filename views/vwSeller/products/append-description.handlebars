@@ -1,0 +1,77 @@
+<div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <div class="mb-8">
+    <h1 class="text-[36px] font-semibold text-gray-900 mb-2">Append Description</h1>
+    <p class="text-gray-600">{{product.name}}</p>
+    <a
+      href="/products/{{product._id}}"
+      class="text-blue-600 hover:underline mt-2 inline-block"
+    >
+      ← Back to Product
+    </a>
+  </div>
+  <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-8">
+    <form
+      method="post"
+      action="/seller/products/{{product._id}}/append"
+      class="space-y-6"
+      id="appendForm"
+    >
+      <div class="relative mb-6">
+        <label for="description" class="block text-sm font-medium text-gray-900 mb-2">Additional Description</label>
+        <div
+          id="editor"
+          class="bg-white border border-gray-200/60 rounded-2xl"
+          style="min-height: 300px;"
+        ></div>
+        <input type="hidden" id="description" name="description" />
+        <p class="text-gray-500 text-sm mt-2">This will be added to the existing description with a timestamp.</p>
+      </div>
+      <button
+        type="submit"
+        class="w-full px-6 py-4 bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
+      >
+        Append Description
+      </button>
+    </form>
+  </div>
+</div>
+{{#section "css"}}
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+{{/section}}
+{{#section "js"}}
+  <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+  <script>
+    var quill = new Quill('#editor', {
+      theme: 'snow',
+      placeholder: 'Enter additional information to append to the description...',
+      modules: {
+        toolbar: [
+          [{ 'header': [1, 2, 3, false] }],
+          ['bold', 'italic', 'underline', 'strike'],
+          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+          [{ 'color': [] }, { 'background': [] }],
+          [{ 'align': [] }],
+          ['link', 'image'],
+          ['clean']
+        ]
+      }
+    });
+    
+    var form = document.getElementById('appendForm');
+    form.onsubmit = function(e) {
+      var descriptionInput = document.getElementById('description');
+      var content = quill.root.innerHTML;
+      var text = quill.getText().trim();
+      
+      if (!text || text === '' || content === '<p><br></p>') {
+        e.preventDefault();
+        alert('Please enter additional description');
+        return false;
+      }
+      
+      descriptionInput.value = content;
+      return true;
+    };
+  </script>
+{{/section}}
+

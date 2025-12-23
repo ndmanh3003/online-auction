@@ -11,7 +11,7 @@ router.get('/', async function (req, res) {
   const categoryId = req.query.categoryId || null;
   const sortBy = req.query.sortBy || null;
 
-  const result = await searchService.searchProducts(query, categoryId, sortBy, page, 10);
+  const result = await searchService.searchProducts(query, categoryId, sortBy, page, 6);
   const categories = await categoryService.findAllWithSubcategories();
 
   const highlightMinutes = parseInt(process.env.NEW_PRODUCT_HIGHLIGHT_MINUTES || '10');

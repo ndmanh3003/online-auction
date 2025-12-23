@@ -95,16 +95,44 @@ export async function findWonByUser(userId, page = 1, limit = 10) {
   };
 }
 
+export async function getCurrentPrice(productId) {
+  const product = await Product.findById(productId);
+  if (!product) return 0;
+
+  const topBid = await getTopBidder(productId);
+  return topBid ? topBid.bidAmount : product.startPrice;
+}
+
 export async function getTopBidder(productId) {
-  const topBid = await Bid.findOne({ productId })
+  const product = await Product.findById(productId);
+  if (!product) return null;
+
+  const bids = await Bid.find({ productId })
     .populate('bidderId', 'name email')
     .sort({ bidAmount: -1, createdAt: 1 });
-  return topBid;
+
+  const topBid = bids.find(bid => {
+    const bidderId = bid.bidderId._id.toString();
+    return !product.blockedBidders.some(blocked => blocked.toString() === bidderId);
+  });
+
+  return topBid || null;
 }
 
 export async function getSecondHighestBid(productId) {
-  const bids = await Bid.find({ productId }).sort({ bidAmount: -1, createdAt: 1 }).limit(2);
-  return bids.length > 1 ? bids[1] : null;
+  const product = await Product.findById(productId);
+  if (!product) return null;
+
+  const bids = await Bid.find({ productId })
+    .populate('bidderId', '_id')
+    .sort({ bidAmount: -1, createdAt: 1 });
+
+  const validBids = bids.filter(bid => {
+    const bidderId = bid.bidderId._id.toString();
+    return !product.blockedBidders.some(blocked => blocked.toString() === bidderId);
+  });
+
+  return validBids.length > 1 ? validBids[1] : null;
 }
 
 export async function create(bidData) {
@@ -157,7 +185,6 @@ export async function placeBid(productId, bidderId, bidAmount, maxBidAmount = nu
         maxBidAmount: topBid.maxBidAmount,
         isAutoBid: true,
       });
-      await productService.updateCurrentPrice(productId, autoBidAmount);
       return { success: false, message: 'Outbid by auto-bid system', currentBid: autoBidAmount };
     }
   }
@@ -169,8 +196,6 @@ export async function placeBid(productId, bidderId, bidAmount, maxBidAmount = nu
     maxBidAmount,
     isAutoBid,
   });
-
-  await productService.updateCurrentPrice(productId, finalBidAmount);
 
   if (product.autoExtend) {
     const thresholdMinutes = parseInt(process.env.AUTO_EXTEND_THRESHOLD_MINUTES || '5');
@@ -209,14 +234,6 @@ export async function validateBidder(bidderId, product) {
 
 export async function blockBidder(productId, bidderId) {
   await productService.addBlockedBidder(productId, bidderId);
-
-  const topBid = await getTopBidder(productId);
-  if (topBid && topBid.bidderId._id.toString() === bidderId.toString()) {
-    const secondBid = await getSecondHighestBid(productId);
-    if (secondBid) {
-      await productService.updateCurrentPrice(productId, secondBid.bidAmount);
-    }
-  }
 }
 
 export async function countByProductId(productId) {

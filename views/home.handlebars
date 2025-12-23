@@ -14,25 +14,31 @@
       </a>
     </div>
     {{#if endingSoon.length}}
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-        {{#each endingSoon}}
-          <a
-            href="/products/{{_id}}"
-            class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 overflow-hidden hover:scale-105 transition-all duration-300 ease-out"
-          >
-            <img
-              src="{{images.[0]}}"
-              alt="{{name}}"
-              class="w-full h-48 object-cover"
-            />
-            <div class="p-4">
-              <h3 class="text-gray-900 font-semibold mb-2 truncate">{{name}}</h3>
-              <p class="text-gray-600 text-sm mb-2">{{categoryId.name}}</p>
-              <p class="text-blue-600 font-bold text-lg">${{format_currency currentPrice}}</p>
-              <p class="text-gray-500 text-sm mt-2">Ends: {{formatDate endTime}}</p>
-            </div>
-          </a>
-        {{/each}}
+      <div class="relative">
+        <div
+          id="carousel-ending-soon"
+          class="flex gap-6 scrollbar-hide scroll-smooth overflow-x-auto py-2"
+          style="scrollbar-width: none; -ms-overflow-style: none;"
+        >
+          {{#each endingSoon}}
+            <a
+              href="/products/{{_id}}"
+              class="bg-white rounded-3xl border border-gray-200/60 overflow-hidden hover:scale-105 transition-all duration-300 ease-out flex-none w-[calc(33.333%-16px)]"
+            >
+              <img
+                src="{{images.[0]}}"
+                alt="{{name}}"
+                class="w-full h-48 object-cover"
+              />
+              <div class="p-4">
+                <h3 class="text-gray-900 font-semibold mb-2 truncate">{{name}}</h3>
+                <p class="text-gray-600 text-sm mb-2">{{categoryId.name}}</p>
+                <p class="text-blue-600 font-bold text-lg">${{format_currency currentPrice}}</p>
+                <p class="text-gray-500 text-sm mt-2">Ends: {{formatDate endTime}}</p>
+              </div>
+            </a>
+          {{/each}}
+        </div>
       </div>
     {{else}}
       <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-12 text-center">
@@ -51,25 +57,31 @@
       </a>
     </div>
     {{#if mostBids.length}}
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-        {{#each mostBids}}
-          <a
-            href="/products/{{_id}}"
-            class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 overflow-hidden hover:scale-105 transition-all duration-300 ease-out"
-          >
-            <img
-              src="{{images.[0]}}"
-              alt="{{name}}"
-              class="w-full h-48 object-cover"
-            />
-            <div class="p-4">
-              <h3 class="text-gray-900 font-semibold mb-2 truncate">{{name}}</h3>
-              <p class="text-gray-600 text-sm mb-2">{{categoryId.name}}</p>
-              <p class="text-blue-600 font-bold text-lg">${{format_currency currentPrice}}</p>
-              <p class="text-gray-500 text-sm mt-2">{{bidCount}} bids</p>
-            </div>
-          </a>
-        {{/each}}
+      <div class="relative">
+        <div
+          id="carousel-most-bids"
+          class="flex gap-6 scrollbar-hide scroll-smooth overflow-x-auto py-2"
+          style="scrollbar-width: none; -ms-overflow-style: none;"
+        >
+          {{#each mostBids}}
+            <a
+              href="/products/{{_id}}"
+              class="bg-white rounded-3xl border border-gray-200/60 overflow-hidden hover:scale-105 transition-all duration-300 ease-out flex-none w-[calc(33.333%-16px)]"
+            >
+              <img
+                src="{{images.[0]}}"
+                alt="{{name}}"
+                class="w-full h-48 object-cover"
+              />
+              <div class="p-4">
+                <h3 class="text-gray-900 font-semibold mb-2 truncate">{{name}}</h3>
+                <p class="text-gray-600 text-sm mb-2">{{categoryId.name}}</p>
+                <p class="text-blue-600 font-bold text-lg">${{format_currency currentPrice}}</p>
+                <p class="text-gray-500 text-sm mt-2">{{bidCount}} bids</p>
+              </div>
+            </a>
+          {{/each}}
+        </div>
       </div>
     {{else}}
       <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-12 text-center">
@@ -88,25 +100,31 @@
       </a>
     </div>
     {{#if highestPrice.length}}
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-        {{#each highestPrice}}
-          <a
-            href="/products/{{_id}}"
-            class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 overflow-hidden hover:scale-105 transition-all duration-300 ease-out"
-          >
-            <img
-              src="{{images.[0]}}"
-              alt="{{name}}"
-              class="w-full h-48 object-cover"
-            />
-            <div class="p-4">
-              <h3 class="text-gray-900 font-semibold mb-2 truncate">{{name}}</h3>
-              <p class="text-gray-600 text-sm mb-2">{{categoryId.name}}</p>
-              <p class="text-blue-600 font-bold text-lg">${{format_currency currentPrice}}</p>
-              <p class="text-gray-500 text-sm mt-2">Ends: {{formatDate endTime}}</p>
-            </div>
-          </a>
-        {{/each}}
+      <div class="relative">
+        <div
+          id="carousel-highest-price"
+          class="flex gap-6 scrollbar-hide scroll-smooth overflow-x-auto py-2"
+          style="scrollbar-width: none; -ms-overflow-style: none;"
+        >
+          {{#each highestPrice}}
+            <a
+              href="/products/{{_id}}"
+              class="bg-white rounded-3xl border border-gray-200/60 overflow-hidden hover:scale-105 transition-all duration-300 ease-out flex-none w-[calc(33.333%-16px)]"
+            >
+              <img
+                src="{{images.[0]}}"
+                alt="{{name}}"
+                class="w-full h-48 object-cover"
+              />
+              <div class="p-4">
+                <h3 class="text-gray-900 font-semibold mb-2 truncate">{{name}}</h3>
+                <p class="text-gray-600 text-sm mb-2">{{categoryId.name}}</p>
+                <p class="text-blue-600 font-bold text-lg">${{format_currency currentPrice}}</p>
+                <p class="text-gray-500 text-sm mt-2">Ends: {{formatDate endTime}}</p>
+              </div>
+            </a>
+          {{/each}}
+        </div>
       </div>
     {{else}}
       <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-12 text-center">
@@ -115,4 +133,60 @@
     {{/if}}
   </div>
 </div>
+{{#section "css"}}
+  <style>
+    .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+    }
+  </style>
+{{/section}}
+{{#section "js"}}
+  <script>
+    ;(function () {
+      const carouselIds = [
+        'carousel-ending-soon',
+        'carousel-most-bids',
+        'carousel-highest-price'
+      ];
+      const carouselData = carouselIds.map(function (id) {
+        const carousel = document.getElementById(id);
+        return {
+          id: id,
+          element: carousel,
+          currentIndex: 0,
+          paused: false
+        };
+      }).filter(function (data) {
+        return data.element && data.element.children.length > 3;
+      });
+      if (carouselData.length === 0) return;
+      let globalCarouselIndex = 0;
+      function scrollNextCarousel() {
+        const current = carouselData[globalCarouselIndex];
+        if (!current.paused && current.element.children[0]) {
+          const itemWidth = current.element.children[0].offsetWidth + 24;
+          current.currentIndex++;
+          const maxIndex = current.element.children.length - 3;
+          if (current.currentIndex > maxIndex) {
+            current.currentIndex = 0;
+          }
+          current.element.scrollTo({
+            left: current.currentIndex * itemWidth,
+            behavior: 'smooth'
+          });
+        }
+        globalCarouselIndex = (globalCarouselIndex + 1) % carouselData.length;
+      }
+      const scrollInterval = setInterval(scrollNextCarousel, 1000);
+      carouselData.forEach(function (data) {
+        data.element.addEventListener('mouseenter', function () {
+          data.paused = true;
+        });
+        data.element.addEventListener('mouseleave', function () {
+          data.paused = false;
+        });
+      });
+    })();
+  </script>
+{{/section}}
 

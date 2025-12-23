@@ -1,0 +1,67 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <div class="mb-8">
+    <h1 class="text-[36px] font-semibold text-gray-900">My Active Bids</h1>
+  </div>
+  {{#if items.length}}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      {{#each items}}
+        {{#if productId}}
+          <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 overflow-hidden hover:scale-105 transition-all duration-300 ease-out">
+            <a href="/products/{{productId._id}}">
+              <img
+                src="{{productId.images.[0]}}"
+                alt="{{productId.name}}"
+                class="w-full h-48 object-cover"
+              />
+            </a>
+            <div class="p-6">
+              <a href="/products/{{productId._id}}" class="block">
+                <h3 class="text-gray-900 font-semibold text-lg mb-2 truncate">{{productId.name}}</h3>
+              </a>
+              <div class="mt-4 space-y-2">
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600 text-sm">Your Bid:</span>
+                  <span class="text-blue-600 font-bold">${{format_currency bidAmount}}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600 text-sm">Current Price:</span>
+                  <span class="text-gray-900 font-semibold">${{format_currency productId.currentPrice}}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600 text-sm">Ends:</span>
+                  <span class="text-gray-900 font-medium">{{formatDate productId.endTime}}</span>
+                </div>
+                {{#if isAutoBid}}
+                  <div class="mt-2 p-2 bg-green-50 border border-green-200 rounded-xl">
+                    <p class="text-green-800 text-xs font-medium">Auto-Bid Active</p>
+                  </div>
+                {{/if}}
+              </div>
+              <div class="mt-4">
+                <a
+                  href="/products/{{productId._id}}"
+                  class="block w-full text-center px-4 py-3 bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
+                >
+                  View Product
+                </a>
+              </div>
+            </div>
+          </div>
+        {{/if}}
+      {{/each}}
+    </div>
+    {{{pagination pagination.page pagination.totalPages pagination.total}}}
+  {{else}}
+    <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-12 text-center">
+      <i class="fas fa-gavel text-gray-400 text-6xl mb-4"></i>
+      <p class="text-gray-600 text-lg">You haven't placed any bids yet.</p>
+      <a
+        href="/products"
+        class="inline-block mt-4 px-6 py-3 bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
+      >
+        Browse Products
+      </a>
+    </div>
+  {{/if}}
+</div>
+

@@ -1,16 +1,34 @@
 import Product from '../models/Product.js';
 import Bid from '../models/Bid.js';
+import * as bidService from './bid.service.js';
+import * as questionService from './question.service.js';
 
-export async function findById(id) {
-  return await Product.findById(id)
-    .populate('categoryId', 'name')
-    .populate('sellerId', 'name email');
-}
-
-export async function findByIdWithDetails(id) {
-  return await Product.findById(id)
+export async function findById(id, includeRelated = true) {
+  const product = await Product.findById(id)
     .populate('categoryId', 'name parentId')
     .populate('sellerId', 'name email');
+  
+  if (!product) return null;
+  
+  const currentPrice = await bidService.getCurrentPrice(id);
+  const bidCount = await bidService.countByProductId(id);
+  const topBid = await bidService.getTopBidder(id);
+  
+  const result = { 
+    ...product.toObject(), 
+    currentPrice,
+    bidCount,
+    topBidder: topBid ? topBid.bidderId : null,
+  };
+
+  if (includeRelated) {
+    const questions = await questionService.findByProductId(id);
+    const relatedProducts = await getRelatedProducts(product.categoryId._id, id, 5);
+    result.questions = questions;
+    result.relatedProducts = relatedProducts;
+  }
+  
+  return result;
 }
 
 export async function findAll(page = 1, limit = 10) {
@@ -22,8 +40,23 @@ export async function findAll(page = 1, limit = 10) {
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit);
+  
+  const enrichedItems = await Promise.all(
+    items.map(async (item) => {
+      const currentPrice = await bidService.getCurrentPrice(item._id);
+      const bidCount = await bidService.countByProductId(item._id);
+      const topBid = await bidService.getTopBidder(item._id);
+      return { 
+        ...item.toObject(), 
+        currentPrice,
+        bidCount,
+        topBidder: topBid ? topBid.bidderId : null,
+      };
+    })
+  );
+  
   return {
-    items,
+    items: enrichedItems,
     pagination: {
       page,
       limit,
@@ -42,8 +75,23 @@ export async function findByCategory(categoryId, page = 1, limit = 10) {
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit);
+  
+  const enrichedItems = await Promise.all(
+    items.map(async (item) => {
+      const currentPrice = await bidService.getCurrentPrice(item._id);
+      const bidCount = await bidService.countByProductId(item._id);
+      const topBid = await bidService.getTopBidder(item._id);
+      return { 
+        ...item.toObject(), 
+        currentPrice,
+        bidCount,
+        topBidder: topBid ? topBid.bidderId : null,
+      };
+    })
+  );
+  
   return {
-    items,
+    items: enrichedItems,
     pagination: {
       page,
       limit,
@@ -61,8 +109,23 @@ export async function findBySellerId(sellerId, page = 1, limit = 10) {
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit);
+  
+  const enrichedItems = await Promise.all(
+    items.map(async (item) => {
+      const currentPrice = await bidService.getCurrentPrice(item._id);
+      const bidCount = await bidService.countByProductId(item._id);
+      const topBid = await bidService.getTopBidder(item._id);
+      return { 
+        ...item.toObject(), 
+        currentPrice,
+        bidCount,
+        topBidder: topBid ? topBid.bidderId : null,
+      };
+    })
+  );
+  
   return {
-    items,
+    items: enrichedItems,
     pagination: {
       page,
       limit,
@@ -80,8 +143,23 @@ export async function findEndedBySellerId(sellerId, page = 1, limit = 10) {
     .sort({ endTime: -1 })
     .skip(skip)
     .limit(limit);
+  
+  const enrichedItems = await Promise.all(
+    items.map(async (item) => {
+      const currentPrice = await bidService.getCurrentPrice(item._id);
+      const bidCount = await bidService.countByProductId(item._id);
+      const topBid = await bidService.getTopBidder(item._id);
+      return { 
+        ...item.toObject(), 
+        currentPrice,
+        bidCount,
+        topBidder: topBid ? topBid.bidderId : null,
+      };
+    })
+  );
+  
   return {
-    items,
+    items: enrichedItems,
     pagination: {
       page,
       limit,
@@ -101,8 +179,23 @@ export async function findAllAdmin(page = 1, limit = 10, status = null) {
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit);
+  
+  const enrichedItems = await Promise.all(
+    items.map(async (item) => {
+      const currentPrice = await bidService.getCurrentPrice(item._id);
+      const bidCount = await bidService.countByProductId(item._id);
+      const topBid = await bidService.getTopBidder(item._id);
+      return { 
+        ...item.toObject(), 
+        currentPrice,
+        bidCount,
+        topBidder: topBid ? topBid.bidderId : null,
+      };
+    })
+  );
+  
   return {
-    items,
+    items: enrichedItems,
     pagination: {
       page,
       limit,
@@ -113,11 +206,18 @@ export async function findAllAdmin(page = 1, limit = 10, status = null) {
 }
 
 export async function getTopEndingSoon(limit = 5) {
-  return await Product.find({ status: 'active', endTime: { $gt: new Date() } })
+  const items = await Product.find({ status: 'active', endTime: { $gt: new Date() } })
     .populate('categoryId', 'name')
     .populate('sellerId', 'name')
     .sort({ endTime: 1 })
     .limit(limit);
+  
+  return await Promise.all(
+    items.map(async (item) => {
+      const currentPrice = await bidService.getCurrentPrice(item._id);
+      return { ...item.toObject(), currentPrice };
+    })
+  );
 }
 
 export async function getTopMostBids(limit = 5) {
@@ -129,7 +229,8 @@ export async function getTopMostBids(limit = 5) {
   const productsWithBidCount = await Promise.all(
     products.map(async (product) => {
       const bidCount = await Bid.countDocuments({ productId: product._id });
-      return { ...product, bidCount };
+      const currentPrice = await bidService.getCurrentPrice(product._id);
+      return { ...product, bidCount, currentPrice };
     })
   );
 
@@ -137,15 +238,23 @@ export async function getTopMostBids(limit = 5) {
 }
 
 export async function getTopHighestPrice(limit = 5) {
-  return await Product.find({ status: 'active' })
+  const products = await Product.find({ status: 'active' })
     .populate('categoryId', 'name')
     .populate('sellerId', 'name')
-    .sort({ currentPrice: -1 })
-    .limit(limit);
+    .lean();
+
+  const productsWithPrice = await Promise.all(
+    products.map(async (product) => {
+      const currentPrice = await bidService.getCurrentPrice(product._id);
+      return { ...product, currentPrice };
+    })
+  );
+
+  return productsWithPrice.sort((a, b) => b.currentPrice - a.currentPrice).slice(0, limit);
 }
 
 export async function getRelatedProducts(categoryId, excludeId, limit = 5) {
-  return await Product.find({
+  const items = await Product.find({
     categoryId,
     _id: { $ne: excludeId },
     status: 'active',
@@ -154,14 +263,17 @@ export async function getRelatedProducts(categoryId, excludeId, limit = 5) {
     .populate('sellerId', 'name')
     .sort({ createdAt: -1 })
     .limit(limit);
+  
+  return await Promise.all(
+    items.map(async (item) => {
+      const currentPrice = await bidService.getCurrentPrice(item._id);
+      return { ...item.toObject(), currentPrice };
+    })
+  );
 }
 
 export async function create(productData) {
-  const product = new Product({
-    ...productData,
-    currentPrice: productData.startPrice,
-    endTime: new Date(Date.now() + productData.duration * 24 * 60 * 60 * 1000),
-  });
+  const product = new Product(productData);
   return await product.save();
 }
 
@@ -173,22 +285,12 @@ export async function appendDescription(id, newDescription) {
   const product = await Product.findById(id);
   if (!product) return null;
 
-  const timestamp = new Date().toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
+  product.appendedDescriptions.push({
+    content: newDescription,
+    timestamp: new Date(),
   });
-  const appendedDescription = `${product.description}\n\n✏️ ${timestamp}\n\n- ${newDescription}`;
 
-  return await Product.findByIdAndUpdate(
-    id,
-    { description: appendedDescription },
-    { new: true }
-  );
-}
-
-export async function updateCurrentPrice(id, newPrice) {
-  return await Product.findByIdAndUpdate(id, { currentPrice: newPrice }, { new: true });
+  return await product.save();
 }
 
 export async function updateEndTime(id, newEndTime) {

@@ -9,14 +9,16 @@ export async function create(userId) {
   return await request.save();
 }
 
-export async function findAllPending(page = 1, limit = 10) {
+
+export async function findAll(page = 1, limit = 10, status = null) {
   const skip = (page - 1) * limit;
-  const items = await SellerRequest.find({ status: 'pending' })
+  const filter = status ? { status } : {};
+  const items = await SellerRequest.find(filter)
     .populate('userId', 'name email role')
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit);
-  const total = await SellerRequest.countDocuments({ status: 'pending' });
+  const total = await SellerRequest.countDocuments(filter);
   return {
     items,
     pagination: {
