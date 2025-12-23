@@ -1,7 +1,6 @@
 import 'dotenv/config';
 import './../utils/db.js';
 import Category from '../models/Category.js';
-import mongoose from 'mongoose';
 
 export const seedCategories = async () => {
   try {

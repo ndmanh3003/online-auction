@@ -26,13 +26,13 @@
           </thead>
           <tbody>
             {{#each bids}}
-              <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors {{#if (isBlocked @root.product.blockedBidders bidderId._id)}}opacity-50{{/if}}">
+              <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors {{#if isBlocked}}opacity-50{{/if}}">
                 <td class="py-4 px-6 text-gray-600">
                   {{formatDate createdAt}}
                 </td>
                 <td class="py-4 px-6 text-gray-900 font-medium">
                   {{bidderId.name}}
-                  {{#if (isBlocked @root.product.blockedBidders bidderId._id)}}
+                  {{#if isBlocked}}
                     <span class="ml-2 inline-block px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
                       Blocked
                     </span>
@@ -54,7 +54,7 @@
                 </td>
                 {{#if ../isSeller}}
                   <td class="py-4 px-6 text-center">
-                    {{#unless (isBlocked @root.product.blockedBidders bidderId._id)}}
+                    {{#unless isBlocked}}
                       <form
                         method="post"
                         action="/seller/products/{{@root.product._id}}/block/{{bidderId._id}}"

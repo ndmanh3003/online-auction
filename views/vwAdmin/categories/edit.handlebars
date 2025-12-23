@@ -10,21 +10,8 @@
       <input type="hidden" name="_method" value="PUT">
       <div class="relative mb-6">
         <label for="parentId" class="block text-sm font-medium text-gray-900 mb-2">Parent Category (Optional)</label>
-        <select
-          id="parentId"
-          name="parentId"
-          class="w-full px-4 py-4 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900 bg-white"
-        >
-          <option value="" {{#unless category.parentId}}selected{{/unless}}>
-            None (Top-level category)
-          </option>
-          {{#each drpdwnParents}}
-            <option value="{{value}}" {{#if (eq ../category.parentId._id value)}}selected{{/if}}>
-              {{label}}
-            </option>
-          {{/each}}
-        </select>
-        <p class="mt-2 text-sm text-gray-500">Leave empty to make this a top-level category. Select a parent to make it a subcategory.</p>
+        {{> category-parent-dropdown selectedParentId=category.parentId._id}}
+        <p class="mt-2 text-sm text-gray-500">Leave empty to make this a top-level category. Select a subcategory as parent.</p>
       </div>
       <div class="relative mb-6">
         <label for="name" class="block text-sm font-medium text-gray-900 mb-2">Category Name</label>

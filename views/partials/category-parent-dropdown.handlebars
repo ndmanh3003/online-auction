@@ -1,0 +1,19 @@
+<select
+  id='parentId'
+  name='parentId'
+  class='w-full px-4 py-4 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900 bg-white'
+>
+  <option value=''>None (Top-level category)</option>
+  {{#each @root.allCategories}}
+    <option value='{{_id}}' disabled>{{name}}</option>
+    {{#each subcategories}}
+      <option
+        value='{{_id}}'
+        {{#if (eq ../../selectedParentId (toString _id))}}selected{{/if}}
+      >
+        &nbsp;&nbsp;{{name}}
+      </option>
+    {{/each}}
+  {{/each}}
+</select>
+

@@ -28,20 +28,7 @@
       </div>
       <div class="relative mb-6">
         <label for="categoryId" class="block text-sm font-medium text-gray-900 mb-2">Category</label>
-        <select
-          id="categoryId"
-          name="categoryId"
-          class="w-full px-4 py-4 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900 bg-white"
-          required
-        >
-          <option value="">Select Category</option>
-          {{#each categories}}
-            <option value="{{_id}}">{{name}}</option>
-            {{#each subcategories}}
-              <option value="{{_id}}">&nbsp;&nbsp;{{name}}</option>
-            {{/each}}
-          {{/each}}
-        </select>
+        {{> category-dropdown id="categoryId" name="categoryId" placeholder="Select Category" required=true}}
       </div>
       <div class="relative mb-6">
         <label for="images" class="block text-sm font-medium text-gray-900 mb-2">Images (min 3, comma-separated URLs)</label>
