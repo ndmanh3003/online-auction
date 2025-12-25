@@ -1,41 +1,47 @@
-import Product from '../models/Product.js';
-import * as bidService from '../services/bid.service.js';
-import * as transactionService from '../services/transaction.service.js';
-import * as emailService from '../utils/email.js';
+import Product from '../models/Product.js'
+import Transaction from '../models/Transaction.js'
+import * as emailService from '../utils/email.js'
+import { processBids } from '../utils/bids.js'
 
 export async function checkEndedAuctions() {
   try {
-    const now = new Date();
+    const now = new Date()
     const endedProducts = await Product.find({
       status: 'active',
       endTime: { $lte: now },
-    }).populate('sellerId', 'name email');
+    }).populate('sellerId', 'name email')
 
     for (const product of endedProducts) {
-      await Product.findByIdAndUpdate(product._id, { status: 'ended' });
+      await Product.findByIdAndUpdate(product._id, { status: 'ended' })
 
-      const topBid = await bidService.getTopBidder(product._id);
+      await product.populate('bids.bidderId')
+      const bidsResult = processBids(product, { query: { page: 1, limit: 1 } })
+      const topBid = bidsResult.topBidder
 
-      if (topBid) {
-        await transactionService.create({
-          productId: product._id,
-          sellerId: product.sellerId._id,
-          winnerId: topBid.bidderId._id,
-        });
+            if (topBid) {
+              const transaction = new Transaction({
+                productId: product._id,
+                sellerId: product.sellerId._id,
+                winnerId: topBid.bidderId._id,
+              })
+              await transaction.save()
 
-        await emailService.sendAuctionEndedWithWinnerEmail(product, topBid.bidderId);
+        emailService.sendAuctionEndedWithWinnerEmail(product, topBid.bidderId)
       } else {
-        await emailService.sendAuctionEndedNoWinnerEmail(product);
+        emailService.sendAuctionEndedNoWinnerEmail(product)
       }
     }
 
-    console.log(`Checked ${endedProducts.length} ended auctions at ${new Date().toISOString()}`);
+    console.log(
+      `Checked ${
+        endedProducts.length
+      } ended auctions at ${new Date().toISOString()}`
+    )
   } catch (error) {
-    console.error('Error checking ended auctions:', error);
+    console.error('Error checking ended auctions:', error)
   }
 }
 
-setInterval(checkEndedAuctions, 600 * 1000);
+setInterval(checkEndedAuctions, 600 * 1000)
 
-console.log('Auction end detection job started. Checking every minute...');
-
+console.log('Auction end detection job started. Checking every minute...')

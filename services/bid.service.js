@@ -1,246 +1,237 @@
-import Bid from '../models/Bid.js';
-import Product from '../models/Product.js';
-import * as ratingService from './rating.service.js';
-import * as productService from './product.service.js';
+import AuctionConfig from '../models/AuctionConfig.js'
+import AutoBid from '../models/AutoBid.js'
+import Product from '../models/Product.js'
+import Rating from '../models/Rating.js'
 
-export async function findById(id) {
-  return await Bid.findById(id).populate('bidderId', 'name email').populate('productId', 'name');
+function computeMinAllowedMax(product, currentPrice) {
+  return currentPrice + product.stepPrice
 }
 
-export async function findByProductId(productId) {
-  return await Bid.find({ productId })
-    .populate('bidderId', 'name')
-    .sort({ bidAmount: -1, createdAt: 1 });
+function pickTopTwo(candidates) {
+  if (!candidates.length) return { top1: null, top2: null }
+  const sorted = [...candidates].sort((a, b) => {
+    if (b.maxBidAmount !== a.maxBidAmount)
+      return b.maxBidAmount - a.maxBidAmount
+    return new Date(a.createdAt) - new Date(b.createdAt)
+  })
+  return { top1: sorted[0] ?? null, top2: sorted[1] ?? null }
 }
 
-export async function findByBidderId(bidderId, page = 1, limit = 10) {
-  const skip = (page - 1) * limit;
-  const total = await Bid.countDocuments({ bidderId });
-  const items = await Bid.find({ bidderId })
-    .populate('productId', 'name currentPrice endTime status')
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit);
-  return {
-    items,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-    },
-  };
-}
+function computeDisplayedPrice({
+  product,
+  top1,
+  top2,
+  startPrice,
+  currentPrice,
+}) {
+  if (!top1) return { winnerId: null, newPrice: currentPrice }
 
-export async function findActiveBidsByUser(userId, page = 1, limit = 10) {
-  const skip = (page - 1) * limit;
-  const bids = await Bid.find({ bidderId: userId })
-    .populate({
-      path: 'productId',
-      match: { status: 'active' },
-      populate: { path: 'categoryId', select: 'name' },
-    })
-    .sort({ createdAt: -1 });
-
-  const filteredBids = bids.filter((bid) => bid.productId !== null);
-  const total = filteredBids.length;
-  const items = filteredBids.slice(skip, skip + limit);
-
-  return {
-    items,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-    },
-  };
-}
-
-export async function findWonByUser(userId, page = 1, limit = 10) {
-  const skip = (page - 1) * limit;
-  const endedProducts = await Product.find({ status: 'ended' }).select('_id');
-  const productIds = endedProducts.map((p) => p._id);
-
-  const allBids = await Bid.find({ productId: { $in: productIds } })
-    .populate({
-      path: 'productId',
-      populate: { path: 'categoryId', select: 'name' },
-    })
-    .sort({ bidAmount: -1, createdAt: 1 });
-
-  const wonProducts = [];
-  const seenProducts = new Set();
-
-  for (const bid of allBids) {
-    if (bid.productId && !seenProducts.has(bid.productId._id.toString())) {
-      seenProducts.add(bid.productId._id.toString());
-      if (bid.bidderId.toString() === userId.toString()) {
-        wonProducts.push(bid);
-      }
+  if (!top2) {
+    const minPrice = Math.max(startPrice, currentPrice + product.stepPrice)
+    return {
+      winnerId: top1.bidderId,
+      newPrice: Math.min(top1.maxBidAmount, minPrice),
     }
   }
 
-  const total = wonProducts.length;
-  const items = wonProducts.slice(skip, skip + limit);
+  const target = top2.maxBidAmount + product.stepPrice
+  return {
+    winnerId: top1.bidderId,
+    newPrice: Math.min(top1.maxBidAmount, target),
+  }
+}
+
+async function getOrCreateConfig() {
+  let config = await AuctionConfig.findOne()
+  if (!config) {
+    config = await AuctionConfig.create({
+      autoExtendThresholdMinutes: 5,
+      autoExtendDurationMinutes: 10,
+      sellerDurationDays: 7,
+      newProductHighlightMinutes: 30,
+      minRatingPercentForBid: 80,
+    })
+  }
+  return config
+}
+
+async function getUserRatingPercent(bidderId) {
+  const [positive, negative] = await Promise.all([
+    Rating.countDocuments({ toUserId: bidderId, rating: 1 }),
+    Rating.countDocuments({ toUserId: bidderId, rating: -1 }),
+  ])
+  const total = positive + negative
+  const percent = total > 0 ? (positive / total) * 100 : 0
+  return { positive, negative, total, percent }
+}
+
+async function recomputeWinner(productId) {
+  const product = await Product.findById(productId)
+  if (!product || product.status !== 'active') return null
+
+  const startPrice = product.startPrice
+  const currentPrice = product.currentPrice
+
+  const blockedIds = (product.blockedBidders ?? []).map((x) => x.toString())
+  const candidates = await AutoBid.find({
+    productId,
+    bidderId: { $nin: blockedIds },
+  })
+    .select({ bidderId: 1, maxBidAmount: 1, createdAt: 1 })
+    .lean()
+
+  const { top1, top2 } = pickTopTwo(candidates)
+
+  const { winnerId, newPrice } = computeDisplayedPrice({
+    product,
+    top1,
+    top2,
+    startPrice,
+    currentPrice,
+  })
+
+  const prevWinner = product.currentWinnerId?.toString()
+  const nextWinner = winnerId?.toString() ?? null
+  const priceChanged = Number(newPrice) !== Number(currentPrice)
+  const winnerChanged = prevWinner !== nextWinner
+
+  if (priceChanged || winnerChanged) {
+    if (winnerId) {
+      product.bids = product.bids || []
+      product.bids.push({
+        bidderId: winnerId,
+        bidAmount: newPrice,
+        createdAt: new Date(),
+      })
+    }
+
+    product.currentPrice = newPrice
+    product.currentWinnerId = winnerId
+    await product.save()
+  }
 
   return {
-    items,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-    },
-  };
-}
-
-export async function getCurrentPrice(productId) {
-  const product = await Product.findById(productId);
-  if (!product) return 0;
-
-  const topBid = await getTopBidder(productId);
-  return topBid ? topBid.bidAmount : product.startPrice;
-}
-
-export async function getTopBidder(productId) {
-  const product = await Product.findById(productId);
-  if (!product) return null;
-
-  const bids = await Bid.find({ productId })
-    .populate('bidderId', 'name email')
-    .sort({ bidAmount: -1, createdAt: 1 });
-
-  const topBid = bids.find(bid => {
-    const bidderId = bid.bidderId._id.toString();
-    return !product.blockedBidders.some(blocked => blocked.toString() === bidderId);
-  });
-
-  return topBid || null;
-}
-
-export async function getSecondHighestBid(productId) {
-  const product = await Product.findById(productId);
-  if (!product) return null;
-
-  const bids = await Bid.find({ productId })
-    .populate('bidderId', '_id')
-    .sort({ bidAmount: -1, createdAt: 1 });
-
-  const validBids = bids.filter(bid => {
-    const bidderId = bid.bidderId._id.toString();
-    return !product.blockedBidders.some(blocked => blocked.toString() === bidderId);
-  });
-
-  return validBids.length > 1 ? validBids[1] : null;
-}
-
-export async function create(bidData) {
-  const bid = new Bid(bidData);
-  return await bid.save();
-}
-
-export async function placeBid(productId, bidderId, bidAmount, maxBidAmount = null) {
-  const product = await Product.findById(productId);
-  if (!product) {
-    throw new Error('Product not found');
+    priceChanged,
+    winnerChanged,
+    currentPrice: product.currentPrice,
+    currentWinnerId: product.currentWinnerId,
   }
+}
 
-  if (product.status !== 'active') {
-    throw new Error('Auction has ended');
-  }
+export async function placeBid(productId, bidderId, maxBidAmount) {
+  const config = await getOrCreateConfig()
 
-  if (new Date() > product.endTime) {
-    throw new Error('Auction has ended');
-  }
+  const product = await Product.findById(productId)
+  if (!product) throw new Error('Product not found')
+  if (product.status !== 'active') throw new Error('Auction has ended')
+  if (new Date() > product.endTime) throw new Error('Auction has ended')
 
   if (product.sellerId.toString() === bidderId.toString()) {
-    throw new Error('Seller cannot bid on their own product');
+    throw new Error('Seller cannot bid on their own product')
+  }
+  if (
+    product.blockedBidders?.some((x) => x.toString() === bidderId.toString())
+  ) {
+    throw new Error('You are blocked from bidding on this product')
   }
 
-  if (product.blockedBidders.includes(bidderId)) {
-    throw new Error('You are blocked from bidding on this product');
+  const userRating = await getUserRatingPercent(bidderId)
+  const minPercent = config.minRatingPercentForBid
+
+  if (userRating.total === 0) {
+    if (!product.allowNonRatedBidders)
+      throw new Error('This auction does not allow non-rated bidders')
+  } else if (userRating.percent < minPercent) {
+    throw new Error(`Minimum ${minPercent}% positive rating required`)
   }
 
-  const minBidAmount = product.currentPrice + product.stepPrice;
-  if (bidAmount < minBidAmount) {
-    throw new Error(`Minimum bid is ${minBidAmount}`);
+  const startPrice = product.startPrice
+  const currentPrice = product.currentPrice
+
+  const minAllowedMax = computeMinAllowedMax(product, currentPrice)
+  if (maxBidAmount < minAllowedMax) {
+    throw new Error(`Maximum bid amount must be at least ${minAllowedMax}`)
   }
 
-  const topBid = await getTopBidder(productId);
+  const existingAutoBid = await AutoBid.findOne({ productId, bidderId })
+  const prevMaxBidAmount = existingAutoBid?.maxBidAmount || 0
 
-  let finalBidAmount = bidAmount;
-  let isAutoBid = false;
+  await AutoBid.findOneAndUpdate(
+    { productId, bidderId },
+    { $set: { maxBidAmount } },
+    { upsert: true, new: true, setDefaultsOnInsert: true }
+  )
 
-  if (topBid && topBid.maxBidAmount) {
-    if (maxBidAmount && maxBidAmount > topBid.maxBidAmount) {
-      finalBidAmount = Math.min(topBid.maxBidAmount + product.stepPrice, maxBidAmount);
-      isAutoBid = true;
-    } else if (bidAmount <= topBid.maxBidAmount) {
-      const autoBidAmount = Math.min(bidAmount + product.stepPrice, topBid.maxBidAmount);
-      await create({
-        productId,
-        bidderId: topBid.bidderId._id,
-        bidAmount: autoBidAmount,
-        maxBidAmount: topBid.maxBidAmount,
-        isAutoBid: true,
-      });
-      return { success: false, message: 'Outbid by auto-bid system', currentBid: autoBidAmount };
-    }
-  }
-
-  const bid = await create({
+  const blockedIds = (product.blockedBidders ?? []).map((x) => x.toString())
+  const candidates = await AutoBid.find({
     productId,
-    bidderId,
-    bidAmount: finalBidAmount,
-    maxBidAmount,
-    isAutoBid,
-  });
+    bidderId: { $nin: blockedIds },
+  })
+    .select({ bidderId: 1, maxBidAmount: 1, createdAt: 1 })
+    .lean()
+
+  const { top1, top2 } = pickTopTwo(candidates)
+
+  const { winnerId, newPrice } = computeDisplayedPrice({
+    product,
+    top1,
+    top2,
+    startPrice,
+    currentPrice,
+  })
+
+  const prevWinner = product.currentWinnerId?.toString()
+  const nextWinner = winnerId?.toString() ?? null
+  const priceChanged = Number(newPrice) !== Number(currentPrice)
+  const winnerChanged = prevWinner !== nextWinner
+  const isUpdatingBidder = bidderId.toString() === nextWinner
+
+  if (priceChanged || winnerChanged) {
+    if (winnerId) {
+      product.bids = product.bids || []
+      product.bids.push({
+        bidderId: winnerId,
+        bidAmount: newPrice,
+        createdAt: new Date(),
+      })
+    }
+
+    product.currentPrice = newPrice
+    product.currentWinnerId = winnerId
+  } else if (
+    isUpdatingBidder &&
+    winnerId &&
+    winnerId.toString() === bidderId.toString() &&
+    maxBidAmount > prevMaxBidAmount
+  ) {
+    product.bids = product.bids || []
+    product.bids.push({
+      bidderId: winnerId,
+      bidAmount: currentPrice,
+      createdAt: new Date(),
+    })
+  }
 
   if (product.autoExtend) {
-    const thresholdMinutes = parseInt(process.env.AUTO_EXTEND_THRESHOLD_MINUTES || '5');
-    const extendMinutes = parseInt(process.env.AUTO_EXTEND_DURATION_MINUTES || '10');
-    const thresholdTime = new Date(product.endTime.getTime() - thresholdMinutes * 60 * 1000);
-
+    const thresholdMs = config.autoExtendThresholdMinutes * 60 * 1000
+    const extendMs = config.autoExtendDurationMinutes * 60 * 1000
+    const thresholdTime = new Date(product.endTime.getTime() - thresholdMs)
     if (new Date() >= thresholdTime) {
-      const newEndTime = new Date(product.endTime.getTime() + extendMinutes * 60 * 1000);
-      await productService.updateEndTime(productId, newEndTime);
+      product.endTime = new Date(product.endTime.getTime() + extendMs)
     }
   }
 
-  return { success: true, bid };
-}
+  await product.save()
 
-export async function validateBidder(bidderId, product) {
-  const rating = await ratingService.calculateUserRating(bidderId);
-
-  if (rating.total === 0 && !product.allowNonRatedBidders) {
-    return {
-      valid: false,
-      message: 'Seller does not allow bidders without ratings',
-    };
+  return {
+    success: true,
+    message: priceChanged || winnerChanged ? 'Bid placed' : 'Max bid updated',
+    currentPrice: product.currentPrice,
+    currentWinnerId: product.currentWinnerId,
+    endTime: product.endTime,
   }
-
-  const minRatingPercent = parseInt(process.env.MIN_BIDDER_RATING_PERCENT || '80');
-  if (rating.total > 0 && rating.percent < minRatingPercent) {
-    return {
-      valid: false,
-      message: `You need at least ${minRatingPercent}% positive rating to bid`,
-    };
-  }
-
-  return { valid: true };
 }
 
-export async function blockBidder(productId, bidderId) {
-  await productService.addBlockedBidder(productId, bidderId);
+export async function recomputeWinnerAfterBlock(productId) {
+  return await recomputeWinner(productId)
 }
-
-export async function countByProductId(productId) {
-  return await Bid.countDocuments({ productId });
-}
-
-export async function countByBidderId(bidderId) {
-  return await Bid.countDocuments({ bidderId });
-}
-
