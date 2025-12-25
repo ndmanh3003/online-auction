@@ -1,0 +1,14 @@
+{
+  "semi": false,
+  "singleQuote": true,
+  "trailingComma": "es5",
+  "tabWidth": 2,
+  "overrides": [
+    {
+      "files": "*.handlebars",
+      "options": {
+        "parser": "html"
+      }
+    }
+  ]
+}

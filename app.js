@@ -7,8 +7,8 @@ import handlebarsHelpers from 'handlebars-helpers'
 import methodOverride from 'method-override'
 import './jobs/auction-end.job.js'
 import { handleError } from './middlewares/error.mdw.js'
+import Category from './models/Category.js'
 import routes from './routes/index.js'
-import * as categoryService from './services/category.service.js'
 import './utils/db.js'
 import { paginationHelper } from './utils/pagination.js'
 
@@ -94,6 +94,29 @@ const handlebarsEngine = engine({
     pagination(currentPage, totalPages, total) {
       return paginationHelper(currentPage, totalPages, total)
     },
+    maskBidderName(name) {
+      if (!name || name.length <= 4) return '****'
+      return '****' + name.slice(-4)
+    },
+    isNewProduct(createdAt, highlightMinutes = 30) {
+      if (!createdAt) return false
+      const diff = Date.now() - new Date(createdAt).getTime()
+      return diff < highlightMinutes * 60 * 1000
+    },
+    formatStatus(status) {
+      if (!status) return ''
+      return status
+        .split('_')
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ')
+    },
+    now() {
+      return new Date()
+    },
+    roundPercent(value) {
+      if (!value && value !== 0) return 0
+      return parseFloat(value).toFixed(2)
+    },
   },
 })
 
@@ -116,9 +139,17 @@ app.use(
 app.use(handleError)
 app.use(async function (req, res, next) {
   res.locals.err_messages = req.session.err_messages || []
+  res.locals.success_messages = req.session.success_messages || []
   delete req.session.err_messages
+  delete req.session.success_messages
   res.locals.isAuthenticated = req.session.isAuthenticated
   res.locals.authUser = req.session.authUser
+  if (req.session.authUser?.sellerExpiresAt) {
+    res.locals.isSellerExpired =
+      new Date() >= new Date(req.session.authUser.sellerExpiresAt)
+  } else {
+    res.locals.isSellerExpired = false
+  }
   res.locals.recaptchaSiteKey = process.env.RECAPTCHA_SITE_KEY || ''
   res.locals.req = {
     path: req.path,
@@ -126,7 +157,31 @@ app.use(async function (req, res, next) {
     params: req.params,
     query: req.query,
   }
-  res.locals.allCategories = await categoryService.findAllWithSubcategories()
+  const parents = await Category.find({ parentId: null }).sort({ name: 1 })
+  const allCategories = await Promise.all(
+    parents.map(async (parent) => {
+      const children = await Category.find({ parentId: parent._id }).sort({
+        name: 1,
+      })
+      return {
+        ...parent.toObject(),
+        subcategories: children,
+      }
+    })
+  )
+  res.locals.allCategories = allCategories
+  if (req.session.showOtpModal) {
+    res.locals.showOtpModal = true
+    res.locals.otpModalType = req.session.otpModalType
+    res.locals.otpModalTitle = req.session.otpModalTitle
+    res.locals.otpModalMessage = req.session.otpModalMessage
+    res.locals.otpModalAction = req.session.otpModalAction
+    delete req.session.showOtpModal
+    delete req.session.otpModalType
+    delete req.session.otpModalTitle
+    delete req.session.otpModalMessage
+    delete req.session.otpModalAction
+  }
   next()
 })
 

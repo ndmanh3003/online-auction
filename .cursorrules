@@ -5,15 +5,17 @@
 **BEFORE writing ANY code, you MUST:**
 
 1. **Read 1-2 related files first** to understand the existing style
+
    - Writing a route? Read another route file in the same folder
    - Writing a service? Read another service file
    - Writing a view? Read another view in the same folder
    - Writing a util? Read another util file
 
 2. **Match the existing patterns EXACTLY:**
+
    - Same indentation (2 spaces for .handlebars, standard for .js)
    - Same naming conventions (camelCase, kebab-case)
-   - Same error handling approach (`res.error()` or `res.locals.err_messages`)
+   - NO SEMICOLONS in JavaScript files
    - Same HTML attribute formatting (each on separate line)
    - Same Tailwind class patterns (Apple-like design)
    - Same async/await patterns (`return await` in services)
@@ -31,159 +33,200 @@
 
 Express.js 5 + Handlebars + MongoDB/Mongoose + TailwindCSS. All code, comments, UI in **English only**.
 
-**Stack:** Session-based auth (no JWT), bcryptjs, express-validator, method-override, nodemailer, reCAPTCHA.
+**Stack:** Session-based auth (no JWT), bcryptjs, method-override, nodemailer.
+
+**Code Style:** NO SEMICOLONS - All JavaScript files use semicolon-free style.
 
 ---
 
 ## Architecture Patterns
 
 ### Routes (`/routes/*.route.js`)
+
 ```javascript
 // Pattern: router.METHOD('/path', [middleware], async function(req, res))
-import express from 'express';
-import * as service from '../services/resource.service.js';
-import { isAuth, isAdmin } from '../middlewares/auth.mdw.js';
+import express from 'express'
+import * as service from '../services/resource.service.js'
+import { isAuth, isAdmin } from '../middlewares/auth.mdw.js'
 
-const router = express.Router();
+const router = express.Router()
 
 // Sync route (no async needed)
 router.get('/path', function (req, res) {
-  res.render('view');
-});
+  res.render('view')
+})
 
-// Async route
+// Async route (happy case - assume valid data)
 router.post('/path', isAuth, async function (req, res) {
-  const data = await service.findById(id);
-  if (!data) return res.error('Not found.');
-  res.redirect('/success');
-});
+  const data = await service.findById(id)
+  res.redirect('/success')
+})
 
-export default router;
+export default router
 ```
 
 **Rules:**
+
 - HTTP methods: POST (create), PUT (update), DELETE (delete)
-- Use `res.error('msg')` for errors (redirects back automatically)
+- NO SEMICOLONS - use semicolon-free style
+- **No input validation** - assume client data is valid (no 404 checks, no existence checks)
+- **Use `res.error('msg')` for business logic errors** (seller can't bid on own product, etc.)
 - Use `res.render('view', { data })` for views
 - Use `res.redirect('/path')` for navigation
 - **NEVER pass `authUser`** - already in `res.locals.authUser`
+- **NEVER pass `allCategories`** - already in `res.locals.allCategories`
 - GET routes without async: `function(req, res)`
 - Route index: `/routes/index.js` mounts all routers
 - Admin routes: `/routes/admin/index.js` mounts admin routers
 
 ### Services (`/services/*.service.js`)
+
 ```javascript
 // Pattern: Pure DB operations, export individual async functions
-import Model from '../models/Model.js';
+import Model from '../models/Model.js'
 
 export async function findById(id) {
-  return await Model.findById(id);
+  return await Model.findById(id).populate('relatedField')
 }
 
 export async function findAll(page = 1, limit = 10) {
-  const skip = (page - 1) * limit;
-  const items = await Model.find().sort({ createdAt: -1 }).skip(skip).limit(limit);
-  const total = await Model.countDocuments();
+  const skip = (page - 1) * limit
+  const items = await Model.find()
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit)
+  const total = await Model.countDocuments()
   return {
     items,
     pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
-  };
+  }
 }
 
 export async function create(data) {
-  const entity = new Model(data);
-  return await entity.save();
+  const entity = new Model(data)
+  return await entity.save()
 }
 
 export async function update(id, data) {
-  return await Model.findByIdAndUpdate(id, data, { new: true });
+  return await Model.findByIdAndUpdate(id, data, { new: true })
 }
 
 export async function remove(id) {
-  return await Model.findByIdAndDelete(id);
+  return await Model.findByIdAndDelete(id)
 }
 ```
 
 **Naming conventions:**
-- `findById(id)`, `findByEmail(email)`, `findByName(name)` - Single record
+
+- `findById(id)`, `findByEmail(email)` - Single record
 - `findAll(page, limit, filters)` - Paginated list
 - `create(data)` or `add(data)` - Create new
 - `update(id, data)` - Update existing
 - `remove(id)` - Delete (avoid `delete` keyword)
 - `updateStatus()`, `updatePassword()`, `updateRole()` - Specific updates
 
+**Populate Strategy:**
+
+- Always populate ALL fields when using `.populate()` (no field selection)
+- Example: `.populate('categoryId')` not `.populate('categoryId', 'name')`
+- Let the client/view decide what to use
+
 **Always return pagination:** `{ items, pagination: { page, limit, total, totalPages } }`
 
 ### Middleware (`/middlewares/*.mdw.js`)
+
 ```javascript
 // Export individual functions
 export function isAuth(req, res, next) {
   if (!req.session.isAuthenticated) {
-    req.session.retUrl = req.originalUrl;
-    return res.redirect('/auth/login');
+    req.session.retUrl = req.originalUrl
+    return res.redirect('/auth/login')
   }
-  next();
+  next()
 }
 
 export function isAdmin(req, res, next) {
   if (req.session.authUser?.role !== 'admin') {
-    return res.render('403');
+    return res.render('403')
   }
-  next();
+  next()
+}
+
+export function isSeller(req, res, next) {
+  if (
+    req.session.authUser?.role !== 'seller' &&
+    req.session.authUser?.role !== 'admin'
+  ) {
+    return res.render('403')
+  }
+  next()
 }
 
 // Error middleware (in app.js)
 export function handleError(req, res, next) {
   res.error = function (message) {
-    req.session.err_messages = Array.isArray(message) ? message : [message];
-    return redirectBack(req, res);
-  };
-  next();
+    req.session.err_messages = Array.isArray(message) ? message : [message]
+    return redirectBack(req, res)
+  }
+  next()
 }
 ```
 
 ### Utils (`/utils/*.js`)
+
 ```javascript
 // Pure utility functions - no business logic
 export function generateOTP() {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return Math.floor(100000 + Math.random() * 900000).toString()
 }
 
 export function redirectBack(req, res, fallback = '/') {
-  const referer = req.get('Referer');
-  return res.redirect(referer || fallback);
+  const referer = req.get('Referer')
+  return res.redirect(referer || fallback)
 }
 
 export async function sendOTPEmail(email, code, type) {
-  // Email sending logic
   try {
-    await transporter.sendMail({ from, to: email, subject, text });
-    return true;
+    await transporter.sendMail({ from, to: email, subject, text })
+    return true
   } catch (error) {
-    console.error('Email error:', error);
-    return false;
+    console.error('Email error:', error)
+    return false
   }
 }
 ```
 
-**Utils:** `otp.js`, `email.js`, `redirect.js`, `recaptcha.js`, `pagination.js`, `db.js`
+**Utils:** `otp.js`, `email.js`, `redirect.js`, `pagination.js`, `db.js`
 
 ### Models (`/models/*.js`)
+
 ```javascript
 // Mongoose schemas with timestamps
-import mongoose from 'mongoose';
+import mongoose from 'mongoose'
 
-const schema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  role: { type: String, enum: ['bidder', 'seller', 'admin'], default: 'bidder' },
-  parentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', default: null },
-}, { timestamps: true }); // Auto createdAt/updatedAt
+const schema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    role: {
+      type: String,
+      enum: ['bidder', 'seller', 'admin'],
+      default: 'bidder',
+    },
+    parentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Category',
+      default: null,
+    },
+  },
+  { timestamps: true }
+) // Auto createdAt/updatedAt
 
-export default mongoose.model('Model', schema);
+export default mongoose.model('Model', schema)
 ```
 
 **Rules:**
+
 - Always `timestamps: true` (auto `createdAt`/`updatedAt`)
 - Use `enum` for role/status fields
 - Use `ref` for ObjectId references
@@ -195,22 +238,25 @@ export default mongoose.model('Model', schema);
 
 ```javascript
 // Set session
-req.session.isAuthenticated = true;
-req.session.authUser = user; // Full Mongoose object
+req.session.isAuthenticated = true
+req.session.authUser = user // Full Mongoose object
 
 // Access in routes
-const userId = req.session.authUser._id;
+const userId = req.session.authUser._id
 
 // Access in views
 {{authUser.name}} // Already in res.locals.authUser
+{{#each allCategories}} // Already in res.locals.allCategories
 
 // Temporary data
-req.session.registerData = { name, email, password };
-delete req.session.registerData; // Cleanup after use
+req.session.registerData = { name, email, password }
+delete req.session.registerData // Cleanup after use
 ```
 
 **Rules:**
-- **NEVER pass `authUser` to `res.render()`** - already in `res.locals`
+
+- **NEVER pass `authUser` to `res.render()`** - already in `res.locals.authUser`
+- **NEVER pass `allCategories` to `res.render()`** - already in `res.locals.allCategories`
 - Pass Mongoose objects directly (configured to allow proto properties)
 - Update session when user data changes
 
@@ -218,30 +264,49 @@ delete req.session.registerData; // Cleanup after use
 
 ## Error Handling
 
-**Preferred pattern (redirects back):**
+**Happy case approach (no input validation):**
+
 ```javascript
-if (!item) return res.error('Item not found.');
+// Assume client data is valid - no 404 checks, no existence checks
+router.post('/path', async function (req, res) {
+  await service.create(req.body)
+  res.redirect('/success')
+})
 ```
 
-**For forms (stays on page):**
+**Business logic errors (use res.error):**
+
 ```javascript
-res.locals.err_messages = ['Invalid email or password.'];
-return res.render('vwAuth/login');
+// For business rules violations
+router.post('/bid', async function (req, res) {
+  const product = await productService.findById(productId)
+  if (product.sellerId.toString() === req.session.authUser._id.toString()) {
+    return res.error('You cannot bid on your own product')
+  }
+  await bidService.create(req.body)
+  res.redirect('/success')
+})
 ```
 
-**Client-side (JS):**
+**For forms that need validation (rare):**
+
 ```javascript
-window.errorMessage = 'Password mismatch.';
-// Auto-displays on page load
+res.locals.err_messages = ['Invalid email or password.']
+return res.render('vwAuth/login')
 ```
 
-**Error display:** Fixed top-right, red alerts, `bg-red-50 border-red-200 text-red-900 rounded-2xl`
+**Key principles:**
+
+- No input validation (no 404 checks, no existence checks)
+- Use `res.error()` for business logic violations
+- Code for the happy path, handle business rules only
 
 ---
 
 ## Handlebars Templates (`/views/*.handlebars`)
 
 ### Formatting Rules (STRICT)
+
 ```handlebars
 {{!-- 2 spaces indentation, NO blank lines --}}
 <form
@@ -274,6 +339,7 @@ window.errorMessage = 'Password mismatch.';
 ```
 
 **MUST follow:**
+
 - **Each HTML attribute on separate line** (form, input, select, button, a, div)
 - **2 spaces indentation** (not tabs, not 4 spaces)
 - **NO blank lines** - keep compact
@@ -282,6 +348,7 @@ window.errorMessage = 'Password mismatch.';
 - ✅ Good: Each attribute on new line (see example above)
 
 ### Form Methods
+
 ```handlebars
 {{!-- POST for create --}}
 <form method="post" action="/admin/resource">
@@ -300,29 +367,31 @@ window.errorMessage = 'Password mismatch.';
 ```
 
 ### Validation
-- **Backend validation is PRIMARY** (express-validator)
-- **HTML5 attributes for UX only**: `required`, `type`, `step`, `min`, `max`, `pattern`
-- Backend MUST validate even if HTML5 validates
+
+- **HTML5 validation ONLY**: `required`, `type`, `step`, `min`, `max`, `pattern`
+- **No backend validation** - assume client data is always valid
+- Code for happy case only
 
 ---
 
 ## UI/UX Design System (Apple-like)
 
 ### Design Tokens
+
 ```css
 /* Containers */
 bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60
 
 /* Buttons - Primary/Action */
-bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] 
+bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)]
 hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out
 
 /* Buttons - Destructive (delete, deny) */
-bg-red-600 text-white border border-red-600 rounded-xl 
+bg-red-600 text-white border border-red-600 rounded-xl
 shadow-[0_4px_20px_rgba(239,68,68,0.3)] hover:bg-red-700 hover:scale-105
 
 /* Inputs */
-w-full px-4 py-4 border border-gray-200/60 rounded-2xl 
+w-full px-4 py-4 border border-gray-200/60 rounded-2xl
 focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300
 
 /* Typography */
@@ -331,6 +400,7 @@ Body: text-gray-600
 ```
 
 **Rules:**
+
 - **Pure Tailwind only** - NO custom CSS, NO DaisyUI
 - **Lots of whitespace** - generous padding/margins
 - **Large rounded corners** - `rounded-2xl`, `rounded-3xl`
@@ -343,35 +413,46 @@ Body: text-gray-600
 ## Pagination (Default for ALL lists)
 
 **Service:**
+
 ```javascript
 export async function findAll(page = 1, limit = 10) {
-  const skip = (page - 1) * limit;
-  const items = await Model.find().sort({ createdAt: -1 }).skip(skip).limit(limit);
-  const total = await Model.countDocuments();
-  return { items, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } };
+  const skip = (page - 1) * limit
+  const items = await Model.find()
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit)
+  const total = await Model.countDocuments()
+  return {
+    items,
+    pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+  }
 }
 ```
 
 **Route:**
+
 ```javascript
-router.get('/', async function(req, res) {
-  const page = parseInt(req.query.page) || 1;
-  const result = await service.findAll(page, 10);
-  res.render('view', { ...result });
-});
+router.get('/', async function (req, res) {
+  const page = parseInt(req.query.page) || 1
+  const result = await service.findAll(page, 10)
+  res.render('view', { ...result })
+})
 ```
 
 **View:**
+
 ```handlebars
 {{#if items.length}}
-  {{!-- Content --}}
-  <div class="p-6">
+  {{! Content }}
+  <div class='p-6'>
     {{{pagination pagination.page pagination.totalPages pagination.total}}}
   </div>
 {{else}}
-  <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-12 text-center">
-    <i class="fas fa-folder-open text-gray-400 text-6xl mb-4"></i>
-    <p class="text-gray-600 text-lg">No items found.</p>
+  <div
+    class='bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-12 text-center'
+  >
+    <i class='fas fa-folder-open text-gray-400 text-6xl mb-4'></i>
+    <p class='text-gray-600 text-lg'>No items found.</p>
   </div>
 {{/if}}
 ```
@@ -381,68 +462,66 @@ router.get('/', async function(req, res) {
 ## Admin Patterns
 
 ### Admin Index (`/routes/admin/index.js`)
-```javascript
-import express from 'express';
-import sellerRequestsRouter from './seller-requests.route.js';
-import categoriesRouter from './categories.route.js';
 
-const router = express.Router();
+```javascript
+import express from 'express'
+import sellerRequestsRouter from './seller-requests.route.js'
+import categoriesRouter from './categories.route.js'
+
+const router = express.Router()
 
 router.get('/', function (req, res) {
-  res.redirect('/admin/seller-requests');
-});
+  res.redirect('/admin/seller-requests')
+})
 
-router.use('/seller-requests', sellerRequestsRouter);
-router.use('/categories', categoriesRouter);
+router.use('/seller-requests', sellerRequestsRouter)
+router.use('/categories', categoriesRouter)
 
-export default router;
+export default router
 ```
 
 ### Admin CRUD Pattern
+
 ```javascript
 // List
-router.get('/', async function(req, res) {
-  const page = parseInt(req.query.page) || 1;
-  const result = await service.findAll(page, 10);
-  res.render('vwAdmin/resource/index', { ...result });
-});
+router.get('/', async function (req, res) {
+  const page = parseInt(req.query.page) || 1
+  const result = await service.findAll(page, 10)
+  res.render('vwAdmin/resource/index', { ...result })
+})
 
 // Create GET
-router.get('/create', function(req, res) {
-  res.render('vwAdmin/resource/create');
-});
+router.get('/create', function (req, res) {
+  res.render('vwAdmin/resource/create')
+})
 
-// Create POST
-router.post('/create', async function(req, res) {
-  await service.create(req.body);
-  res.redirect('/admin/resource');
-});
+// Create POST (no validation needed)
+router.post('/create', async function (req, res) {
+  await service.create(req.body)
+  res.redirect('/admin/resource')
+})
 
 // Edit GET
-router.get('/:id/edit', async function(req, res) {
-  const resource = await service.findById(req.params.id);
-  if (!resource) return res.status(404).render('404');
-  res.render('vwAdmin/resource/edit', { resource });
-});
+router.get('/:id/edit', async function (req, res) {
+  const resource = await service.findById(req.params.id)
+  res.render('vwAdmin/resource/edit', { resource })
+})
 
-// Update PUT
-router.put('/:id', async function(req, res) {
-    const resource = await service.findById(req.params.id);
-  if (!resource) return res.status(404).render('404');
-  await service.update(req.params.id, req.body);
-  res.redirect('/admin/resource');
-});
+// Update PUT (no validation needed)
+router.put('/:id', async function (req, res) {
+  await service.update(req.params.id, req.body)
+  res.redirect('/admin/resource')
+})
 
-// Delete DELETE
-router.delete('/:id', async function(req, res) {
-  const resource = await service.findById(req.params.id);
-  if (!resource) return res.error('Resource not found.');
-  await service.remove(req.params.id);
-  res.redirect('/admin/resource');
-});
+// Delete DELETE (no checks needed)
+router.delete('/:id', async function (req, res) {
+  await service.remove(req.params.id)
+  res.redirect('/admin/resource')
+})
 ```
 
 **Admin View Layout:**
+
 ```handlebars
 {{#> admin-management-layout activeMenu='categories'}}
   <div class="mb-8">
@@ -457,28 +536,34 @@ router.delete('/:id', async function(req, res) {
 ## Code Style
 
 ### Naming Conventions
+
 - **Functions:** camelCase (`findByUsername`, `isAuthenticated`)
 - **Files:** kebab-case (`account.route.js`, `auth.mdw.js`, `login.handlebars`)
 - **DB collections:** lowercase plural (`users`, `categories`)
 - **Mongoose models:** PascalCase (`User.js`, `Category.js`)
 
 ### Organization
+
 ```
-/routes/*.route.js          # Routes (auth, account, admin/*)
-/services/*.service.js      # DB operations (user, category, otp)
-/models/*.js                # Mongoose schemas (User, Category, OTP)
-/middlewares/*.mdw.js       # Middleware (auth, error)
-/utils/*.js                 # Utilities (otp, email, redirect, pagination)
+/routes/*.route.js          # Routes (auth, account, admin/*, bidder/*, seller/*)
+/services/*.service.js      # DB operations (user, category, otp, bid, product)
+/models/*.js                # Mongoose schemas (User, Category, Product, Bid)
+/middlewares/*.mdw.js       # Middleware (auth.mdw.js only)
+/utils/*.js                 # Utilities (otp, email, pagination, db)
 /views/vw*/*.handlebars     # Views by feature (vwAuth, vwAccount, vwAdmin)
+/views/partials/            # Reusable components (category-dropdown, product-card)
 ```
 
 ### Async/Await
+
 - Always use `async/await`
 - Services: `return await Model.find()`
 - Routes: `async function(req, res)`
 - Utils: `async` only when needed
+- **NO SEMICOLONS** - use semicolon-free style throughout
 
 ### Comments
+
 - **Minimize comments** - code should be self-explanatory
 - **Only comment complex logic** - algorithms, edge cases
 - **No obvious comments** - don't state what code shows
@@ -488,45 +573,41 @@ router.delete('/:id', async function(req, res) {
 
 ## Security & Validation
 
-### Validation (express-validator)
-```javascript
-import { body } from 'express-validator';
-import { handleValidationErrors } from '../middlewares/validation.mdw.js';
+### Validation
 
-router.post('/register', [
-  body('name').trim().isLength({ min: 2, max: 100 }),
-  body('email').trim().isEmail().normalizeEmail(),
-  body('password').isLength({ min: 6, max: 50 }),
-  handleValidationErrors('vwAuth/register'),
-], async function(req, res) {
-  // Handler
-});
-```
+- **HTML5 only** - No input validation on backend
+- **Business logic validation** - Use `res.error()` for business rules
+- Trust client data (no 404 checks, no existence checks)
+- Use HTML5 attributes: `required`, `type`, `min`, `max`, `pattern`
 
 ### Authentication
+
 - **bcryptjs:** `bcrypt.hashSync(password, 10)`, `bcrypt.compareSync(plain, hashed)`
 - **Session-based:** No JWT
 - **Roles:** `'bidder'`, `'seller'`, `'admin'`
+- **Middleware:** `isAuth`, `isAdmin`, `isSeller`
 
 ---
 
 ## Quick Reference Files
 
 **Before coding, read these for reference:**
-- Routes: `/routes/auth.route.js`, `/routes/admin/categories.route.js`
-- Services: `/services/user.service.js`, `/services/category.service.js`
-- Views: `/views/vwAuth/login.handlebars`, `/views/vwAdmin/categories/index.handlebars`
-- Utils: `/utils/otp.js`, `/utils/email.js`, `/utils/redirect.js`
+
+- Routes: `/routes/auth.route.js`, `/routes/admin/categories.route.js`, `/routes/bidder/bid.route.js`
+- Services: `/services/user.service.js`, `/services/category.service.js`, `/services/bid.service.js`
+- Views: `/views/vwAuth/login.handlebars`, `/views/vwProducts/list.handlebars`
+- Partials: `/views/partials/category-dropdown.handlebars`, `/views/partials/product-card.handlebars`
+- Utils: `/utils/otp.js`, `/utils/email.js`, `/utils/redirect.js`, `/utils/pagination.js`
 
 ---
 
 ## Critical Reminders
 
 1. ✅ **Read 1-2 related files before writing code**
-2. ✅ **Match existing style exactly** (indentation, naming, patterns)
-3. ✅ **Backend validation is primary** (HTML5 for UX only)
-4. ✅ **Use `res.error()` for errors** (not manual redirectBack)
-5. ✅ **Never pass `authUser` to views** (already in `res.locals`)
+2. ✅ **Match existing style exactly** (NO SEMICOLONS, indentation, naming)
+3. ✅ **No input validation** - assume client data is valid (no 404, no existence checks)
+4. ✅ **Use `res.error()` for business logic errors** - business rules violations only
+5. ✅ **Never pass `authUser` or `allCategories` to views** (already in `res.locals`)
 6. ✅ **Separate create/edit views** (no shared forms)
 7. ✅ **Use proper HTTP methods** (POST/PUT/DELETE)
 8. ✅ **All lists have pagination** (10 items/page)
@@ -535,8 +616,11 @@ router.post('/register', [
 11. ✅ **Apple-like design** (whitespace, rounded corners, soft shadows)
 12. ✅ **Delete forms need confirmation** (`onsubmit="return confirm(...)"`)
 13. ✅ **Timestamps: true** (no manual `createdAt`)
-14. ✅ **English only** (code, comments, UI)
-15. ✅ **Act as senior engineer** (clean, maintainable, production-ready)
+14. ✅ **Populate all fields** - don't specify field selections in `.populate()`
+15. ✅ **Use reusable partials** - category-dropdown, product-card
+16. ✅ **English only** (code, comments, UI)
+17. ✅ **Code for happy case + business rules** - no defensive checks, only business logic
+18. ✅ **NO SEMICOLONS** - this is critical, never use semicolons in JS files
 
 ---
 

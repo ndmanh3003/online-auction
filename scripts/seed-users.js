@@ -1,134 +1,60 @@
-import 'dotenv/config';
-import './../utils/db.js';
-import User from '../models/User.js';
-import bcrypt from 'bcryptjs';
+import bcrypt from 'bcryptjs'
+import 'dotenv/config'
+import User from '../models/User.js'
+import './../utils/db.js'
 
 export const seedUsers = async () => {
   try {
-    console.log('Starting user seed...');
+    console.log('Starting user seed...')
 
-    await User.deleteMany({});
-    console.log('Cleared existing users');
+    const hashedPassword = bcrypt.hashSync('123123', 10)
 
-    const hashedPassword = bcrypt.hashSync('123456', 10);
+    const now = new Date()
+    const sevenDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
 
     const admin = await User.create({
-      name: 'Admin User',
-      email: 'admin@auction.com',
+      name: 'Admin',
+      email: 'admin@gmail.com',
       password: hashedPassword,
       role: 'admin',
       isEmailVerified: true,
-      address: '123 Admin Street, Hanoi',
-    });
+      address: '',
+    })
 
-    const sellers = await User.insertMany([
-      {
-        name: 'John Smith',
-        email: 'john@seller.com',
-        password: hashedPassword,
-        role: 'seller',
-        isEmailVerified: true,
-        address: '456 Seller Avenue, Ho Chi Minh City',
-      },
-      {
-        name: 'Emily Johnson',
-        email: 'emily@seller.com',
-        password: hashedPassword,
-        role: 'seller',
-        isEmailVerified: true,
-        address: '789 Market Street, Da Nang',
-      },
-      {
-        name: 'Michael Brown',
-        email: 'michael@seller.com',
-        password: hashedPassword,
-        role: 'seller',
-        isEmailVerified: true,
-        address: '321 Commerce Road, Hanoi',
-      },
-      {
-        name: 'Sarah Davis',
-        email: 'sarah@seller.com',
-        password: hashedPassword,
-        role: 'seller',
-        isEmailVerified: true,
-        address: '654 Business Blvd, Ho Chi Minh City',
-      },
-    ]);
+    const user1 = await User.create({
+      name: 'User1',
+      email: 'user1@gmail.com',
+      password: hashedPassword,
+      role: null,
+      isEmailVerified: true,
+      address: '',
+      sellerActivatedAt: now,
+      sellerExpiresAt: sevenDaysLater,
+    })
 
-    const bidders = await User.insertMany([
-      {
-        name: 'David Wilson',
-        email: 'david@bidder.com',
-        password: hashedPassword,
-        role: 'bidder',
-        isEmailVerified: true,
-        address: '111 Bidder Lane, Hanoi',
-      },
-      {
-        name: 'Jennifer Taylor',
-        email: 'jennifer@bidder.com',
-        password: hashedPassword,
-        role: 'bidder',
-        isEmailVerified: true,
-        address: '222 Auction Street, Da Nang',
-      },
-      {
-        name: 'Robert Anderson',
-        email: 'robert@bidder.com',
-        password: hashedPassword,
-        role: 'bidder',
-        isEmailVerified: true,
-        address: '333 Buyer Avenue, Ho Chi Minh City',
-      },
-      {
-        name: 'Mary Martinez',
-        email: 'mary@bidder.com',
-        password: hashedPassword,
-        role: 'bidder',
-        isEmailVerified: true,
-        address: '444 Customer Road, Hanoi',
-      },
-      {
-        name: 'James Garcia',
-        email: 'james@bidder.com',
-        password: hashedPassword,
-        role: 'bidder',
-        isEmailVerified: true,
-        address: '555 Shopper Street, Da Nang',
-      },
-      {
-        name: 'Patricia Rodriguez',
-        email: 'patricia@bidder.com',
-        password: hashedPassword,
-        role: 'bidder',
-        isEmailVerified: true,
-        address: '666 Collector Avenue, Ho Chi Minh City',
-      },
-      {
-        name: 'Christopher Lee',
-        email: 'christopher@bidder.com',
-        password: hashedPassword,
-        role: 'bidder',
-        isEmailVerified: true,
-        address: '777 Enthusiast Lane, Hanoi',
-      },
-      {
-        name: 'Linda Walker',
-        email: 'linda@bidder.com',
-        password: hashedPassword,
-        role: 'bidder',
-        isEmailVerified: true,
-        address: '888 Buyer Circle, Da Nang',
-      },
-    ]);
+    const user2 = await User.create({
+      name: 'User2',
+      email: 'user2@gmail.com',
+      password: hashedPassword,
+      role: null,
+      isEmailVerified: true,
+      address: '',
+    })
 
-    console.log(`Created: 1 admin, ${sellers.length} sellers, ${bidders.length} bidders`);
-    
-    return { admin, sellers, bidders };
+    const user3 = await User.create({
+      name: 'User3',
+      email: 'user3@gmail.com',
+      password: hashedPassword,
+      role: null,
+      isEmailVerified: true,
+      address: '',
+    })
+
+    console.log('Created: 1 admin, 1 seller (user1), 2 bidders (user2, user3)')
+
+    return { admin, sellers: [user1], bidders: [user2, user3] }
   } catch (error) {
-    console.error('Error seeding users:', error);
-    throw error;
+    console.error('Error seeding users:', error)
+    throw error
   }
-};
-
+}
