@@ -1,4 +1,5 @@
-import mongoose from 'mongoose';
+import mongoose from 'mongoose'
+import { paginationPlugin } from '../utils/mongoose-plugins.js'
 
 const transactionSchema = new mongoose.Schema(
   {
@@ -87,7 +88,18 @@ const transactionSchema = new mongoose.Schema(
   {
     timestamps: true,
   }
-);
+)
 
-export default mongoose.model('Transaction', transactionSchema);
+transactionSchema.pre('find', function () {
+  this.populate('productId').populate('sellerId').populate('winnerId')
+})
+transactionSchema.pre('findOne', function () {
+  this.populate('productId').populate('sellerId').populate('winnerId')
+})
+transactionSchema.pre('findOneAndUpdate', function () {
+  this.populate('productId').populate('sellerId').populate('winnerId')
+})
 
+transactionSchema.plugin(paginationPlugin)
+
+export default mongoose.model('Transaction', transactionSchema)

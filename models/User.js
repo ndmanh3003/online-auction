@@ -1,4 +1,7 @@
-import mongoose from 'mongoose';
+import mongoose from 'mongoose'
+import Rating from './Rating.js'
+import SellerRequest from './SellerRequest.js'
+import { paginationPlugin } from '../utils/mongoose-plugins.js'
 
 const userSchema = new mongoose.Schema(
   {
@@ -27,8 +30,16 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['bidder', 'seller', 'admin'],
-      default: 'bidder',
+      enum: ['admin'],
+      default: null,
+    },
+    sellerActivatedAt: {
+      type: Date,
+      default: null,
+    },
+    sellerExpiresAt: {
+      type: Date,
+      default: null,
     },
     isEmailVerified: {
       type: Boolean,
@@ -38,6 +49,26 @@ const userSchema = new mongoose.Schema(
   {
     timestamps: true,
   }
-);
+)
 
-export default mongoose.model('User', userSchema);
+userSchema.methods.getRatingStats = async function () {
+  const positive = await Rating.countDocuments({
+    toUserId: this._id,
+    rating: 1,
+  })
+  const negative = await Rating.countDocuments({
+    toUserId: this._id,
+    rating: -1,
+  })
+  const total = positive + negative
+  const percent = total > 0 ? (positive / total) * 100 : 0
+  return { positive, negative, total, percent }
+}
+
+userSchema.methods.getSellerRequest = async function () {
+  return await SellerRequest.findOne({ userId: this._id }).sort({ createdAt: -1 })
+}
+
+userSchema.plugin(paginationPlugin)
+
+export default mongoose.model('User', userSchema)

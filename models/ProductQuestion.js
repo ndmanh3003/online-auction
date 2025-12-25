@@ -1,4 +1,5 @@
-import mongoose from 'mongoose';
+import mongoose from 'mongoose'
+import { paginationPlugin } from '../utils/mongoose-plugins.js'
 
 const productQuestionSchema = new mongoose.Schema(
   {
@@ -32,7 +33,18 @@ const productQuestionSchema = new mongoose.Schema(
   {
     timestamps: true,
   }
-);
+)
 
-export default mongoose.model('ProductQuestion', productQuestionSchema);
+productQuestionSchema.pre('find', function () {
+  this.populate('askerId')
+})
+productQuestionSchema.pre('findOne', function () {
+  this.populate('askerId')
+})
+productQuestionSchema.pre('findOneAndUpdate', function () {
+  this.populate('askerId')
+})
 
+productQuestionSchema.plugin(paginationPlugin)
+
+export default mongoose.model('ProductQuestion', productQuestionSchema)

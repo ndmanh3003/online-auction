@@ -1,4 +1,5 @@
-import mongoose from 'mongoose';
+import mongoose from 'mongoose'
+import { paginationPlugin } from '../utils/mongoose-plugins.js'
 
 const otpSchema = new mongoose.Schema(
   {
@@ -6,6 +7,8 @@ const otpSchema = new mongoose.Schema(
       type: String,
       required: true,
       index: true,
+      lowercase: true,
+      trim: true,
     },
     code: {
       type: String,
@@ -29,6 +32,8 @@ const otpSchema = new mongoose.Schema(
   {
     timestamps: true,
   }
-);
+)
 
-export default mongoose.model('OTP', otpSchema);
+otpSchema.plugin(paginationPlugin)
+
+export default mongoose.model('OTP', otpSchema)

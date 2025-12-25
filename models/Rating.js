@@ -1,4 +1,5 @@
-import mongoose from 'mongoose';
+import mongoose from 'mongoose'
+import { paginationPlugin } from '../utils/mongoose-plugins.js'
 
 const ratingSchema = new mongoose.Schema(
   {
@@ -39,9 +40,20 @@ const ratingSchema = new mongoose.Schema(
   {
     timestamps: true,
   }
-);
+)
 
-ratingSchema.index({ productId: 1, fromUserId: 1, toUserId: 1 });
+ratingSchema.index({ productId: 1, fromUserId: 1, toUserId: 1 })
 
-export default mongoose.model('Rating', ratingSchema);
+ratingSchema.pre('find', function () {
+  this.populate('fromUserId').populate('productId')
+})
+ratingSchema.pre('findOne', function () {
+  this.populate('fromUserId').populate('productId')
+})
+ratingSchema.pre('findOneAndUpdate', function () {
+  this.populate('fromUserId').populate('productId')
+})
 
+ratingSchema.plugin(paginationPlugin)
+
+export default mongoose.model('Rating', ratingSchema)

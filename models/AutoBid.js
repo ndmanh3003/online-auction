@@ -1,6 +1,7 @@
-import mongoose from 'mongoose';
+import mongoose from 'mongoose'
+import { paginationPlugin } from '../utils/mongoose-plugins.js'
 
-const bidSchema = new mongoose.Schema(
+const autoBidSchema = new mongoose.Schema(
   {
     productId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -14,28 +15,19 @@ const bidSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
-    bidAmount: {
+    maxBidAmount: {
       type: Number,
       required: true,
       min: 0,
-      index: true,
-    },
-    maxBidAmount: {
-      type: Number,
-      default: null,
-      min: 0,
-    },
-    isAutoBid: {
-      type: Boolean,
-      default: false,
     },
   },
   {
     timestamps: true,
   }
-);
+)
 
-bidSchema.index({ productId: 1, bidAmount: -1 });
+autoBidSchema.index({ productId: 1, bidderId: 1 }, { unique: true })
 
-export default mongoose.model('Bid', bidSchema);
+autoBidSchema.plugin(paginationPlugin)
 
+export default mongoose.model('AutoBid', autoBidSchema)

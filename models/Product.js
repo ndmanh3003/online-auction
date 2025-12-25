@@ -1,4 +1,7 @@
-import mongoose from 'mongoose';
+import mongoose from 'mongoose'
+import { paginationPlugin } from '../utils/mongoose-plugins.js'
+import AutoBid from './AutoBid.js'
+import Watchlist from './Watchlist.js'
 
 const productSchema = new mongoose.Schema(
   {
@@ -28,9 +31,9 @@ const productSchema = new mongoose.Schema(
       required: true,
       validate: {
         validator: function (v) {
-          return v && v.length >= 3;
+          return v && v.length >= 4
         },
-        message: 'At least 3 images are required',
+        message: 'At least 4 images are required',
       },
     },
     categoryId: {
@@ -84,13 +87,68 @@ const productSchema = new mongoose.Schema(
       ref: 'User',
       default: [],
     },
+    currentPrice: {
+      type: Number,
+      default: null,
+    },
+    currentWinnerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    bids: [
+      {
+        bidderId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'User',
+          required: true,
+        },
+        bidAmount: {
+          type: Number,
+          required: true,
+          min: 0,
+        },
+        createdAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
   },
   {
     timestamps: true,
   }
-);
+)
 
-productSchema.index({ name: 'text', description: 'text' });
+productSchema.index({ name: 'text', description: 'text' })
 
-export default mongoose.model('Product', productSchema);
+productSchema.pre('find', function () {
+  this.populate('categoryId').populate('sellerId')
+})
+productSchema.pre('findOne', function () {
+  this.populate('categoryId').populate('sellerId')
+})
+productSchema.pre('findOneAndUpdate', function () {
+  this.populate('categoryId').populate('sellerId')
+})
 
+productSchema.methods.isInWatchlist = async function (userId) {
+  const item = await Watchlist.findOne({ userId, productId: this._id })
+  return item !== null
+}
+
+productSchema.methods.getUserBid = async function (userId) {
+  const autoBid = await AutoBid.findOne({
+    productId: this._id,
+    bidderId: userId,
+  })
+  if (!autoBid) return null
+  return {
+    maxBidAmount: autoBid.maxBidAmount,
+    createdAt: autoBid.createdAt,
+  }
+}
+
+productSchema.plugin(paginationPlugin)
+
+export default mongoose.model('Product', productSchema)

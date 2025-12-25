@@ -1,20 +1,11 @@
-import mongoose from 'mongoose';
+import mongoose from 'mongoose'
+import { paginationPlugin } from '../utils/mongoose-plugins.js'
 
 const categorySchema = new mongoose.Schema(
   {
     name: {
       type: String,
       required: true,
-      trim: true,
-    },
-    img_url: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    description: {
-      type: String,
-      default: '',
       trim: true,
     },
     parentId: {
@@ -26,6 +17,18 @@ const categorySchema = new mongoose.Schema(
   {
     timestamps: true,
   }
-);
+)
 
-export default mongoose.model('Category', categorySchema);
+categorySchema.pre('find', function () {
+  this.populate('parentId')
+})
+categorySchema.pre('findOne', function () {
+  this.populate('parentId')
+})
+categorySchema.pre('findOneAndUpdate', function () {
+  this.populate('parentId')
+})
+
+categorySchema.plugin(paginationPlugin)
+
+export default mongoose.model('Category', categorySchema)

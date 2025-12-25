@@ -1,4 +1,5 @@
-import mongoose from 'mongoose';
+import mongoose from 'mongoose'
+import { paginationPlugin } from '../utils/mongoose-plugins.js'
 
 const sellerRequestSchema = new mongoose.Schema(
   {
@@ -21,10 +22,26 @@ const sellerRequestSchema = new mongoose.Schema(
       ref: 'User',
       default: null,
     },
+    approvedAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
   }
-);
+)
 
-export default mongoose.model('SellerRequest', sellerRequestSchema);
+sellerRequestSchema.pre('find', function () {
+  this.populate('userId').populate('reviewedBy')
+})
+sellerRequestSchema.pre('findOne', function () {
+  this.populate('userId').populate('reviewedBy')
+})
+sellerRequestSchema.pre('findOneAndUpdate', function () {
+  this.populate('userId').populate('reviewedBy')
+})
+
+sellerRequestSchema.plugin(paginationPlugin)
+
+export default mongoose.model('SellerRequest', sellerRequestSchema)
