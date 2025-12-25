@@ -1,29 +1,49 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
   <div class="mb-8">
-    <h1 class="text-[36px] font-semibold text-gray-900">My Active Bids</h1>
-  </div>
-  {{#if items.length}}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-      {{#each items}}
-        {{#if productId}}
-          {{#with productId}}
-            {{> product-card}}
-          {{/with}}
-        {{/if}}
-      {{/each}}
-    </div>
-    {{{pagination pagination.page pagination.totalPages pagination.total}}}
-  {{else}}
-    <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-12 text-center">
-      <i class="fas fa-gavel text-gray-400 text-6xl mb-4"></i>
-      <p class="text-gray-600 text-lg">You haven't placed any bids yet.</p>
+    <h1 class="text-[36px] font-semibold text-gray-900 mb-6">My Bids</h1>
+    <div class="flex gap-2 border-b border-gray-200">
       <a
-        href="/products"
-        class="inline-block mt-4 px-6 py-3 bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
+        href="/account/bids?tab=all"
+        class="px-6 py-3 text-sm font-medium transition-colors {{#if (eq activeTab 'all')}}text-blue-600 border-b-2 border-blue-600{{else}}text-gray-600 hover:text-gray-900{{/if}}"
       >
-        Browse Products
+        All
+      </a>
+      <a
+        href="/account/bids?tab=active"
+        class="px-6 py-3 text-sm font-medium transition-colors {{#if (eq activeTab 'active')}}text-blue-600 border-b-2 border-blue-600{{else}}text-gray-600 hover:text-gray-900{{/if}}"
+      >
+        Active Bids
+      </a>
+      <a
+        href="/account/bids?tab=won"
+        class="px-6 py-3 text-sm font-medium transition-colors {{#if (eq activeTab 'won')}}text-blue-600 border-b-2 border-blue-600{{else}}text-gray-600 hover:text-gray-900{{/if}}"
+      >
+        Won Bids
       </a>
     </div>
+  </div>
+  {{#if items.length}}
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+    {{#each items}} {{#if productId}} {{#with productId}} {{> product-card}}
+    {{/with}} {{/if}} {{/each}}
+  </div>
+  {{{pagination pagination.page pagination.totalPages pagination.total}}}
+  {{else}}
+  <div
+    class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-12 text-center"
+  >
+    <i class="fas fa-gavel text-gray-400 text-6xl mb-4"></i>
+    <p class="text-gray-600 text-lg">
+      {{#if (eq activeTab 'active')}} You don't have any active bids. {{else if
+      (eq activeTab 'won')}} You haven't won any auctions yet. {{else}} You
+      haven't placed any bids yet. {{/if}}
+    </p>
+    <a
+      href="/products"
+      class="inline-block mt-4 px-6 py-3 bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
+    >
+      Browse Products
+    </a>
+  </div>
   {{/if}}
 </div>
-

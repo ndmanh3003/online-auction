@@ -2,12 +2,12 @@
   <div class="mb-8">
     <div class="flex justify-between items-center mb-4">
       <h1 class="text-[36px] font-semibold text-gray-900">Categories</h1>
-      <a
-        href="/admin/categories/create"
+      <button
+        onclick="document.getElementById('addCategoryModal').classList.remove('hidden')"
         class="px-6 py-3 bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
       >
         Add Category
-      </a>
+      </button>
     </div>
     <div class="flex items-center gap-4">
       <label for="parentFilter" class="text-sm font-medium text-gray-700">Filter by Parent:</label>
@@ -37,20 +37,14 @@
         <table class="w-full">
           <thead>
             <tr class="border-b border-gray-200">
-              <th class="text-left py-4 px-4 text-gray-900 font-semibold">Image</th>
               <th class="text-left py-4 px-4 text-gray-900 font-semibold">Category Name</th>
               <th class="text-left py-4 px-4 text-gray-900 font-semibold">Parent Category</th>
-              <th class="text-left py-4 px-4 text-gray-900 font-semibold">Description</th>
-              <th class="text-left py-4 px-4 text-gray-900 font-semibold">Created At</th>
               <th class="text-left py-4 px-4 text-gray-900 font-semibold">Actions</th>
             </tr>
           </thead>
           <tbody>
             {{#each items}}
               <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                <td class="py-4 px-4">
-                  <img src="{{img_url}}" alt="{{name}}" class="w-16 h-16 object-cover rounded-xl">
-                </td>
                 <td class="py-4 px-4">
                   <span class="text-gray-900 font-medium">{{name}}</span>
                 </td>
@@ -61,21 +55,13 @@
                     <span class="text-gray-400 italic">-</span>
                   {{/if}}
                 </td>
-                <td class="py-4 px-4 text-gray-600">
-                  {{#if description}}
-                    <p class="max-w-md truncate">{{description}}</p>
-                  {{else}}
-                    <span class="text-gray-400">-</span>
-                  {{/if}}
-                </td>
-                <td class="py-4 px-4 text-gray-600">{{formatDate createdAt}}</td>
                 <td class="py-4 px-4">
-                  <a
-                    href="/admin/categories/{{_id}}/edit"
+                  <button
+                    onclick="openEditModal('{{_id}}', '{{name}}', '{{#if parentId}}{{parentId._id}}{{/if}}')"
                     class="mr-2 px-4 py-2 bg-blue-600 text-white border border-blue-600 rounded-xl shadow-[0_4px_20px_rgba(59,130,246,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium text-sm whitespace-nowrap"
                   >
                     Edit
-                  </a>
+                  </button>
                   <form
                     method="post"
                     action="/admin/categories/{{_id}}"
@@ -108,4 +94,116 @@
       <p class="text-gray-600 text-lg">No items found.</p>
     </div>
   {{/if}}
+{{#> modal id="addCategoryModal" title="Add Category"}}
+<form
+  method="post"
+  action="/admin/categories/create"
+  class="space-y-4"
+>
+  <div>
+    <label
+      for="addParentId"
+      class="block text-sm font-medium text-gray-900 mb-2"
+      >Parent Category (Optional)</label
+    >
+    <select
+      id="addParentId"
+      name="parentId"
+      class="w-full px-4 py-3 border border-gray-200/60 rounded-xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900 bg-white"
+    >
+      <option value="">None (Top-level category)</option>
+      {{#each allCategories}}
+        <option value="{{_id}}" disabled>{{name}}</option>
+        {{#each subcategories}}
+          <option value="{{_id}}">&nbsp;&nbsp;{{name}}</option>
+        {{/each}}
+      {{/each}}
+    </select>
+    <p class="mt-2 text-sm text-gray-500">Leave empty to create a top-level category. Select a subcategory as parent.</p>
+  </div>
+  <div>
+    <label
+      for="addName"
+      class="block text-sm font-medium text-gray-900 mb-2"
+      >Category Name</label
+    >
+    <input
+      type="text"
+      id="addName"
+      name="name"
+      class="w-full px-4 py-3 border border-gray-200/60 rounded-xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
+      placeholder="Enter category name"
+      required
+    />
+  </div>
+  <button
+    type="submit"
+    class="w-full px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
+  >
+    Create
+  </button>
+</form>
+{{/modal}}
+{{#> modal id="editCategoryModal" title="Edit Category"}}
+<form
+  method="post"
+  action=""
+  id="editCategoryForm"
+  class="space-y-4"
+>
+  <input type="hidden" name="_method" value="PUT">
+  <div>
+    <label
+      for="editParentId"
+      class="block text-sm font-medium text-gray-900 mb-2"
+      >Parent Category (Optional)</label
+    >
+    <select
+      id="editParentId"
+      name="parentId"
+      class="w-full px-4 py-3 border border-gray-200/60 rounded-xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900 bg-white"
+    >
+      <option value="">None (Top-level category)</option>
+      {{#each allCategories}}
+        <option value="{{_id}}" disabled>{{name}}</option>
+        {{#each subcategories}}
+          <option value="{{_id}}">&nbsp;&nbsp;{{name}}</option>
+        {{/each}}
+      {{/each}}
+    </select>
+    <p class="mt-2 text-sm text-gray-500">Leave empty to make this a top-level category. Select a subcategory as parent.</p>
+  </div>
+  <div>
+    <label
+      for="editName"
+      class="block text-sm font-medium text-gray-900 mb-2"
+      >Category Name</label
+    >
+    <input
+      type="text"
+      id="editName"
+      name="name"
+      class="w-full px-4 py-3 border border-gray-200/60 rounded-xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
+      placeholder="Enter category name"
+      required
+    />
+  </div>
+  <button
+    type="submit"
+    class="w-full px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
+  >
+    Update
+  </button>
+</form>
+{{/modal}}
+{{#section "js"}}
+<script>
+  function openEditModal(id, name, parentId) {
+    document.getElementById('editCategoryForm').action = '/admin/categories/' + id
+    document.getElementById('editName').value = name
+    document.getElementById('editParentId').value = parentId || ''
+    document.getElementById('editCategoryModal').classList.remove('hidden')
+  }
+</script>
+{{/section}}
 {{/admin-management-layout}}

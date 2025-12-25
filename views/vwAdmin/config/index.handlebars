@@ -1,0 +1,154 @@
+{{#> admin-management-layout activeMenu='config'}}
+<div class="mb-8">
+  <h1 class="text-[36px] font-semibold text-gray-900">Auction Configuration</h1>
+  <p class="text-gray-600 mt-2">Manage system-wide auction settings</p>
+</div>
+<div
+  class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-8"
+>
+  <form method="post" action="/admin/config" class="space-y-6">
+    <input type="hidden" name="_method" value="PUT" />
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div>
+        <label
+          for="autoExtendThresholdMinutes"
+          class="block text-sm font-medium text-gray-900 mb-2"
+        >
+          Auto-Extend Threshold
+        </label>
+        <div class="relative">
+          <input
+            type="number"
+            id="autoExtendThresholdMinutes"
+            name="autoExtendThresholdMinutes"
+            value="{{config.autoExtendThresholdMinutes}}"
+            min="1"
+            class="w-full px-4 py-3 pr-20 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
+            required
+          />
+          <span
+            class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 text-sm"
+            >minutes</span
+          >
+        </div>
+        <p class="text-sm text-gray-500 mt-1">
+          Extend auction when bid placed within X minutes of end time
+        </p>
+      </div>
+      <div>
+        <label
+          for="autoExtendDurationMinutes"
+          class="block text-sm font-medium text-gray-900 mb-2"
+        >
+          Auto-Extend Duration
+        </label>
+        <div class="relative">
+          <input
+            type="number"
+            id="autoExtendDurationMinutes"
+            name="autoExtendDurationMinutes"
+            value="{{config.autoExtendDurationMinutes}}"
+            min="1"
+            class="w-full px-4 py-3 pr-20 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
+            required
+          />
+          <span
+            class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 text-sm"
+            >minutes</span
+          >
+        </div>
+        <p class="text-sm text-gray-500 mt-1">
+          Extend auction by X minutes when triggered
+        </p>
+      </div>
+      <div>
+        <label
+          for="sellerDurationDays"
+          class="block text-sm font-medium text-gray-900 mb-2"
+        >
+          Seller Role Duration
+        </label>
+        <div class="relative">
+          <input
+            type="number"
+            id="sellerDurationDays"
+            name="sellerDurationDays"
+            value="{{config.sellerDurationDays}}"
+            min="1"
+            class="w-full px-4 py-3 pr-16 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
+            required
+          />
+          <span
+            class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 text-sm"
+            >days</span
+          >
+        </div>
+        <p class="text-sm text-gray-500 mt-1">
+          Number of days seller role remains active after approval
+        </p>
+      </div>
+      <div>
+        <label
+          for="newProductHighlightMinutes"
+          class="block text-sm font-medium text-gray-900 mb-2"
+        >
+          New Product Highlight Duration
+        </label>
+        <div class="relative">
+          <input
+            type="number"
+            id="newProductHighlightMinutes"
+            name="newProductHighlightMinutes"
+            value="{{config.newProductHighlightMinutes}}"
+            min="1"
+            class="w-full px-4 py-3 pr-20 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
+            required
+          />
+          <span
+            class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 text-sm"
+            >minutes</span
+          >
+        </div>
+        <p class="text-sm text-gray-500 mt-1">
+          Show NEW badge on products posted within X minutes
+        </p>
+      </div>
+      <div>
+        <label
+          for="minRatingPercentForBid"
+          class="block text-sm font-medium text-gray-900 mb-2"
+        >
+          Minimum Rating Percentage for Bidding
+        </label>
+        <div class="relative">
+          <input
+            type="number"
+            id="minRatingPercentForBid"
+            name="minRatingPercentForBid"
+            value="{{config.minRatingPercentForBid}}"
+            min="0"
+            max="100"
+            class="w-full px-4 py-3 pr-12 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
+            required
+          />
+          <span
+            class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 text-sm"
+            >%</span
+          >
+        </div>
+        <p class="text-sm text-gray-500 mt-1">
+          Minimum positive rating percentage required to bid (0-100)
+        </p>
+      </div>
+    </div>
+     <div class="flex justify-end">
+       <button
+         type="submit"
+         class="px-6 py-4 bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
+       >
+         Save Configuration
+       </button>
+     </div>
+  </form>
+</div>
+{{/admin-management-layout}}

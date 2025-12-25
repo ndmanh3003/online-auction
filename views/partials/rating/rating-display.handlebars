@@ -1,0 +1,35 @@
+{{#if (gt ratingStats.total 0)}} {{#if compact}}
+<button
+  onclick="openRatingModal('{{userId}}', '{{userName}}')"
+  class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium text-sm"
+>
+  {{roundPercent ratingStats.percent}}%
+  ({{ratingStats.positive}}/{{ratingStats.total}})
+</button>
+{{else}}
+<div class="flex items-center gap-4 mb-2">
+  <div class="flex items-center gap-2">
+    <i class="fas fa-star text-yellow-500 text-lg"></i>
+    <span class="text-gray-900 font-bold text-xl"
+      >{{roundPercent ratingStats.percent}}%</span
+    >
+  </div>
+  <div class="text-sm text-gray-600">
+    <span class="text-green-600 font-semibold">{{ratingStats.positive}}</span>
+    /
+    <span class="text-red-600 font-semibold">{{ratingStats.negative}}</span>
+    ({{ratingStats.total}} total)
+  </div>
+</div>
+<button
+  onclick="document.getElementById('{{modalId}}').classList.remove('hidden')"
+  class="text-blue-600 hover:underline text-sm"
+>
+  View all ratings →
+</button>
+{{/if}} {{else}} {{#if compact}}
+<span class="text-gray-400">No ratings</span>
+{{else}}
+<div class="text-gray-500">No ratings yet</div>
+{{/if}} {{/if}}
+

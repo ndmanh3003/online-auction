@@ -3,6 +3,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Auction System</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Logo_of_Twitter.svg/1245px-Logo_of_Twitter.svg.png"
+    />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -17,9 +22,32 @@
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     />
+    <script type="text/javascript">
+      function googleTranslateElementInit() {
+        new google.translate.TranslateElement(
+          {
+            pageLanguage: 'auto',
+            includedLanguages: 'en,vi',
+            autoDisplay: false,
+          },
+          'google_translate_element'
+        )
+      }
+    </script>
+    <script
+      type="text/javascript"
+      src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
+    ></script>
+    <div
+      id="google_translate_element"
+      style="position: absolute; left: -9999px; top: -9999px"
+    ></div>
     <style>
       * {
         font-family: 'Momo Trust Sans', sans-serif;
+      }
+      font {
+        font-family: inherit !important;
       }
       h1,
       h2,
@@ -32,28 +60,71 @@
       .font-momo-signature {
         font-family: 'Momo Signature', cursive;
       }
+      .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+      }
+      .goog-te-banner-frame,
+      .goog-te-menu-frame,
+      #google_translate_element {
+        display: none !important;
+      }
+      body {
+        top: 0 !important;
+      }
+      .skiptranslate {
+        display: none !important;
+      }
+      .goog-te-banner-frame.skiptranslate {
+        display: none !important;
+      }
+      body {
+        position: static !important;
+        top: auto !important;
+      }
     </style>
     {{{_sections.css}}}
   </head>
   <body>
-    {{#if err_messages}}
-      <div class="fixed top-4 right-4 z-50 space-y-3" id="errorAlerts">
-        {{#each err_messages}}
-          <div
-            role="alert"
-            class="flex items-center gap-3 px-6 py-4 bg-red-50 border border-red-200 rounded-2xl shadow-[0_4px_20px_rgba(239,68,68,0.15)] max-w-md"
-          >
-            <i class="fas fa-exclamation-circle text-red-600 shrink-0 text-xl"></i>
-            <span class="flex-1 text-red-900 font-medium">{{this}}</span>
-            <button
-              onclick="this.parentElement.remove()"
-              class="text-red-400 hover:text-red-600 transition-colors"
-            >
-              <i class="fas fa-times text-lg"></i>
-            </button>
-          </div>
-        {{/each}}
+    {{#if success_messages}}
+    <div class="fixed top-4 right-4 z-50 space-y-3" id="successAlerts">
+      {{#each success_messages}}
+      <div
+        role="alert"
+        class="flex items-center gap-3 px-6 py-4 bg-green-50 border border-green-200 rounded-2xl shadow-[0_4px_20px_rgba(34,197,94,0.15)] max-w-md"
+      >
+        <i class="fas fa-check-circle text-green-600 shrink-0 text-xl"></i>
+        <span class="flex-1 text-green-900 font-medium">{{this}}</span>
+        <button
+          onclick="this.parentElement.remove()"
+          class="text-green-400 hover:text-green-600 transition-colors"
+        >
+          <i class="fas fa-times text-lg"></i>
+        </button>
       </div>
+      {{/each}}
+    </div>
+    {{/if}} {{#if err_messages}}
+    <div class="fixed top-4 right-4 z-50 space-y-3" id="errorAlerts">
+      {{#each err_messages}}
+      <div
+        role="alert"
+        class="flex items-center gap-3 px-6 py-4 bg-red-50 border border-red-200 rounded-2xl shadow-[0_4px_20px_rgba(239,68,68,0.15)] max-w-md"
+      >
+        <i class="fas fa-exclamation-circle text-red-600 shrink-0 text-xl"></i>
+        <span class="flex-1 text-red-900 font-medium">{{this}}</span>
+        <button
+          onclick="this.parentElement.remove()"
+          class="text-red-400 hover:text-red-600 transition-colors"
+        >
+          <i class="fas fa-times text-lg"></i>
+        </button>
+      </div>
+      {{/each}}
+    </div>
     {{/if}}
     <div id="windowErrorAlert" class="fixed top-4 right-4 z-50 hidden">
       <div
@@ -61,7 +132,10 @@
         class="flex items-center gap-3 px-6 py-4 bg-red-50 border border-red-200 rounded-2xl shadow-[0_4px_20px_rgba(239,68,68,0.15)] max-w-md"
       >
         <i class="fas fa-exclamation-circle text-red-600 shrink-0 text-xl"></i>
-        <span id="windowErrorText" class="flex-1 text-red-900 font-medium"></span>
+        <span
+          id="windowErrorText"
+          class="flex-1 text-red-900 font-medium"
+        ></span>
         <button
           onclick="document.getElementById('windowErrorAlert').classList.add('hidden')"
           class="text-red-400 hover:text-red-600 transition-colors"
@@ -70,11 +144,13 @@
         </button>
       </div>
     </div>
-    <header class="bg-white border-b border-gray-200/60 shadow-sm sticky top-0 z-40">
+    <header
+      class="bg-white border-b border-gray-200/60 shadow-sm sticky top-0 z-40"
+    >
       <div class="max-w-[2000px] mx-auto px-6">
         <div class="flex items-center justify-between h-16">
           <div class="flex items-center">
-            <a href="/" class="flex items-center">
+            <a href="/products" class="flex items-center">
               <img
                 src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Logo_of_Twitter.svg/1245px-Logo_of_Twitter.svg.png"
                 alt="Logo"
@@ -83,89 +159,135 @@
             </a>
           </div>
           <div class="flex items-center gap-4">
-            {{#if isAuthenticated}}
-              <a
-                href="/bidder/watchlist"
-                class="px-4 py-2 {{#if (startsWith req.path '/bidder/watchlist')}}text-blue-600 font-semibold{{else}}text-gray-700 hover:text-blue-600{{/if}} transition-colors font-medium"
+            <div class="relative" style="z-index: 9999">
+              <button
+                id="languageBtn"
+                class="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-gray-50 transition-all duration-300 ease-out text-gray-700 hover:text-gray-900"
+                style="pointer-events: auto"
               >
-                Watchlist
-              </a>
-              <a
-                href="/account/bids"
-                class="px-4 py-2 {{#if (startsWith req.path '/account/bids')}}text-blue-600 font-semibold{{else}}text-gray-700 hover:text-blue-600{{/if}} transition-colors font-medium"
+                <span
+                  id="languageText"
+                  translate="no"
+                  class="inline-flex items-center justify-center px-2 py-1 rounded-lg bg-blue-100 text-blue-700 text-xs font-semibold"
+                  >EN</span
+                >
+                <i class="fas fa-chevron-down text-xs"></i>
+              </button>
+              <div
+                id="languageMenu"
+                class="hidden absolute right-0 mt-2 w-40 bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.15)] border border-gray-200/60 overflow-hidden"
+                style="z-index: 10000; pointer-events: auto"
               >
-                My Bids
-              </a>
-              <div class="relative">
                 <button
-                  id="profileMenuBtn"
-                  class="flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-gray-50 transition-all duration-300 ease-out group"
+                  type="button"
+                  data-lang="en"
+                  translate="no"
+                  class="language-option w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
+                  style="pointer-events: auto; cursor: pointer"
                 >
-                  <span class="text-gray-900 font-medium group-hover:text-blue-600 transition-colors font-momo-signature">
-                    {{authUser.name}}
-                  </span>
-                  <div class="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-full group-hover:bg-blue-200 transition-colors">
-                    <i class="fas fa-user text-blue-600 text-sm"></i>
-                  </div>
+                  <i
+                    class="fas fa-check text-blue-600 text-xs hidden"
+                    id="check-en"
+                  ></i>
+                  <span translate="no">English</span>
                 </button>
-                <div
-                  id="profileMenu"
-                  class="hidden absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.15)] border border-gray-200/60 pt-2"
+                <button
+                  type="button"
+                  data-lang="vi"
+                  translate="no"
+                  class="language-option w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
+                  style="pointer-events: auto; cursor: pointer"
                 >
-                  {{#if (eq authUser.role 'admin')}}
-                    <a
-                      href="/admin"
-                      class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      <i class="fas fa-tachometer-alt w-5"></i>
-                      Dashboard
-                    </a>
-                  {{/if}}
-                  {{#if (eq authUser.role 'seller')}}
-                    <a
-                      href="/seller/products"
-                      class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      <i class="fas fa-box w-5"></i>
-                      My Products
-                    </a>
-                  {{/if}}
-                  <a
-                    href="/account/profile"
-                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                  >
-                    <i class="fas fa-user w-5"></i>
-                    Profile
-                  </a>
-                  <form
-                    method="post"
-                    action="/auth/logout"
-                  >
-                    <button
-                      type="submit"
-                      class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50 transition-colors"
-                    >
-                      <i class="fas fa-sign-out-alt w-5"></i>
-                      Logout
-                    </button>
-                  </form>
-                </div>
+                  <i
+                    class="fas fa-check text-blue-600 text-xs hidden"
+                    id="check-vi"
+                  ></i>
+                  <span translate="no">Tiếng Việt</span>
+                </button>
               </div>
-            {{else}}
-              <a
-                href="/auth/login"
-                class="px-6 py-3 bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
+            </div>
+            {{#if isAuthenticated}}
+            <a
+              href="/bidder/watchlist"
+              class="flex items-center gap-2 px-4 py-2 {{#if (startsWith req.path '/bidder/watchlist')}}text-blue-600 font-semibold{{else}}text-gray-700 hover:text-blue-600{{/if}} transition-colors font-medium"
+            >
+              <i class="fas fa-heart"></i>
+              <span>Watchlist</span>
+            </a>
+            <div class="relative">
+              <button
+                id="profileMenuBtn"
+                class="flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-gray-50 transition-all duration-300 ease-out group"
               >
-                Login
-              </a>
+                <span
+                  class="text-gray-900 font-medium group-hover:text-blue-600 transition-colors font-momo-signature"
+                >
+                  {{authUser.name}}
+                </span>
+                <div
+                  class="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-full group-hover:bg-blue-200 transition-colors"
+                >
+                  <i class="fas fa-user text-blue-600 text-sm"></i>
+                </div>
+              </button>
+              <div
+                id="profileMenu"
+                class="hidden absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.15)] border border-gray-200/60 pt-2"
+              >
+                {{#if (eq authUser.role 'admin')}}
+                <a
+                  href="/admin"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  <i class="fas fa-tachometer-alt w-5"></i>
+                  Dashboard
+                </a>
+                {{/if}}
+                <a
+                  href="/seller/products"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  <i class="fas fa-box w-5"></i>
+                  My Products
+                </a>
+                <a
+                  href="/account/bids"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  <i class="fas fa-gavel w-5"></i>
+                  My Bids
+                </a>
+                <a
+                  href="/account/profile"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  <i class="fas fa-user w-5"></i>
+                  Profile
+                </a>
+                <form method="post" action="/auth/logout">
+                  <button
+                    type="submit"
+                    class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50 transition-colors"
+                  >
+                    <i class="fas fa-sign-out-alt w-5"></i>
+                    Logout
+                  </button>
+                </form>
+              </div>
+            </div>
+            {{else}}
+            <a
+              href="/auth/login"
+              class="px-6 py-3 bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
+            >
+              Login
+            </a>
             {{/if}}
           </div>
         </div>
       </div>
     </header>
-    <main class="max-w-[2000px] mx-auto px-6">
-      {{{body}}}
-    </main>
+    <main class="max-w-[2000px] mx-auto px-6">{{{body}}}</main>
     {{{_sections.js}}}
     <script>
       ;(function () {
@@ -196,6 +318,81 @@
           profileMenu.addEventListener('click', function (e) {
             e.stopPropagation()
           })
+        }
+        const languageBtn = document.getElementById('languageBtn')
+        const languageMenu = document.getElementById('languageMenu')
+        if (languageBtn && languageMenu) {
+          languageBtn.addEventListener('click', function (e) {
+            e.stopPropagation()
+            languageMenu.classList.toggle('hidden')
+          })
+          document.addEventListener('click', function () {
+            languageMenu.classList.add('hidden')
+          })
+          languageMenu.addEventListener('click', function (e) {
+            e.stopPropagation()
+          })
+        }
+        function switchLanguage(lang) {
+          localStorage.setItem('language', lang)
+          const languageText = document.getElementById('languageText')
+          const checkEn = document.getElementById('check-en')
+          const checkVi = document.getElementById('check-vi')
+          if (lang === 'vi') {
+            languageText.textContent = 'VI'
+            languageText.className =
+              'inline-flex items-center justify-center px-2 py-1 rounded-lg bg-green-100 text-green-700 text-xs font-semibold'
+            checkEn.classList.add('hidden')
+            checkVi.classList.remove('hidden')
+          } else {
+            languageText.textContent = 'EN'
+            languageText.className =
+              'inline-flex items-center justify-center px-2 py-1 rounded-lg bg-blue-100 text-blue-700 text-xs font-semibold'
+            checkEn.classList.remove('hidden')
+            checkVi.classList.add('hidden')
+          }
+          function triggerTranslate() {
+            const select = document.querySelector('.goog-te-combo')
+            if (!select) {
+              setTimeout(triggerTranslate, 300)
+              return
+            }
+            select.value = lang
+            select.dispatchEvent(new Event('change', { bubbles: true }))
+          }
+          triggerTranslate()
+          languageMenu.classList.add('hidden')
+          return false
+        }
+        window.switchLanguage = switchLanguage
+        const languageOptions = document.querySelectorAll('.language-option')
+        languageOptions.forEach(function (btn) {
+          btn.addEventListener('click', function (e) {
+            e.preventDefault()
+            e.stopPropagation()
+            const lang = this.getAttribute('data-lang')
+            switchLanguage(lang)
+          })
+        })
+        const savedLang = localStorage.getItem('language') || 'en'
+        if (savedLang === 'vi') {
+          const languageTextEl = document.getElementById('languageText')
+          languageTextEl.textContent = 'VI'
+          languageTextEl.className =
+            'inline-flex items-center justify-center px-2 py-1 rounded-lg bg-green-100 text-green-700 text-xs font-semibold'
+          document.getElementById('check-vi').classList.remove('hidden')
+          function initTranslate() {
+            const select = document.querySelector('.goog-te-combo')
+            if (!select) {
+              setTimeout(initTranslate, 300)
+              return
+            }
+            select.value = 'vi'
+            select.dispatchEvent(new Event('change', { bubbles: true }))
+          }
+          setTimeout(initTranslate, 1000)
+        } else {
+          document.getElementById('check-en').classList.remove('hidden')
         }
       })()
     </script>

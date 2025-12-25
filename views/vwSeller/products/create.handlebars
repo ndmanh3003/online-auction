@@ -1,14 +1,18 @@
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
   <div class="mb-8">
-    <h1 class="text-[36px] font-semibold text-gray-900 mb-2">Create New Product</h1>
+    <h1 class="text-[36px] font-semibold text-gray-900 mb-2">
+      Create New Product
+    </h1>
     <a
-      href="/seller/products"
+      href="javascript:history.back();"
       class="text-blue-600 hover:underline mt-2 inline-block"
     >
-      ← Back to My Products
+      ← Back
     </a>
   </div>
-  <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-8">
+  <div
+    class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-8"
+  >
     <form
       method="post"
       action="/seller/products/create"
@@ -16,7 +20,9 @@
       id="createProductForm"
     >
       <div class="relative mb-6">
-        <label for="name" class="block text-sm font-medium text-gray-900 mb-2">Product Name</label>
+        <label for="name" class="block text-sm font-medium text-gray-900 mb-2"
+          >Product Name</label
+        >
         <input
           type="text"
           id="name"
@@ -27,23 +33,34 @@
         />
       </div>
       <div class="relative mb-6">
-        <label for="categoryId" class="block text-sm font-medium text-gray-900 mb-2">Category</label>
-        {{> category-dropdown id="categoryId" name="categoryId" placeholder="Select Category" required=true}}
+        <label
+          for="categoryId"
+          class="block text-sm font-medium text-gray-900 mb-2"
+          >Category</label
+        >
+        {{> category-dropdown id="categoryId" name="categoryId"
+        placeholder="Select Category" required=true}}
       </div>
       <div class="relative mb-6">
-        <label for="images" class="block text-sm font-medium text-gray-900 mb-2">Images (min 3, comma-separated URLs)</label>
+        <label for="images" class="block text-sm font-medium text-gray-900 mb-2"
+          >Images (min 4, comma-separated URLs)</label
+        >
         <textarea
           id="images"
           name="images"
           rows="3"
           class="w-full px-4 py-4 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
-          placeholder="Enter image URLs separated by commas"
+          placeholder="Enter at least 4 image URLs separated by commas"
           required
         ></textarea>
       </div>
       <div class="grid grid-cols-2 gap-4">
         <div class="relative mb-6">
-          <label for="startPrice" class="block text-sm font-medium text-gray-900 mb-2">Start Price ($)</label>
+          <label
+            for="startPrice"
+            class="block text-sm font-medium text-gray-900 mb-2"
+            >Start Price ($)</label
+          >
           <input
             type="number"
             id="startPrice"
@@ -56,7 +73,11 @@
           />
         </div>
         <div class="relative mb-6">
-          <label for="stepPrice" class="block text-sm font-medium text-gray-900 mb-2">Step Price ($)</label>
+          <label
+            for="stepPrice"
+            class="block text-sm font-medium text-gray-900 mb-2"
+            >Step Price ($)</label
+          >
           <input
             type="number"
             id="stepPrice"
@@ -71,7 +92,11 @@
       </div>
       <div class="grid grid-cols-2 gap-4">
         <div class="relative mb-6">
-          <label for="buyNowPrice" class="block text-sm font-medium text-gray-900 mb-2">Buy Now Price (Optional)</label>
+          <label
+            for="buyNowPrice"
+            class="block text-sm font-medium text-gray-900 mb-2"
+            >Buy Now Price (Optional)</label
+          >
           <input
             type="number"
             id="buyNowPrice"
@@ -83,7 +108,11 @@
           />
         </div>
         <div class="relative mb-6">
-          <label for="endTime" class="block text-sm font-medium text-gray-900 mb-2">Auction End Time</label>
+          <label
+            for="endTime"
+            class="block text-sm font-medium text-gray-900 mb-2"
+            >Auction End Time</label
+          >
           <input
             type="datetime-local"
             id="endTime"
@@ -94,11 +123,14 @@
         </div>
       </div>
       <div class="relative mb-6">
-        <label for="description" class="block text-sm font-medium text-gray-900 mb-2">Description</label>
+        <label
+          for="description"
+          class="block text-sm font-medium text-gray-900 mb-2"
+          >Description</label
+        >
         <div
           id="editor"
-          class="bg-white border border-gray-200/60 rounded-2xl"
-          style="min-height: 300px;"
+          class="bg-white max-h-[200px] border border-gray-200/60 rounded-2xl"
         ></div>
         <input type="hidden" id="description" name="description" />
       </div>
@@ -133,52 +165,62 @@
   </div>
 </div>
 {{#section "css"}}
-  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-{{/section}}
-{{#section "js"}}
-  <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
-  <script>
-    var now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    document.getElementById('endTime').min = now.toISOString().slice(0, 16);
-    
-    var quill = new Quill('#editor', {
-      theme: 'snow',
-      placeholder: 'Enter detailed product description...',
-      modules: {
-        toolbar: [
-          [{ 'header': [1, 2, 3, false] }],
-          ['bold', 'italic', 'underline', 'strike'],
-          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-          [{ 'color': [] }, { 'background': [] }],
-          [{ 'align': [] }],
-          ['link', 'image'],
-          ['clean']
-        ]
-      }
-    });
-    
-    var form = document.getElementById('createProductForm');
-    form.onsubmit = function(e) {
-      var descriptionInput = document.getElementById('description');
-      var content = quill.root.innerHTML;
-      var text = quill.getText().trim();
-      
-      if (!text || text === '' || content === '<p><br></p>') {
-        e.preventDefault();
-        alert('Please enter a product description');
-        return false;
-      }
-      
-      var endTime = new Date(document.getElementById('endTime').value);
-      if (endTime <= new Date()) {
-        e.preventDefault();
-        alert('Auction end time must be in the future');
-        return false;
-      }
-      
-      descriptionInput.value = content;
-      return true;
-    };
-  </script>
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet" />
+{{/section}} {{#section "js"}}
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<script>
+  var now = new Date()
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
+  document.getElementById('endTime').min = now.toISOString().slice(0, 16)
+
+  var quill = new Quill('#editor', {
+    theme: 'snow',
+    placeholder: 'Enter detailed product description...',
+    modules: {
+      toolbar: [
+        [{ header: [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ list: 'ordered' }, { list: 'bullet' }],
+        [{ color: [] }, { background: [] }],
+        [{ align: [] }],
+        ['link', 'image'],
+        ['clean'],
+      ],
+    },
+  })
+
+  var form = document.getElementById('createProductForm')
+  form.onsubmit = function (e) {
+    var descriptionInput = document.getElementById('description')
+    var content = quill.root.innerHTML
+    var text = quill.getText().trim()
+
+    if (!text || text === '' || content === '<p><br></p>') {
+      e.preventDefault()
+      alert('Please enter a product description')
+      return false
+    }
+
+    var imagesInput = document.getElementById('images').value.trim()
+    var imageUrls = imagesInput
+      .split(',')
+      .map((url) => url.trim())
+      .filter((url) => url !== '')
+    if (imageUrls.length < 4) {
+      e.preventDefault()
+      alert('Please provide at least 4 image URLs')
+      return false
+    }
+
+    var endTime = new Date(document.getElementById('endTime').value)
+    if (endTime <= new Date()) {
+      e.preventDefault()
+      alert('Auction end time must be in the future')
+      return false
+    }
+
+    descriptionInput.value = content
+    return true
+  }
+</script>
 {{/section}}

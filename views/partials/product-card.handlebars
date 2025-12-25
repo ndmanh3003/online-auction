@@ -1,18 +1,35 @@
 <div
-  class='bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 overflow-hidden hover:scale-105 transition-all duration-300 ease-out'
+  class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 overflow-hidden hover:scale-105 transition-all duration-300 ease-out relative flex flex-col h-full"
 >
-  <a href='/products/{{_id}}'>
-    <img src='{{images.0}}' alt='{{name}}' class='w-full h-48 object-cover' />
+  {{#if (isNewProduct createdAt 30)}}
+  <span
+    class="absolute top-4 right-4 bg-red-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10"
+    >NEW</span
+  >
+  {{/if}}
+  <a href="/products/{{_id}}">
+    <img src="{{images.[0]}}" alt="{{name}}" class="w-full h-48 object-cover" />
   </a>
-  <div class='p-4'>
-    <a href='/products/{{_id}}' class='block'>
-      <h3 class='text-gray-900 font-semibold mb-2 truncate'>{{name}}</h3>
+  <div class="p-4 flex flex-col flex-grow">
+    <a href="/products/{{_id}}" class="block">
+      <h3 class="text-gray-900 font-semibold mb-2 truncate">{{name}}</h3>
     </a>
-    <p class='text-gray-600 text-sm mb-2'>{{categoryId.name}}</p>
-    <p class='text-blue-600 font-bold text-lg'>${{format_currency
-        currentPrice
-      }}</p>
-    <div class='flex justify-between items-center mt-2 text-sm text-gray-500'>
+    <p class="text-gray-600 text-sm mb-2">{{categoryId.name}}</p>
+    <p class="text-blue-600 font-bold text-lg mb-1">
+      ${{format_currency currentPrice }}
+    </p>
+    {{#if buyNowPrice}}
+    <p class="text-green-600 font-semibold text-sm mb-1">
+      Buy Now: ${{format_currency buyNowPrice}}
+    </p>
+    {{/if}} {{#if topBidder}}
+    <p class="text-gray-500 text-sm mb-1">
+      Top bidder: {{maskBidderName topBidder.name}}
+    </p>
+    {{/if}}
+    <div
+      class="flex justify-between items-center mt-auto pt-3 text-sm text-gray-500 border-t border-gray-100"
+    >
       <span>{{bidCount}} bids</span>
       <span>{{formatDate endTime}}</span>
     </div>

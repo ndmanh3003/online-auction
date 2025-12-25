@@ -1,41 +1,76 @@
 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <div class="mb-6">
+    <a
+      href="javascript:history.back();"
+      class="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+    >
+      <i class="fas fa-arrow-left"></i>
+      <span>Back</span>
+    </a>
+  </div>
   <div class="mb-8">
-    <h1 class="text-[36px] font-semibold text-gray-900 mb-2">Complete Transaction</h1>
+    <h1 class="text-[36px] font-semibold text-gray-900 mb-2">
+      Complete Transaction
+    </h1>
     <p class="text-gray-600">{{product.name}}</p>
   </div>
-  <div class="mb-8 bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-6">
+  <div
+    class="mb-8 bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-6"
+  >
     <div class="flex items-center justify-between mb-4">
       <div class="flex items-center gap-4">
-        <div class="w-12 h-12 rounded-full {{#if (eq transaction.status 'pending_payment')}}bg-yellow-100{{else}}bg-green-100{{/if}} flex items-center justify-center">
-          <span class="text-lg font-bold {{#if (eq transaction.status 'pending_payment')}}text-yellow-600{{else}}text-green-600{{/if}}">1</span>
+        <div
+          class="w-12 h-12 rounded-full {{#if (eq transaction.status 'pending_payment')}}bg-yellow-100{{else}}bg-green-100{{/if}} flex items-center justify-center"
+        >
+          <span
+            class="text-lg font-bold {{#if (eq transaction.status 'pending_payment')}}text-yellow-600{{else}}text-green-600{{/if}}"
+            >1</span
+          >
         </div>
         <span class="text-gray-900 font-medium">Payment</span>
       </div>
       <div class="flex-1 h-1 bg-gray-200 mx-4"></div>
       <div class="flex items-center gap-4">
-        <div class="w-12 h-12 rounded-full {{#if (eq transaction.status 'payment_confirmed')}}bg-yellow-100{{else if (eq transaction.status 'shipped')}}bg-green-100{{else if (eq transaction.status 'delivered')}}bg-green-100{{else if (eq transaction.status 'completed')}}bg-green-100{{else}}bg-gray-200{{/if}} flex items-center justify-center">
-          <span class="text-lg font-bold {{#if (eq transaction.status 'payment_confirmed')}}text-yellow-600{{else if (eq transaction.status 'shipped')}}text-green-600{{else if (eq transaction.status 'delivered')}}text-green-600{{else if (eq transaction.status 'completed')}}text-green-600{{else}}text-gray-400{{/if}}">2</span>
+        <div
+          class="w-12 h-12 rounded-full {{#if (eq transaction.status 'payment_confirmed')}}bg-yellow-100{{else if (eq transaction.status 'shipped')}}bg-green-100{{else if (eq transaction.status 'delivered')}}bg-green-100{{else if (eq transaction.status 'completed')}}bg-green-100{{else}}bg-gray-200{{/if}} flex items-center justify-center"
+        >
+          <span
+            class="text-lg font-bold {{#if (eq transaction.status 'payment_confirmed')}}text-yellow-600{{else if (eq transaction.status 'shipped')}}text-green-600{{else if (eq transaction.status 'delivered')}}text-green-600{{else if (eq transaction.status 'completed')}}text-green-600{{else}}text-gray-400{{/if}}"
+            >2</span
+          >
         </div>
         <span class="text-gray-900 font-medium">Shipping</span>
       </div>
       <div class="flex-1 h-1 bg-gray-200 mx-4"></div>
       <div class="flex items-center gap-4">
-        <div class="w-12 h-12 rounded-full {{#if (eq transaction.status 'delivered')}}bg-yellow-100{{else if (eq transaction.status 'completed')}}bg-green-100{{else}}bg-gray-200{{/if}} flex items-center justify-center">
-          <span class="text-lg font-bold {{#if (eq transaction.status 'delivered')}}text-yellow-600{{else if (eq transaction.status 'completed')}}text-green-600{{else}}text-gray-400{{/if}}">3</span>
+        <div
+          class="w-12 h-12 rounded-full {{#if (eq transaction.status 'delivered')}}bg-yellow-100{{else if (eq transaction.status 'completed')}}bg-green-100{{else}}bg-gray-200{{/if}} flex items-center justify-center"
+        >
+          <span
+            class="text-lg font-bold {{#if (eq transaction.status 'delivered')}}text-yellow-600{{else if (eq transaction.status 'completed')}}text-green-600{{else}}text-gray-400{{/if}}"
+            >3</span
+          >
         </div>
         <span class="text-gray-900 font-medium">Delivery</span>
       </div>
       <div class="flex-1 h-1 bg-gray-200 mx-4"></div>
       <div class="flex items-center gap-4">
-        <div class="w-12 h-12 rounded-full {{#if (eq transaction.status 'completed')}}bg-green-100{{else}}bg-gray-200{{/if}} flex items-center justify-center">
-          <span class="text-lg font-bold {{#if (eq transaction.status 'completed')}}text-green-600{{else}}text-gray-400{{/if}}">4</span>
+        <div
+          class="w-12 h-12 rounded-full {{#if (eq transaction.status 'completed')}}bg-green-100{{else}}bg-gray-200{{/if}} flex items-center justify-center"
+        >
+          <span
+            class="text-lg font-bold {{#if (eq transaction.status 'completed')}}text-green-600{{else}}text-gray-400{{/if}}"
+            >4</span
+          >
         </div>
         <span class="text-gray-900 font-medium">Rating</span>
       </div>
     </div>
   </div>
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-    <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-6">
+    <div
+      class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-6"
+    >
       <h2 class="text-xl font-semibold text-gray-900 mb-4">Product Details</h2>
       <img
         src="{{product.images.[0]}}"
@@ -43,149 +78,194 @@
         class="w-full h-48 object-cover rounded-2xl mb-4"
       />
       <h3 class="text-gray-900 font-semibold text-lg mb-2">{{product.name}}</h3>
-      <p class="text-blue-600 font-bold text-2xl">${{format_currency product.currentPrice}}</p>
+      <p class="text-blue-600 font-bold text-2xl">
+        ${{format_currency product.currentPrice}}
+      </p>
     </div>
-    <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-6">
-      <h2 class="text-xl font-semibold text-gray-900 mb-4">Transaction Status</h2>
+    <div
+      class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-6"
+    >
+      <h2 class="text-xl font-semibold text-gray-900 mb-4">
+        Transaction Status
+      </h2>
       <div class="space-y-4">
-        {{#if (eq transaction.status 'pending_payment')}}
-          {{#if isWinner}}
-            <form
-              method="post"
-              action="/checkout/{{product._id}}/payment"
-              class="space-y-4"
+        {{#if (eq transaction.status 'pending_payment')}} {{#if isWinner}}
+        <form
+          method="post"
+          action="/checkout/{{product._id}}/payment"
+          class="space-y-4"
+        >
+          <div>
+            <label class="block text-sm font-medium text-gray-900 mb-2"
+              >Payment Proof</label
             >
-              <div>
-                <label class="block text-sm font-medium text-gray-900 mb-2">Payment Proof</label>
-                <input
-                  type="text"
-                  name="paymentProof"
-                  class="w-full px-4 py-3 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
-                  placeholder="Enter payment reference/proof"
-                  required
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-900 mb-2">Shipping Address</label>
-                <textarea
-                  name="shippingAddress"
-                  rows="3"
-                  class="w-full px-4 py-3 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
-                  placeholder="Enter your shipping address"
-                  required
-                ></textarea>
-              </div>
-              <button
-                type="submit"
-                class="w-full px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
-              >
-                Submit Payment Info
-              </button>
-            </form>
-          {{else}}
-            <p class="text-gray-600">Waiting for buyer to submit payment information...</p>
-          {{/if}}
-        {{else if (eq transaction.status 'payment_confirmed')}}
-          {{#if isSeller}}
-            <form
-              method="post"
-              action="/checkout/{{product._id}}/confirm-payment"
-              class="space-y-4"
+            <input
+              type="text"
+              name="paymentProof"
+              class="w-full px-4 py-3 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
+              placeholder="Enter payment reference/proof"
+              required
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-900 mb-2"
+              >Shipping Address</label
             >
-              <div>
-                <label class="block text-sm font-medium text-gray-900 mb-2">Tracking Number</label>
-                <input
-                  type="text"
-                  name="trackingNumber"
-                  class="w-full px-4 py-3 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
-                  required
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-900 mb-2">Carrier</label>
-                <input
-                  type="text"
-                  name="carrier"
-                  class="w-full px-4 py-3 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
-                  required
-                />
-              </div>
-              <button
-                type="submit"
-                class="w-full px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
-              >
-                Confirm Shipment
-              </button>
-            </form>
-          {{else}}
-            <p class="text-gray-600">Payment confirmed. Waiting for seller to ship...</p>
-          {{/if}}
-        {{else if (eq transaction.status 'shipped')}}
-          {{#if isWinner}}
-            <form
-              method="post"
-              action="/checkout/{{product._id}}/confirm-delivery"
-            >
-              <button
-                type="submit"
-                class="w-full px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors font-medium"
-              >
-                Confirm Delivery Received
-              </button>
-            </form>
-          {{else}}
-            <p class="text-gray-600">Item shipped. Waiting for buyer to confirm delivery...</p>
-          {{/if}}
-        {{else if (eq transaction.status 'delivered')}}
-          <form
-            method="post"
-            action="/checkout/{{product._id}}/rate"
-            class="space-y-4"
+            <textarea
+              name="shippingAddress"
+              rows="3"
+              class="w-full px-4 py-3 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
+              placeholder="Enter your shipping address"
+              required
+            ></textarea>
+          </div>
+          <button
+            type="submit"
+            class="w-full px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
           >
-            <div>
-              <label class="block text-sm font-medium text-gray-900 mb-2">Rating</label>
-              <select
-                name="rating"
-                class="w-full px-4 py-3 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900 bg-white"
-                required
-              >
-                <option value="1">Positive (+1)</option>
-                <option value="-1">Negative (-1)</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-900 mb-2">Comment</label>
-              <textarea
-                name="comment"
-                rows="3"
-                class="w-full px-4 py-3 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
-              ></textarea>
-            </div>
-            <button
-              type="submit"
-              class="w-full px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
+            Submit Payment Info
+          </button>
+        </form>
+        {{else}}
+        <p class="text-gray-600">
+          Waiting for buyer to submit payment information...
+        </p>
+        {{/if}} {{else if (eq transaction.status 'payment_confirmed')}} {{#if
+        isSeller}}
+        <form
+          method="post"
+          action="/checkout/{{product._id}}/confirm-payment"
+          class="space-y-4"
+        >
+          <div>
+            <label class="block text-sm font-medium text-gray-900 mb-2"
+              >Tracking Number</label
             >
-              Submit Rating
-            </button>
-          </form>
-        {{else if (eq transaction.status 'completed')}}
-          <p class="text-green-600 font-semibold">Transaction completed successfully!</p>
+            <input
+              type="text"
+              name="trackingNumber"
+              class="w-full px-4 py-3 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
+              required
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-900 mb-2"
+              >Carrier</label
+            >
+            <input
+              type="text"
+              name="carrier"
+              class="w-full px-4 py-3 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            class="w-full px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
+          >
+            Confirm Shipment
+          </button>
+        </form>
+        {{else}}
+        <p class="text-gray-600">
+          Payment confirmed. Waiting for seller to ship...
+        </p>
+        {{/if}} {{else if (eq transaction.status 'shipped')}} {{#if isWinner}}
+        <form method="post" action="/checkout/{{product._id}}/confirm-delivery">
+          <button
+            type="submit"
+            class="w-full px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors font-medium"
+          >
+            Confirm Delivery Received
+          </button>
+        </form>
+        {{else}}
+        <p class="text-gray-600">
+          Item shipped. Waiting for buyer to confirm delivery...
+        </p>
+        {{/if}} {{else if (or (eq transaction.status 'delivered') (eq
+        transaction.status 'completed'))}} {{#if existingRating}}
+        <p class="text-gray-600 mb-4">
+          Current rating: {{#if (eq existingRating.rating 1)}}
+          <span class="text-green-600 font-semibold">Positive (+1)</span>
+          {{else}}
+          <span class="text-red-600 font-semibold">Negative (-1)</span>
+          {{/if}}
+        </p>
+        {{/if}}
+        <form
+          method="post"
+          action="/checkout/{{product._id}}/rate"
+          class="space-y-4"
+        >
+          <div>
+            <label class="block text-sm font-medium text-gray-900 mb-3"
+              >{{#if existingRating}}Update Rating{{else}}Rating{{/if}}</label
+            >
+            <div class="flex gap-3">
+              <label
+                class="flex-1 flex items-center justify-center cursor-pointer px-4 py-4 border-2 border-gray-200 rounded-xl hover:border-green-400 hover:bg-green-50 transition-all has-[:checked]:border-green-600 has-[:checked]:bg-green-50"
+              >
+                <input type="radio" name="rating" value="1" class="sr-only"
+                {{#if existingRating}} {{#if (eq existingRating.rating
+                1)}}checked{{/if}} {{/if}} required />
+                <i class="fas fa-thumbs-up text-green-600 text-xl mr-2"></i>
+                <span class="text-gray-900 font-medium">Positive</span>
+              </label>
+              <label
+                class="flex-1 flex items-center justify-center cursor-pointer px-4 py-4 border-2 border-gray-200 rounded-xl hover:border-red-400 hover:bg-red-50 transition-all has-[:checked]:border-red-600 has-[:checked]:bg-red-50"
+              >
+                <input type="radio" name="rating" value="-1" class="sr-only"
+                {{#if existingRating}} {{#if (eq existingRating.rating
+                -1)}}checked{{/if}} {{/if}} required />
+                <i class="fas fa-thumbs-down text-red-600 text-xl mr-2"></i>
+                <span class="text-gray-900 font-medium">Negative</span>
+              </label>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-900 mb-2"
+              >Comment</label
+            >
+            <textarea
+              name="comment"
+              rows="3"
+              class="w-full px-4 py-3 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
+            >
+{{#if existingRating}}{{existingRating.comment}}{{/if}}</textarea
+            >
+          </div>
+          <button
+            type="submit"
+            class="w-full px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
+          >
+            {{#if existingRating}}Update Rating{{else}}Submit Rating{{/if}}
+          </button>
+        </form>
         {{else if (eq transaction.status 'cancelled')}}
-          <p class="text-red-600 font-semibold">Transaction cancelled by seller.</p>
+        <p class="text-red-600 font-semibold">
+          Transaction cancelled by seller.
+        </p>
         {{/if}}
       </div>
     </div>
   </div>
-  <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-6">
+  <div
+    class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-6"
+  >
     <h2 class="text-xl font-semibold text-gray-900 mb-4">Chat</h2>
     <div class="space-y-4 mb-6 max-h-96 overflow-y-auto">
       {{#each transaction.chat}}
-        <div class="flex {{#if (eq senderId ../authUser._id)}}justify-end{{else}}justify-start{{/if}}">
-          <div class="max-w-md px-4 py-3 rounded-2xl {{#if (eq senderId ../authUser._id)}}bg-blue-600 text-white{{else}}bg-gray-100 text-gray-900{{/if}}">
-            <p>{{message}}</p>
-            <p class="text-xs mt-1 opacity-75">{{formatDate timestamp}}</p>
-          </div>
+      <div
+        class="flex {{#if (eq senderId ../authUser._id)}}justify-end{{else}}justify-start{{/if}}"
+      >
+        <div
+          class="max-w-md px-4 py-3 rounded-2xl {{#if (eq senderId ../authUser._id)}}bg-blue-600 text-white{{else}}bg-gray-100 text-gray-900{{/if}}"
+        >
+          <p>{{message}}</p>
+          <p class="text-xs mt-1 opacity-75">{{formatDate timestamp}}</p>
         </div>
+      </div>
       {{/each}}
     </div>
     <form
@@ -209,4 +289,3 @@
     </form>
   </div>
 </div>
-

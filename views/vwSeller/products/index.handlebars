@@ -25,23 +25,24 @@
     </div>
   </div>
   {{#if items.length}}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-      {{#each items}}
-        {{> product-card}}
-      {{/each}}
-    </div>
-    {{{pagination pagination.page pagination.totalPages pagination.total}}}
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+    {{#each items}} {{> product-card}} {{/each}}
+  </div>
+  {{{pagination pagination.page pagination.totalPages pagination.total}}}
   {{else}}
-    <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-12 text-center">
-      <i class="fas fa-box text-gray-400 text-6xl mb-4"></i>
-      <p class="text-gray-600 text-lg mb-4">You haven't posted any products yet.</p>
-      <a
-        href="/seller/products/create"
-        class="inline-block px-6 py-3 bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
-      >
-        Create Your First Product
-      </a>
-    </div>
+  <div
+    class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-12 text-center"
+  >
+    <i class="fas fa-box text-gray-400 text-6xl mb-4"></i>
+    <p class="text-gray-600 text-lg mb-4">
+      You haven't posted any products yet.
+    </p>
+    <a
+      href="/seller/products/create"
+      class="inline-block px-6 py-3 bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
+    >
+      Create Your First Product
+    </a>
+  </div>
   {{/if}}
 </div>
-

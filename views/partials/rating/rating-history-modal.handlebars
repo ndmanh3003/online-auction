@@ -1,0 +1,204 @@
+<div
+  id="{{modalId}}"
+  class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+  onclick="if(event.target === this) this.classList.add('hidden')"
+>
+  <div
+    class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.15)] border border-gray-200/60 w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col"
+    onclick="event.stopPropagation()"
+  >
+    <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+      <h2 id="{{modalId}}Title" class="text-[24px] font-semibold text-gray-900">
+        {{title}}
+      </h2>
+      <button
+        onclick="document.getElementById('{{modalId}}').classList.add('hidden')"
+        class="text-gray-400 hover:text-gray-600 transition-colors"
+      >
+        <i class="fas fa-times text-xl"></i>
+      </button>
+    </div>
+    <div id="{{modalId}}Content" class="flex-1 overflow-y-auto p-6">
+      {{#if staticRatings}} {{!-- Static ratings (from server) --}} {{#if
+      staticRatings.length}}
+      <div class="space-y-4">
+        {{#each staticRatings}}
+        <div class="bg-gray-50 rounded-2xl p-4 border border-gray-200/60">
+          <div class="flex items-start gap-4">
+            <div class="flex-shrink-0">
+              {{#if (eq rating 1)}}
+              <div
+                class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center"
+              >
+                <i class="fas fa-thumbs-up text-green-600"></i>
+              </div>
+              {{else}}
+              <div
+                class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center"
+              >
+                <i class="fas fa-thumbs-down text-red-600"></i>
+              </div>
+              {{/if}}
+            </div>
+            <div class="flex-1">
+              <div class="flex justify-between items-start mb-2">
+                <div>
+                  <p class="text-gray-900 font-semibold">
+                    From: {{fromUserId.name}}
+                  </p>
+                  <p class="text-gray-600 text-sm">
+                    Product: {{productId.name}}
+                  </p>
+                </div>
+                <p class="text-gray-400 text-sm">{{formatDate createdAt}}</p>
+              </div>
+              {{#if comment}}
+              <p class="text-gray-600 text-sm mt-2">{{comment}}</p>
+              {{/if}}
+            </div>
+          </div>
+        </div>
+        {{/each}}
+      </div>
+      {{else}}
+      <div class="text-center py-12">
+        <i class="fas fa-star text-gray-400 text-5xl mb-4"></i>
+        <p class="text-gray-600">You haven't received any ratings yet.</p>
+      </div>
+      {{/if}} {{else}} {{!-- Dynamic ratings (from API) --}}
+      <div class="text-center text-gray-500 py-8">
+        <i class="fas fa-spinner fa-spin text-3xl mb-4"></i>
+        <p>Loading ratings...</p>
+      </div>
+      {{/if}}
+    </div>
+  </div>
+</div>
+
+{{#unless staticRatings}}
+<script>
+  (function() {
+    let currentPage_{{modalId}} = 1
+    let isLoading_{{modalId}} = false
+    const modalId_{{modalId}} = '{{modalId}}'
+    const titleEl_{{modalId}} = document.getElementById(modalId_{{modalId}} + 'Title')
+
+    window['openRatingModal_{{modalId}}'] = async function(userId, userName) {
+      currentPage_{{modalId}} = 1
+      const modal = document.getElementById(modalId_{{modalId}})
+      const content = document.getElementById(modalId_{{modalId}} + 'Content')
+
+      if (titleEl_{{modalId}}) {
+        titleEl_{{modalId}}.textContent = `Rating History - ${userName}`
+      }
+      content.innerHTML = `
+        <div class="text-center text-gray-500 py-8">
+          <i class="fas fa-spinner fa-spin text-3xl mb-4"></i>
+          <p>Loading ratings...</p>
+        </div>
+      `
+      modal.classList.remove('hidden')
+
+      await loadRatings_{{modalId}}(userId, 1)
+    }
+
+    async function loadRatings_{{modalId}}(userId, page) {
+      if (isLoading_{{modalId}}) return
+      isLoading_{{modalId}} = true
+
+      try {
+        const response = await fetch(`/admin/users/${userId}/ratings?page=${page}`)
+        const data = await response.json()
+
+        const content = document.getElementById(modalId_{{modalId}} + 'Content')
+        if (data.items.length === 0) {
+          content.innerHTML = `
+            <div class="text-center text-gray-500 py-8">
+              <i class="fas fa-star text-gray-300 text-4xl mb-4"></i>
+              <p>No ratings found.</p>
+            </div>
+          `
+          isLoading_{{modalId}} = false
+          return
+        }
+
+        let html = '<div class="space-y-4">'
+        data.items.forEach(function (rating) {
+          const isPositive = rating.rating === 1
+          const fromUserName = rating.fromUserId?.name || 'Unknown'
+          const productName = rating.productId?.name || 'Unknown Product'
+
+          html += `
+            <div class="bg-gray-50 rounded-2xl p-4 border border-gray-200/60">
+              <div class="flex items-start gap-4">
+                <div class="flex-shrink-0">
+                  <div class="w-10 h-10 ${isPositive ? 'bg-green-100' : 'bg-red-100'} rounded-full flex items-center justify-center">
+                    <i class="fas ${isPositive ? 'fa-thumbs-up' : 'fa-thumbs-down'} ${isPositive ? 'text-green-600' : 'text-red-600'}"></i>
+                  </div>
+                </div>
+                <div class="flex-1">
+                  <div class="flex justify-between items-start mb-2">
+                    <div>
+                      <p class="text-gray-900 font-semibold">From: ${fromUserName}</p>
+                      <p class="text-gray-600 text-sm">Product: ${productName}</p>
+                    </div>
+                    <p class="text-gray-400 text-sm">${new Date(rating.createdAt).toLocaleDateString()}</p>
+                  </div>
+                  ${rating.comment ? `<p class="text-gray-600 text-sm mt-2">${rating.comment}</p>` : ''}
+                </div>
+              </div>
+            </div>
+          `
+        })
+        html += '</div>'
+
+        if (data.pagination.totalPages > 1) {
+          html += '<div class="mt-6 flex items-center justify-center gap-2">'
+          if (data.pagination.page > 1) {
+            html += `
+              <button
+                onclick="loadRatings_{{modalId}}('${userId}', ${data.pagination.page - 1})"
+                class="px-4 py-2 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-colors font-medium text-sm"
+              >
+                Previous
+              </button>
+            `
+          }
+          html += `
+            <span class="text-sm text-gray-600">
+              Page ${data.pagination.page} of ${data.pagination.totalPages}
+            </span>
+          `
+          if (data.pagination.page < data.pagination.totalPages) {
+            html += `
+              <button
+                onclick="loadRatings_{{modalId}}('${userId}', ${data.pagination.page + 1})"
+                class="px-4 py-2 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-colors font-medium text-sm"
+              >
+                Next
+              </button>
+            `
+          }
+          html += '</div>'
+        }
+
+        content.innerHTML = html
+      } catch (error) {
+        console.error('Error loading ratings:', error)
+        const content = document.getElementById(modalId_{{modalId}} + 'Content')
+        content.innerHTML = `
+          <div class="text-center text-red-500 py-8">
+            <i class="fas fa-exclamation-circle text-3xl mb-4"></i>
+            <p>Error loading ratings. Please try again.</p>
+          </div>
+        `
+      } finally {
+        isLoading_{{modalId}} = false
+      }
+    }
+
+    window['loadRatings_{{modalId}}'] = loadRatings_{{modalId}}
+  })()
+</script>
+{{/unless}}
+

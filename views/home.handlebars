@@ -1,153 +1,105 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <!-- HERO -->
   <div class="text-center mb-12">
     <h1 class="text-[48px] font-semibold text-gray-900 mb-4">Online Auction</h1>
-    <p class="text-gray-600 text-lg">Discover amazing products and start bidding today</p>
+    <p class="text-gray-600 text-lg">
+      Discover amazing products and start bidding today
+    </p>
   </div>
+
+  <!-- ================= ENDING SOON ================= -->
   <div class="mb-16">
     <div class="flex justify-between items-center mb-6">
       <h2 class="text-[28px] font-semibold text-gray-900">Ending Soon</h2>
-      <a
-        href="/products"
-        class="text-blue-600 hover:text-blue-700 font-medium transition-colors"
-      >
+      <a href="/products" class="text-blue-600 hover:text-blue-700 font-medium">
         View All →
       </a>
     </div>
+
     {{#if endingSoon.length}}
-      <div class="relative">
-        <div
-          id="carousel-ending-soon"
-          class="flex gap-6 scrollbar-hide scroll-smooth overflow-x-auto py-2"
-          style="scrollbar-width: none; -ms-overflow-style: none;"
-        >
-          {{#each endingSoon}}
-            <div class="flex-none w-[calc(33.333%-16px)]">
-              {{> product-card}}
-            </div>
-          {{/each}}
+    <!-- WRAPPER: KHÔNG overflow -->
+    <div class="relative overflow-visible">
+      <!-- SCROLL CONTAINER -->
+      <div
+        id="carousel-ending-soon"
+        class="flex items-stretch gap-6 overflow-x-auto scroll-smooth scrollbar-hide py-4"
+      >
+        {{#each endingSoon}}
+        <!-- ITEM: chừa không gian cho shadow -->
+        <div class="flex-none w-[calc(33.333%-16px)] px-2">
+          {{> product-card}}
         </div>
+        {{/each}}
       </div>
+    </div>
     {{else}}
-      <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-12 text-center">
-        <p class="text-gray-600 text-lg">No products ending soon.</p>
-      </div>
+    <div
+      class="bg-white rounded-3xl shadow-lg border border-gray-200/60 p-12 text-center"
+    >
+      <p class="text-gray-600 text-lg">No products ending soon.</p>
+    </div>
     {{/if}}
   </div>
+
+  <!-- ================= MOST POPULAR ================= -->
   <div class="mb-16">
     <div class="flex justify-between items-center mb-6">
       <h2 class="text-[28px] font-semibold text-gray-900">Most Popular</h2>
-      <a
-        href="/products"
-        class="text-blue-600 hover:text-blue-700 font-medium transition-colors"
-      >
+      <a href="/products" class="text-blue-600 hover:text-blue-700 font-medium">
         View All →
       </a>
     </div>
+
     {{#if mostBids.length}}
-      <div class="relative">
-        <div
-          id="carousel-most-bids"
-          class="flex gap-6 scrollbar-hide scroll-smooth overflow-x-auto py-2"
-          style="scrollbar-width: none; -ms-overflow-style: none;"
-        >
-          {{#each mostBids}}
-            <div class="flex-none w-[calc(33.333%-16px)]">
-              {{> product-card}}
-            </div>
-          {{/each}}
+    <div class="relative overflow-visible">
+      <div
+        id="carousel-most-bids"
+        class="flex items-stretch gap-6 overflow-x-auto scroll-smooth scrollbar-hide py-4"
+      >
+        {{#each mostBids}}
+        <div class="flex-none w-[calc(33.333%-16px)] px-2">
+          {{> product-card}}
         </div>
+        {{/each}}
       </div>
+    </div>
     {{else}}
-      <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-12 text-center">
-        <p class="text-gray-600 text-lg">No popular products yet.</p>
-      </div>
+    <div
+      class="bg-white rounded-3xl shadow-lg border border-gray-200/60 p-12 text-center"
+    >
+      <p class="text-gray-600 text-lg">No popular products yet.</p>
+    </div>
     {{/if}}
   </div>
+
+  <!-- ================= HIGHEST PRICE ================= -->
   <div class="mb-16">
     <div class="flex justify-between items-center mb-6">
       <h2 class="text-[28px] font-semibold text-gray-900">Highest Price</h2>
-      <a
-        href="/products"
-        class="text-blue-600 hover:text-blue-700 font-medium transition-colors"
-      >
+      <a href="/products" class="text-blue-600 hover:text-blue-700 font-medium">
         View All →
       </a>
     </div>
+
     {{#if highestPrice.length}}
-      <div class="relative">
-        <div
-          id="carousel-highest-price"
-          class="flex gap-6 scrollbar-hide scroll-smooth overflow-x-auto py-2"
-          style="scrollbar-width: none; -ms-overflow-style: none;"
-        >
-          {{#each highestPrice}}
-            <div class="flex-none w-[calc(33.333%-16px)]">
-              {{> product-card}}
-            </div>
-          {{/each}}
+    <div class="relative overflow-visible">
+      <div
+        id="carousel-highest-price"
+        class="flex items-stretch gap-6 overflow-x-auto scroll-smooth scrollbar-hide py-4"
+      >
+        {{#each highestPrice}}
+        <div class="flex-none w-[calc(33.333%-16px)] px-2">
+          {{> product-card}}
         </div>
+        {{/each}}
       </div>
+    </div>
     {{else}}
-      <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-12 text-center">
-        <p class="text-gray-600 text-lg">No products available.</p>
-      </div>
+    <div
+      class="bg-white rounded-3xl shadow-lg border border-gray-200/60 p-12 text-center"
+    >
+      <p class="text-gray-600 text-lg">No products available.</p>
+    </div>
     {{/if}}
   </div>
 </div>
-{{#section "css"}}
-  <style>
-    .scrollbar-hide::-webkit-scrollbar {
-      display: none;
-    }
-  </style>
-{{/section}}
-{{#section "js"}}
-  <script>
-    ;(function () {
-      const carouselIds = [
-        'carousel-ending-soon',
-        'carousel-most-bids',
-        'carousel-highest-price'
-      ];
-      const carouselData = carouselIds.map(function (id) {
-        const carousel = document.getElementById(id);
-        return {
-          id: id,
-          element: carousel,
-          currentIndex: 0,
-          paused: false
-        };
-      }).filter(function (data) {
-        return data.element && data.element.children.length > 3;
-      });
-      if (carouselData.length === 0) return;
-      let globalCarouselIndex = 0;
-      function scrollNextCarousel() {
-        const current = carouselData[globalCarouselIndex];
-        if (!current.paused && current.element.children[0]) {
-          const itemWidth = current.element.children[0].offsetWidth + 24;
-          current.currentIndex++;
-          const maxIndex = current.element.children.length - 3;
-          if (current.currentIndex > maxIndex) {
-            current.currentIndex = 0;
-          }
-          current.element.scrollTo({
-            left: current.currentIndex * itemWidth,
-            behavior: 'smooth'
-          });
-        }
-        globalCarouselIndex = (globalCarouselIndex + 1) % carouselData.length;
-      }
-      const scrollInterval = setInterval(scrollNextCarousel, 1000);
-      carouselData.forEach(function (data) {
-        data.element.addEventListener('mouseenter', function () {
-          data.paused = true;
-        });
-        data.element.addEventListener('mouseleave', function () {
-          data.paused = false;
-        });
-      });
-    })();
-  </script>
-{{/section}}
-

@@ -1,7 +1,18 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <div class="mb-6">
+    <a
+      href="javascript:history.back();"
+      class="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+    >
+      <i class="fas fa-arrow-left"></i>
+      <span>Back</span>
+    </a>
+  </div>
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12">
     <div>
-      <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 overflow-hidden mb-4">
+      <div
+        class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 overflow-hidden mb-4"
+      >
         <img
           src="{{product.images.[0]}}"
           alt="{{product.name}}"
@@ -11,197 +22,469 @@
       </div>
       <div class="grid grid-cols-4 gap-4">
         {{#each product.images}}
-          <img
-            src="{{this}}"
-            alt="Product image"
-            class="w-full h-24 object-cover rounded-2xl cursor-pointer border-2 border-transparent hover:border-blue-600 transition-all"
-            onclick="document.getElementById('mainImage').src='{{this}}'"
-          />
+        <img
+          src="{{this}}"
+          alt="Product image"
+          class="w-full h-24 object-cover rounded-2xl cursor-pointer border-2 border-transparent hover:border-blue-600 transition-all"
+          onclick="document.getElementById('mainImage').src='{{this}}'"
+        />
         {{/each}}
       </div>
     </div>
     <div>
-      <h1 class="text-[36px] font-semibold text-gray-900 mb-4">{{product.name}}</h1>
+      <h1 class="text-[36px] font-semibold text-gray-900 mb-4">
+        {{product.name}}
+      </h1>
       <a
         href="/products?categoryId={{product.categoryId._id}}"
         class="inline-block text-blue-600 hover:underline mb-6"
       >
         {{product.categoryId.name}}
       </a>
-      <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-6 mb-6">
+      <div
+        class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-6 mb-6"
+      >
         <div class="space-y-4">
           <div class="flex justify-between items-center">
             <span class="text-gray-600">Current Price:</span>
-            <span class="text-blue-600 font-bold text-2xl">${{format_currency product.currentPrice}}</span>
+            <span class="text-blue-600 font-bold text-2xl"
+              >${{format_currency product.currentPrice }}</span
+            >
           </div>
           {{#if product.buyNowPrice}}
-            <div class="flex justify-between items-center">
-              <span class="text-gray-600">Buy Now Price:</span>
-              <span class="text-green-600 font-bold text-xl">${{format_currency product.buyNowPrice}}</span>
-            </div>
+          <div class="flex justify-between items-center">
+            <span class="text-gray-600">Buy Now Price:</span>
+            <span class="text-green-600 font-bold text-xl"
+              >${{format_currency product.buyNowPrice }}</span
+            >
+          </div>
           {{/if}}
           <div class="flex justify-between items-center">
             <span class="text-gray-600">Number of Bids:</span>
-            <span class="text-gray-900 font-semibold">{{product.bidCount}}</span>
+            <span class="text-gray-900 font-semibold"
+              >{{product.bidCount}}</span
+            >
           </div>
           <div class="flex justify-between items-center">
             <span class="text-gray-600">Ends:</span>
-            <span class="text-gray-900 font-semibold">{{formatDate product.endTime}}</span>
+            <span class="text-gray-900 font-semibold"
+              >{{formatDate product.endTime }}</span
+            >
           </div>
         </div>
       </div>
-      <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-6 mb-6">
+      <div
+        class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-6 mb-6"
+      >
         <h3 class="text-gray-900 font-semibold mb-4">Seller Information</h3>
         <p class="text-gray-600">{{product.sellerId.name}}</p>
         <p class="text-gray-500 text-sm">{{product.sellerId.email}}</p>
       </div>
       {{#if product.topBidder}}
-        <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-6 mb-6">
-          <h3 class="text-gray-900 font-semibold mb-4">Current Top Bidder</h3>
-          <p class="text-gray-600">{{product.topBidder.name}}</p>
-        </div>
-      {{/if}}
-      {{#if isAuthenticated}}
-        <div class="flex gap-2">
-          <form
-            method="post"
-            action="/bidder/watchlist/{{product._id}}"
-            class="flex-1"
-          >
-            {{#if isInWatchlist}}
-              <input type="hidden" name="_method" value="DELETE">
-              <button
-                type="submit"
-                class="w-full px-6 py-4 bg-gray-600 text-white rounded-xl shadow-[0_4px_20px_rgba(75,85,99,0.3)] hover:bg-gray-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
-              >
-                Remove from Watchlist
-              </button>
-            {{else}}
-              <button
-                type="submit"
-                class="w-full px-6 py-4 bg-yellow-600 text-white rounded-xl shadow-[0_4px_20px_rgba(202,138,4,0.3)] hover:bg-yellow-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
-              >
-                Add to Watchlist
-              </button>
-            {{/if}}
-          </form>
-          <a
-            href="/bidder/bid/{{product._id}}"
-            class="flex-1 h-fit text-center px-6 py-4 bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
-          >
-            Place Bid
-          </a>
-        </div>
-      {{else}}
-        <a
-          href="/auth/login"
-          class="block text-center px-6 py-4 bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
+      <div
+        class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-6 mb-6"
+      >
+        <h3 class="text-gray-900 font-semibold mb-4">Current Top Bidder</h3>
+        <p class="text-gray-600">{{maskBidderName product.topBidder.name}}</p>
+      </div>
+      {{/if}} {{#if isAuthenticated}}
+      <div class="flex gap-2">
+        <form
+          method="post"
+          action="/bidder/watchlist/{{product._id}}"
+          class="flex-1"
         >
-          Login to Bid
-        </a>
+          {{#if isInWatchlist}}
+          <input type="hidden" name="_method" value="DELETE" />
+          <button
+            type="submit"
+            class="w-full px-6 py-4 bg-gray-600 text-white rounded-xl shadow-[0_4px_20px_rgba(75,85,99,0.3)] hover:bg-gray-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium whitespace-nowrap"
+          >
+            Remove from Watchlist
+          </button>
+          {{else}}
+          <button
+            type="submit"
+            class="w-full px-6 py-4 bg-yellow-500 text-white rounded-xl shadow-[0_4px_20px_rgba(234,179,8,0.4)] hover:bg-yellow-600 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium whitespace-nowrap"
+          >
+            Add to Watchlist
+          </button>
+          {{/if}}
+        </form>
+        <button
+          onclick="document.getElementById('placeBidModal').classList.remove('hidden')"
+          class="flex-1 h-fit text-center px-6 py-4 bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
+        >
+          Place Bid
+        </button>
+      </div>
+      {{else}}
+      <a
+        href="/auth/login"
+        class="block text-center px-6 py-4 bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
+      >
+        Login to Bid
+      </a>
       {{/if}}
       <div class="mt-4">
-        <a
-          href="/products/{{product._id}}/bids"
-          class="block text-center px-6 py-4 bg-white text-gray-900 border border-gray-200/60 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] hover:bg-gray-50 hover:scale-105 transition-all duration-300 ease-out font-medium"
+        <button
+          onclick="document.getElementById('bidHistoryModal').classList.remove('hidden')"
+          class="block w-full text-center px-6 py-4 bg-white text-gray-900 border border-gray-200/60 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] hover:bg-gray-50 hover:scale-105 transition-all duration-300 ease-out font-medium"
         >
           View Bid History
-        </a>
-      </div>
-    </div>
-  </div>
-  <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-8 mb-12">
-    <h2 class="text-[28px] font-semibold text-gray-900 mb-6">Description</h2>
-    <div class="text-gray-600 prose max-w-none">
-      {{{product.description}}}
-    </div>
-    {{#if product.appendedDescriptions.length}}
-      {{#each product.appendedDescriptions}}
-        <hr class="my-8 border-t border-gray-200">
-        <div class="mb-6">
-          <div class="flex items-center gap-2 mb-3">
-            <i class="fas fa-edit text-blue-600"></i>
-            <span class="text-gray-500 text-sm">{{formatDate timestamp}}</span>
-          </div>
-          <div class="text-gray-600 prose max-w-none">
-            {{{content}}}
-          </div>
-        </div>
-      {{/each}}
-    {{/if}}
-  </div>
-  <div class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-8 mb-12">
-    <h2 class="text-[28px] font-semibold text-gray-900 mb-6">Questions & Answers</h2>
-    {{#if isAuthenticated}}
-      <form
-        method="post"
-        action="/bidder/question/{{product._id}}"
-        class="mb-8"
-      >
-        <div class="relative mb-4">
-          <textarea
-            name="question"
-            rows="3"
-            class="w-full px-4 py-4 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
-            placeholder="Ask a question about this product..."
-            required
-          ></textarea>
-        </div>
-        <button
-          type="submit"
-          class="px-6 py-3 bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
-        >
-          Submit Question
         </button>
-      </form>
-    {{/if}}
-    {{#if product.questions.length}}
-      <div class="space-y-6">
-        {{#each product.questions}}
-          <div class="border-b border-gray-200 pb-6 last:border-b-0">
-            <div class="flex items-start gap-4 mb-4">
-              <div class="flex-1">
-                <p class="text-gray-900 font-medium">{{askerId.name}}</p>
-                <p class="text-gray-600 mt-2">{{question}}</p>
-                <p class="text-gray-400 text-sm mt-1">{{formatDate createdAt}}</p>
-              </div>
-            </div>
-            {{#if answer}}
-              <div class="ml-8 bg-blue-50 rounded-2xl p-4">
-                <p class="text-gray-900 font-medium mb-2">Seller's Response:</p>
-                <p class="text-gray-600">{{answer}}</p>
-                <p class="text-gray-400 text-sm mt-1">{{formatDate answeredAt}}</p>
-              </div>
-            {{/if}}
-          </div>
-        {{/each}}
       </div>
+    </div>
+  </div>
+  <div
+    class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-8 mb-12"
+  >
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-[28px] font-semibold text-gray-900">Description</h2>
+      {{#if isAuthenticated}} {{#if (eq authUser._id product.sellerId._id)}}
+      <button
+        onclick="document.getElementById('appendDescModal').classList.remove('hidden')"
+        class="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center gap-1"
+      >
+        <i class="fas fa-plus-circle"></i>
+        <span>Append Description</span>
+      </button>
+      {{/if}} {{/if}}
+    </div>
+    <div class="text-gray-600 prose max-w-none">{{{product.description}}}</div>
+    {{#if product.appendedDescriptions.length}} {{#each
+    product.appendedDescriptions}}
+    <hr class="my-8 border-t border-gray-200" />
+    <div class="mb-6">
+      <div class="flex items-center gap-2 mb-3">
+        <i class="fas fa-edit text-blue-600"></i>
+        <span class="text-gray-500 text-sm">{{formatDate timestamp}}</span>
+      </div>
+      <div class="text-gray-600 prose max-w-none">{{{content}}}</div>
+    </div>
+    {{/each}} {{/if}}
+  </div>
+  <div
+    class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-8 mb-12"
+  >
+    <h2 class="text-[28px] font-semibold text-gray-900 mb-6">
+      Questions & Answers
+    </h2>
+    {{#if isAuthenticated}}
+    <form method="post" action="/bidder/question/{{product._id}}" class="mb-8">
+      <div class="relative mb-4">
+        <textarea
+          name="question"
+          rows="3"
+          class="w-full px-4 py-4 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
+          placeholder="Ask a question about this product..."
+          required
+        ></textarea>
+      </div>
+      <button
+        type="submit"
+        class="px-6 py-3 bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
+      >
+        Submit Question
+      </button>
+    </form>
+    {{/if}} {{#if product.questions.length}}
+    <div class="space-y-6">
+      {{#each product.questions}}
+      <div class="border-b border-gray-200 pb-6 last:border-b-0">
+        <div class="flex items-start gap-4 mb-4">
+          <div class="flex-1">
+            <p class="text-gray-900 font-medium">{{askerId.name}}</p>
+            <p class="text-gray-600 mt-2">{{question}}</p>
+            <p class="text-gray-400 text-sm mt-1">{{formatDate createdAt }}</p>
+          </div>
+        </div>
+        {{#if answer}}
+        <div class="ml-8 bg-blue-50 rounded-2xl p-4">
+          <p class="text-gray-900 font-medium mb-2">Seller's Response:</p>
+          <p class="text-gray-600">{{answer}}</p>
+          <p class="text-gray-400 text-sm mt-1">{{formatDate answeredAt }}</p>
+        </div>
+        {{/if}}
+      </div>
+      {{/each}}
+    </div>
     {{else}}
-      <p class="text-gray-500 text-center py-8">No questions yet. Be the first to ask!</p>
+    <p class="text-gray-500 text-center py-8">
+      No questions yet. Be the first to ask!
+    </p>
     {{/if}}
   </div>
   {{#if product.relatedProducts.length}}
-    <div class="mb-12">
-      <h2 class="text-[28px] font-semibold text-gray-900 mb-6">Related Products</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {{#each product.relatedProducts}}
-          <a
-            href="/products/{{_id}}"
-            class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 overflow-hidden hover:scale-105 transition-all duration-300 ease-out"
-          >
-            <img
-              src="{{images.[0]}}"
-              alt="{{name}}"
-              class="w-full h-48 object-cover"
-            />
-            <div class="p-4">
-              <h3 class="text-gray-900 font-semibold mb-2 truncate">{{name}}</h3>
-              <p class="text-blue-600 font-bold">${{format_currency currentPrice}}</p>
-            </div>
-          </a>
-        {{/each}}
-      </div>
+  <div class="mb-12">
+    <h2 class="text-[28px] font-semibold text-gray-900 mb-6">
+      Related Products
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {{#each product.relatedProducts}}
+      <a
+        href="/products/{{_id}}"
+        class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 overflow-hidden hover:scale-105 transition-all duration-300 ease-out"
+      >
+        <img
+          src="{{images.[0]}}"
+          alt="{{name}}"
+          class="w-full h-48 object-cover"
+        />
+        <div class="p-4">
+          <h3 class="text-gray-900 font-semibold mb-2 truncate">{{name}}</h3>
+          <p class="text-blue-600 font-bold">
+            ${{format_currency currentPrice }}
+          </p>
+        </div>
+      </a>
+      {{/each}}
     </div>
+  </div>
   {{/if}}
 </div>
+{{#> modal id="bidHistoryModal" title="Bid History"}} {{#if bids.length}}
+<div class="overflow-x-auto">
+  <table class="w-full">
+    <thead>
+      <tr class="border-b border-gray-200">
+        <th class="text-left py-3 px-4 text-gray-900 font-semibold text-sm">
+          Date & Time
+        </th>
+        <th class="text-left py-3 px-4 text-gray-900 font-semibold text-sm">
+          Bidder
+        </th>
+        <th class="text-right py-3 px-4 text-gray-900 font-semibold text-sm">
+          Bid Amount
+        </th>
+        {{#if isSeller}}
+        <th class="text-center py-3 px-4 text-gray-900 font-semibold text-sm">
+          Action
+        </th>
+        {{/if}}
+      </tr>
+    </thead>
+    <tbody>
+      {{#each bids}}
+      <tr
+        class="border-b border-gray-100 hover:bg-gray-50 transition-colors {{#if isBlocked}}opacity-50{{/if}}"
+      >
+        <td class="py-3 px-4 text-gray-600 text-sm">
+          {{formatDate createdAt}}
+        </td>
+        <td class="py-3 px-4">
+          <div class="flex flex-col gap-1">
+            <div class="flex items-center gap-2">
+              <span class="text-gray-900 font-medium text-sm">
+                {{#if ../isSeller}} {{bidderId.name}} {{else}} {{maskBidderName
+                bidderId.name}} {{/if}}
+              </span>
+              {{#if isBlocked}}
+              <span
+                class="inline-block px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium"
+              >
+                Blocked
+              </span>
+              {{/if}}
+            </div>
+            {{#if bidderId.ratingStats}} {{#if (gt bidderId.ratingStats.total
+            0)}}
+            <div class="inline-flex items-center gap-1 text-xs">
+              <i class="fas fa-star text-yellow-500"></i>
+              <span class="font-semibold text-gray-900"
+                >{{roundPercent bidderId.ratingStats.percent}}%</span
+              >
+              <span class="text-gray-500"
+                >({{bidderId.ratingStats.positive}}/{{bidderId.ratingStats.total}})</span
+              >
+            </div>
+            {{else}}
+            <span class="text-xs text-gray-400">No ratings</span>
+            {{/if}} {{/if}}
+          </div>
+        </td>
+        <td class="py-3 px-4 text-right">
+          <span class="font-bold text-blue-600">
+            ${{format_currency bidAmount}}
+          </span>
+        </td>
+        {{#if ../isSeller}}
+        <td class="py-3 px-4 text-center">
+          {{#unless isBlocked}}
+          <form
+            method="post"
+            action="/seller/products/{{@root.product._id}}/block/{{bidderId._id}}"
+            onsubmit="return confirm('Are you sure you want to block this bidder?');"
+          >
+            <button
+              type="submit"
+              class="px-3 py-1 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 transition-colors font-medium"
+            >
+              Block
+            </button>
+          </form>
+          {{else}}
+          <span class="text-gray-400 text-xs">Blocked</span>
+          {{/unless}}
+        </td>
+        {{/if}}
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
+</div>
+{{else}}
+<div class="text-center py-12">
+  <i class="fas fa-gavel text-gray-400 text-5xl mb-4"></i>
+  <p class="text-gray-600">No bids yet. Be the first to bid!</p>
+</div>
+{{/if}} {{/modal}} {{#if (eq authUser._id product.sellerId._id)}} {{#> modal
+id="appendDescModal" title="Append Description"}}
+<form
+  method="post"
+  action="/seller/products/{{product._id}}/append"
+  class="space-y-4"
+  id="appendForm"
+>
+  <div>
+    <label
+      for="description"
+      class="block text-sm font-medium text-gray-900 mb-2"
+      >Additional Description</label
+    >
+    <div
+      id="editor"
+      class="bg-white max-h-[300px] border border-gray-200/60 rounded-2xl"
+    ></div>
+    <input type="hidden" id="description" name="description" />
+    <p class="text-gray-500 text-sm mt-2">
+      This will be added to the existing description with a timestamp.
+    </p>
+  </div>
+  <button
+    type="submit"
+    class="w-full px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
+  >
+    Append Description
+  </button>
+</form>
+{{/modal}} {{#section "css"}}
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet" />
+{{/section}} {{#section "js"}}
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<script>
+  var quill = new Quill('#editor', {
+    theme: 'snow',
+    placeholder: 'Enter additional information to append to the description...',
+    modules: {
+      toolbar: [
+        [{ header: [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ list: 'ordered' }, { list: 'bullet' }],
+        [{ color: [] }, { background: [] }],
+        [{ align: [] }],
+        ['link', 'image'],
+        ['clean'],
+      ],
+    },
+  })
 
+  var form = document.getElementById('appendForm')
+  form.onsubmit = function (e) {
+    var descriptionInput = document.getElementById('description')
+    var content = quill.root.innerHTML
+    var text = quill.getText().trim()
+
+    if (!text || text === '' || content === '<p><br></p>') {
+      e.preventDefault()
+      alert('Please enter additional description')
+      return false
+    }
+
+    descriptionInput.value = content
+    return true
+  }
+</script>
+{{/section}} {{/if}} {{#if isAuthenticated}} {{#unless isSeller}} {{#> modal
+id="placeBidModal" title="Place a Bid"}}
+<div class="mb-4">
+  <p class="text-gray-900 font-medium text-lg">{{product.name}}</p>
+</div>
+<div class="mb-4 p-4 bg-blue-50 rounded-xl">
+  <div class="space-y-2">
+    <div class="flex justify-between items-center">
+      <span class="text-gray-600">Current Price:</span>
+      <span class="text-blue-600 font-bold text-xl"
+        >${{format_currency product.currentPrice}}</span
+      >
+    </div>
+    <div class="flex justify-between items-center">
+      <span class="text-gray-600">Step Price:</span>
+      <span class="text-gray-900 font-semibold"
+        >${{format_currency product.stepPrice}}</span
+      >
+    </div>
+    <div class="flex justify-between items-center">
+      <span class="text-gray-600">Minimum Bid:</span>
+      <span class="text-green-600 font-bold text-lg"
+        >${{format_currency minBidAmount}}</span
+      >
+    </div>
+  </div>
+</div>
+<form method="post" action="/bidder/bid/{{product._id}}" class="space-y-4">
+  {{#if userBid}}
+  <div class="p-4 bg-blue-50 border border-blue-200 rounded-xl mb-4">
+    <p class="text-blue-800 text-sm font-medium mb-1">
+      You have already placed a bid
+    </p>
+    <p class="text-blue-600 text-sm">
+      Current maximum bid: ${{format_currency userBid.maxBidAmount}}
+    </p>
+  </div>
+  {{/if}}
+  <div>
+    <label
+      for="maxBidAmount"
+      class="block text-sm font-medium text-gray-900 mb-2"
+      >{{#if userBid}}Update Maximum Auto-Bid Amount{{else}}Maximum Auto-Bid
+      Amount (Required){{/if}}</label
+    >
+    <input
+      type="number"
+      id="maxBidAmount"
+      name="maxBidAmount"
+      min="{{minBidAmount}}"
+      step="0.01"
+      class="w-full px-4 py-3 border border-gray-200/60 rounded-xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
+      placeholder="Enter maximum auto-bid amount"
+      {{#if userBid}}
+        value="{{userBid.maxBidAmount}}"
+      {{/if}}
+      required
+      {{#if userBid}}
+        autofocus
+      {{else}}
+        autofocus
+      {{/if}}
+    />
+    <p class="text-gray-500 text-sm mt-1">
+      System will automatically bid up to this amount for you. Minimum:
+      ${{format_currency minBidAmount}}
+    </p>
+  </div>
+  <div class="p-3 bg-yellow-50 border border-yellow-200 rounded-xl">
+    <p class="text-gray-700 text-sm">
+      <strong>Note:</strong> By placing a bid, you agree to purchase this item
+      if you win. {{#if product.autoExtend}} This auction has auto-extend
+      enabled. {{/if}}
+    </p>
+  </div>
+  <button
+    type="submit"
+    class="w-full px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
+  >
+    {{#if userBid}}Update Maximum Bid{{else}}Place Bid{{/if}}
+  </button>
+</form>
+{{/modal}} {{/unless}} {{/if}}
