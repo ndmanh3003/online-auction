@@ -1,13 +1,38 @@
 import express from 'express'
-import * as categoryService from '../../services/category.service.js'
+import Category from '../../models/Category.js'
 
 const router = express.Router()
 
+function buildParentIdQuery(parentId) {
+  if (parentId === 'none' || parentId === '' || parentId === null) {
+    return { parentId: null }
+  }
+  return { parentId }
+}
+
 router.get('/', async function (req, res) {
-  const page = parseInt(req.query.page) || 1
   const parentId = req.query.parentId || 'none'
-  const result = await categoryService.findAll(page, 10, parentId)
-  res.render('vwAdmin/categories/index', { ...result })
+  const filter = buildParentIdQuery(parentId)
+  const result = await Category.paginate(req, filter)
+
+  const parents = await Category.find({ parentId: null }).sort({ name: 1 })
+  const allCategories = await Promise.all(
+    parents.map(async (parent) => {
+      const children = await Category.find({ parentId: parent._id }).sort({
+        name: 1,
+      })
+      return {
+        ...parent.toObject(),
+        subcategories: children,
+      }
+    })
+  )
+  const drpdwnParents = allCategories.map((cat) => ({
+    value: cat._id.toString(),
+    label: cat.name,
+  }))
+
+  res.render('vwAdmin/categories/index', { ...result, drpdwnParents })
 })
 
 router.get('/create', function (req, res) {
@@ -15,39 +40,33 @@ router.get('/create', function (req, res) {
 })
 
 router.post('/create', async function (req, res) {
-  const { name, img_url, description, parentId } = req.body
-
-  await categoryService.create({
-    name: name.trim(),
-    img_url: img_url.trim(),
-    description: description ? description.trim() : '',
+  const { name, parentId } = req.body
+  const category = new Category({
+    name,
     parentId: parentId || null,
   })
-
+  await category.save()
   res.redirect('/admin/categories')
 })
 
 router.get('/:id/edit', async function (req, res) {
-  const category = await categoryService.findById(req.params.id)
+  const category = await Category.findById(req.params.id)
   res.render('vwAdmin/categories/edit', { category })
 })
 
 router.put('/:id', async function (req, res) {
   const { id } = req.params
-  const { name, img_url, description, parentId } = req.body
-
-  await categoryService.update(id, {
-    name: name.trim(),
-    img_url: img_url.trim(),
-    description: description ? description.trim() : '',
-    parentId: parentId || null,
-  })
-
+  const { name, parentId } = req.body
+  await Category.findByIdAndUpdate(
+    id,
+    { name, parentId: parentId || null },
+    { new: true }
+  )
   res.redirect('/admin/categories')
 })
 
 router.delete('/:id', async function (req, res) {
-  await categoryService.remove(req.params.id)
+  await Category.findByIdAndDelete(req.params.id)
   res.redirect('/admin/categories')
 })
 

@@ -1,28 +1,25 @@
-import express from 'express';
-import * as questionService from '../../services/question.service.js';
-import * as productService from '../../services/product.service.js';
-import * as emailService from '../../utils/email.js';
+import express from 'express'
+import Product from '../../models/Product.js'
+import ProductQuestion from '../../models/ProductQuestion.js'
+import * as emailService from '../../utils/email.js'
 
-const router = express.Router();
+const router = express.Router()
 
 router.post('/:productId', async function (req, res) {
-  const { question } = req.body;
-  const product = await productService.findById(req.params.productId, false);
-
-  if (!product) {
-    return res.error('Product not found.');
-  }
-
-  const newQuestion = await questionService.create({
+  const { question } = req.body
+  const product = await Product.findById(req.params.productId)
+  const newQuestion = new ProductQuestion({
     productId: req.params.productId,
     askerId: req.session.authUser._id,
     question,
-  });
+  })
+  await newQuestion.save()
+  emailService.sendQuestionPostedEmail(
+    product,
+    newQuestion,
+    req.session.authUser
+  )
+  res.redirect(`/products/${req.params.productId}`)
+})
 
-  await emailService.sendQuestionPostedEmail(product, newQuestion, req.session.authUser);
-
-  res.redirect(`/products/${req.params.productId}`);
-});
-
-export default router;
-
+export default router

@@ -1,35 +1,30 @@
-import express from 'express';
-import * as questionService from '../../services/question.service.js';
-import * as productService from '../../services/product.service.js';
-import * as bidService from '../../services/bid.service.js';
-import * as emailService from '../../utils/email.js';
-import { isSeller } from '../../middlewares/auth.mdw.js';
+import express from 'express'
+import { isAuth } from '../../middlewares/auth.mdw.js'
+import Product from '../../models/Product.js'
+import ProductQuestion from '../../models/ProductQuestion.js'
+import * as emailService from '../../utils/email.js'
+import { processBids } from '../../utils/bids.js'
 
-const router = express.Router();
+const router = express.Router()
 
-router.use(isSeller);
+router.use(isAuth)
 
 router.post('/:questionId/answer', async function (req, res) {
-  const { answer } = req.body;
-  const question = await questionService.findById(req.params.questionId);
+  const { answer } = req.body
+  const question = await ProductQuestion.findById(req.params.questionId)
+  const product = await Product.findById(question.productId._id)
+  await ProductQuestion.findByIdAndUpdate(
+    req.params.questionId,
+    {
+      answer,
+      answeredAt: new Date(),
+    },
+    { new: true }
+  )
+  await product.populate('bids.bidderId')
+  const bidsResult = processBids(product, { query: {} })
+  emailService.sendQuestionAnsweredEmail(product, question, bidsResult.items)
+  res.redirect(`/products/${product._id}`)
+})
 
-  if (!question) {
-    return res.error('Question not found.');
-  }
-
-  const product = await productService.findById(question.productId._id);
-
-  if (product.sellerId.toString() !== req.session.authUser._id.toString()) {
-    return res.render('403');
-  }
-
-  await questionService.answer(req.params.questionId, answer.trim());
-
-  const bids = await bidService.findByProductId(product._id);
-  await emailService.sendQuestionAnsweredEmail(product, question, bids);
-
-  res.redirect(`/products/${product._id}`);
-});
-
-export default router;
-
+export default router

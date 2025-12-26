@@ -1,13 +1,14 @@
 import express from 'express'
-import * as sellerRequestService from '../../services/seller-request.service.js'
-import * as userService from '../../services/user.service.js'
+import AuctionConfig from '../../models/AuctionConfig.js'
+import SellerRequest from '../../models/SellerRequest.js'
+import User from '../../models/User.js'
 
 const router = express.Router()
 
 router.get('/', async function (req, res) {
-  const page = parseInt(req.query.page) || 1
   const status = req.query.status || null
-  const result = await sellerRequestService.findAll(page, 10, status)
+  const filter = status ? { status } : {}
+  const result = await SellerRequest.paginate(req, filter)
 
   res.render('vwAdmin/seller-requests/index', {
     ...result,
@@ -16,22 +17,44 @@ router.get('/', async function (req, res) {
 })
 
 router.post('/:id/approve', async function (req, res) {
-  const request = await sellerRequestService.findById(req.params.id)
+  const request = await SellerRequest.findById(req.params.id)
   const userId = request.userId._id ? request.userId._id : request.userId
-  await sellerRequestService.updateStatus(
-    req.params.id,
-    'approved',
-    req.session.authUser._id
+  let config = await AuctionConfig.findOne()
+  if (!config) {
+    config = await AuctionConfig.create({
+      autoExtendThresholdMinutes: 5,
+      autoExtendDurationMinutes: 10,
+      sellerDurationDays: 7,
+      newProductHighlightMinutes: 30,
+      minRatingPercentForBid: 80,
+    })
+  }
+  const now = new Date()
+  const expiresAt = new Date(
+    now.getTime() + config.sellerDurationDays * 24 * 60 * 60 * 1000
   )
-  await userService.updateRole(userId, 'seller')
+
+  await SellerRequest.findByIdAndUpdate(
+    req.params.id,
+    { status: 'approved', reviewedAt: now, reviewedBy: req.session.authUser._id, approvedAt: now },
+    { new: true }
+  )
+  await User.findByIdAndUpdate(
+    userId,
+    {
+      sellerActivatedAt: now,
+      sellerExpiresAt: expiresAt,
+    },
+    { new: true }
+  )
   res.redirect('/admin/seller-requests')
 })
 
 router.post('/:id/deny', async function (req, res) {
-  await sellerRequestService.updateStatus(
+  await SellerRequest.findByIdAndUpdate(
     req.params.id,
-    'denied',
-    req.session.authUser._id
+    { status: 'denied', reviewedAt: new Date(), reviewedBy: req.session.authUser._id },
+    { new: true }
   )
   res.redirect('/admin/seller-requests')
 })
