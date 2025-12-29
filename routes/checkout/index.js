@@ -3,45 +3,38 @@ import { isAuth } from '../../middlewares/auth.mdw.js'
 import Product from '../../models/Product.js'
 import Rating from '../../models/Rating.js'
 import Transaction from '../../models/Transaction.js'
-import { processBids } from '../../utils/bids.js'
 
 const router = express.Router()
 
 router.use(isAuth)
 
 router.get('/:productId', async function (req, res) {
-  const productInstance = await Product.findById(req.params.productId)
-  if (!productInstance) {
+  const product = await Product.findById(req.params.productId)
+  if (!product) {
     return res.render('404')
   }
-  await productInstance.populate('bids.bidderId')
-  const bidsResult = processBids(productInstance, {
-    query: { page: 1, limit: 1 },
-  })
-  const topBid = bidsResult.topBidder
   const userId = req.session.authUser._id.toString()
-  const sellerId = productInstance.sellerId._id.toString()
-  const winnerId = topBid.bidderId._id.toString()
+  const sellerId = product.sellerId._id.toString()
+  const winnerId = product.currentWinnerId?._id.toString()
+  if (!winnerId) {
+    return res.render('404')
+  }
   let transaction = await Transaction.findOne({
-    productId: productInstance._id,
+    productId: product._id,
   })
   if (!transaction) {
     transaction = new Transaction({
-      productId: productInstance._id,
-      sellerId: productInstance.sellerId._id,
-      winnerId: topBid.bidderId._id,
+      productId: product._id,
+      sellerId: product.sellerId._id,
+      winnerId: product.currentWinnerId._id,
     })
     await transaction.save()
   }
   const isSeller = userId === sellerId
   const isWinner = userId === winnerId
 
-  const product = {
-    ...productInstance.toObject(),
-    currentPrice: productInstance.currentPrice,
-    bidCount: bidsResult.pagination.total,
-    topBidder: bidsResult.topBidder?.bidderId || null,
-  }
+  const topBid = product.bids
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0]
 
   res.render('vwCheckout/index', {
     product,

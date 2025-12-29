@@ -123,13 +123,22 @@ const productSchema = new mongoose.Schema(
 productSchema.index({ name: 'text', description: 'text' })
 
 productSchema.pre('find', function () {
-  this.populate('categoryId').populate('sellerId')
+  this.populate('categoryId')
+    .populate('sellerId')
+    .populate('currentWinnerId')
+    .populate('bids.bidderId')
 })
 productSchema.pre('findOne', function () {
-  this.populate('categoryId').populate('sellerId')
+  this.populate('categoryId')
+    .populate('sellerId')
+    .populate('currentWinnerId')
+    .populate('bids.bidderId')
 })
 productSchema.pre('findOneAndUpdate', function () {
-  this.populate('categoryId').populate('sellerId')
+  this.populate('categoryId')
+    .populate('sellerId')
+    .populate('currentWinnerId')
+    .populate('bids.bidderId')
 })
 
 productSchema.methods.isInWatchlist = async function (userId) {

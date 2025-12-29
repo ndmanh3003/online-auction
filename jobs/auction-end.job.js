@@ -1,7 +1,6 @@
 import Product from '../models/Product.js'
 import Transaction from '../models/Transaction.js'
 import * as emailService from '../utils/email.js'
-import { processBids } from '../utils/bids.js'
 
 export async function checkEndedAuctions() {
   try {
@@ -14,19 +13,19 @@ export async function checkEndedAuctions() {
     for (const product of endedProducts) {
       await Product.findByIdAndUpdate(product._id, { status: 'ended' })
 
-      await product.populate('bids.bidderId')
-      const bidsResult = processBids(product, { query: { page: 1, limit: 1 } })
-      const topBid = bidsResult.topBidder
+      if (product.currentWinnerId) {
+        const transaction = new Transaction({
+          productId: product._id,
+          sellerId: product.sellerId._id,
+          winnerId: product.currentWinnerId._id,
+        })
+        await transaction.save()
 
-            if (topBid) {
-              const transaction = new Transaction({
-                productId: product._id,
-                sellerId: product.sellerId._id,
-                winnerId: topBid.bidderId._id,
-              })
-              await transaction.save()
-
-        emailService.sendAuctionEndedWithWinnerEmail(product, topBid.bidderId)
+        await product.populate('currentWinnerId')
+        emailService.sendAuctionEndedWithWinnerEmail(
+          product,
+          product.currentWinnerId
+        )
       } else {
         emailService.sendAuctionEndedNoWinnerEmail(product)
       }

@@ -1,6 +1,5 @@
 import express from 'express'
 import Watchlist from '../../models/Watchlist.js'
-import { processBids } from '../../utils/bids.js'
 
 const router = express.Router()
 
@@ -10,23 +9,17 @@ router.get('/', async function (req, res) {
   })
 
   res.render('vwBidder/watchlist', {
-    items: await Promise.all(
-      result.items.map(async (item) => {
-        if (!item.productId) return item.toObject()
-        const product = item.productId
-        await product.populate('bids.bidderId')
-        const bidsResult = processBids(product, { query: { page: 1, limit: 1 } })
-        return {
-          ...item.toObject(),
-          productId: {
-            ...product.toObject(),
-            currentPrice: product.currentPrice,
-            bidCount: bidsResult.pagination.total,
-            topBidder: bidsResult.topBidder?.bidderId || null,
-          },
-        }
-      })
-    ),
+    items: result.items.map((item) => {
+      if (!item.productId) return item.toObject()
+      const product = item.productId
+      return {
+        ...item.toObject(),
+        productId: {
+          ...product.toObject(),
+          bidCount: product.bids.length,
+        },
+      }
+    }),
     pagination: result.pagination,
   })
 })

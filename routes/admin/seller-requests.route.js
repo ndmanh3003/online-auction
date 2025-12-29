@@ -6,14 +6,12 @@ import User from '../../models/User.js'
 const router = express.Router()
 
 router.get('/', async function (req, res) {
-  const status = req.query.status || null
-  const filter = status ? { status } : {}
-  const result = await SellerRequest.paginate(req, filter)
+  const result = await SellerRequest.paginate(
+    req,
+    req.query.status ? { status: req.query.status } : {}
+  )
 
-  res.render('vwAdmin/seller-requests/index', {
-    ...result,
-    selectedStatus: status,
-  })
+  res.render('vwAdmin/seller-requests/index', result)
 })
 
 router.post('/:id/approve', async function (req, res) {
@@ -30,20 +28,24 @@ router.post('/:id/approve', async function (req, res) {
     })
   }
   const now = new Date()
-  const expiresAt = new Date(
-    now.getTime() + config.sellerDurationDays * 24 * 60 * 60 * 1000
-  )
 
   await SellerRequest.findByIdAndUpdate(
     req.params.id,
-    { status: 'approved', reviewedAt: now, reviewedBy: req.session.authUser._id, approvedAt: now },
+    {
+      status: 'approved',
+      reviewedAt: now,
+      reviewedBy: req.session.authUser._id,
+      approvedAt: now,
+    },
     { new: true }
   )
   await User.findByIdAndUpdate(
     userId,
     {
       sellerActivatedAt: now,
-      sellerExpiresAt: expiresAt,
+      sellerExpiresAt: new Date(
+        now.getTime() + config.sellerDurationDays * 24 * 60 * 60 * 1000
+      ),
     },
     { new: true }
   )
@@ -53,7 +55,11 @@ router.post('/:id/approve', async function (req, res) {
 router.post('/:id/deny', async function (req, res) {
   await SellerRequest.findByIdAndUpdate(
     req.params.id,
-    { status: 'denied', reviewedAt: new Date(), reviewedBy: req.session.authUser._id },
+    {
+      status: 'denied',
+      reviewedAt: new Date(),
+      reviewedBy: req.session.authUser._id,
+    },
     { new: true }
   )
   res.redirect('/admin/seller-requests')

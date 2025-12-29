@@ -1,31 +1,65 @@
 import express from 'express'
+import AuctionConfig from '../../models/AuctionConfig.js'
 import Product from '../../models/Product.js'
 import User from '../../models/User.js'
 import * as bidService from '../../services/bid.service.js'
-import { processBids } from '../../utils/bids.js'
 import * as emailService from '../../utils/email.js'
 
 const router = express.Router()
 
 router.post('/:productId', async function (req, res) {
   const { maxBidAmount } = req.body
+  const productId = req.params.productId
+  const bidderId = req.session.authUser._id
 
   if (!maxBidAmount || parseFloat(maxBidAmount) <= 0) {
     return res.error('Maximum bid amount is required')
   }
 
-  const productInstance = await Product.findById(req.params.productId)
-  if (!productInstance) {
+  const product = await Product.findById(productId)
+  if (!product) {
     return res.error('Product not found')
   }
 
-  const previousWinnerId = productInstance.currentWinnerId?.toString()
-  const previousPrice = productInstance.currentPrice
+  if (product.status !== 'active' || new Date() > product.endTime) {
+    return res.error('Auction has ended')
+  }
+
+  if (product.sellerId.toString() === bidderId.toString()) {
+    return res.error('Seller cannot bid on their own product')
+  }
+
+  if (
+    product.blockedBidders?.some((x) => x.toString() === bidderId.toString())
+  ) {
+    return res.error('You are blocked from bidding on this product')
+  }
+
+  const config = await AuctionConfig.findOne()
+  const bidder = await User.findById(bidderId)
+  const rating = await bidder.getRatingStats()
+  const minPercent = config.minRatingPercentForBid
+
+  if (rating.total === 0 && !product.allowNonRatedBidders) {
+    return res.error('This auction does not allow non-rated bidders')
+  }
+
+  if (rating.total > 0 && rating.percent < minPercent) {
+    return res.error(`Minimum ${minPercent}% positive rating required`)
+  }
+
+  const minAllowedMax = bidService.computeMinAllowedMax(product)
+  if (parseFloat(maxBidAmount) < minAllowedMax) {
+    return res.error(`Maximum bid amount must be at least ${minAllowedMax}`)
+  }
+
+  const previousWinnerId = product.currentWinnerId?.toString()
+  const previousPrice = product.currentPrice
 
   try {
     const result = await bidService.placeBid(
-      req.params.productId,
-      req.session.authUser._id,
+      productId,
+      bidderId,
       parseFloat(maxBidAmount)
     )
 
@@ -33,33 +67,23 @@ router.post('/:productId', async function (req, res) {
       req.session.success_messages = [
         'Maximum bid amount updated successfully.',
       ]
-      return res.redirect(`/products/${req.params.productId}`)
+      return res.redirect(`/products/${productId}`)
     }
 
-    const updatedProductInstance = await Product.findById(req.params.productId)
-    await updatedProductInstance.populate('bids.bidderId')
-    const bidsResult = processBids(updatedProductInstance, {
-      query: { page: 1, limit: 1 },
-    })
-    const topBid = bidsResult.topBidder
+    const updatedProduct = await Product.findById(productId)
+    const latestBid = updatedProduct.bids
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0]
 
-    const updatedProduct = {
-      ...updatedProductInstance.toObject(),
-      currentPrice: updatedProductInstance.currentPrice,
-      bidCount: bidsResult.pagination.total,
-      topBidder: updatedProductInstance.currentWinnerId || null,
-    }
-
-    if (topBid) {
+    if (latestBid && latestBid.bidderId) {
       emailService.sendBidPlacedEmail(
         updatedProduct,
-        topBid,
-        topBid,
+        latestBid,
+        latestBid,
         req.session.authUser
       )
     }
 
-    const currentWinnerId = updatedProductInstance.currentWinnerId?.toString()
+    const currentWinnerId = updatedProduct.currentWinnerId?.toString()
     if (
       previousWinnerId &&
       currentWinnerId !== previousWinnerId &&
@@ -69,12 +93,12 @@ router.post('/:productId', async function (req, res) {
       emailService.sendOutbidEmail(
         updatedProduct,
         previousWinner,
-        updatedProductInstance.currentPrice
+        updatedProduct.currentPrice
       )
     }
 
     req.session.success_messages = ['Bid placed successfully.']
-    res.redirect(`/products/${req.params.productId}`)
+    res.redirect(`/products/${productId}`)
   } catch (error) {
     return res.error(error.message)
   }

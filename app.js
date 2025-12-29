@@ -7,6 +7,7 @@ import handlebarsHelpers from 'handlebars-helpers'
 import methodOverride from 'method-override'
 import './jobs/auction-end.job.js'
 import { handleError } from './middlewares/error.mdw.js'
+import AuctionConfig from './models/AuctionConfig.js'
 import Category from './models/Category.js'
 import routes from './routes/index.js'
 import './utils/db.js'
@@ -157,7 +158,10 @@ app.use(async function (req, res, next) {
     params: req.params,
     query: req.query,
   }
-  const parents = await Category.find({ parentId: null }).sort({ name: 1 })
+  const [parents, config] = await Promise.all([
+    Category.find({ parentId: null }).sort({ name: 1 }),
+    AuctionConfig.findOne(),
+  ])
   const allCategories = await Promise.all(
     parents.map(async (parent) => {
       const children = await Category.find({ parentId: parent._id }).sort({
@@ -170,6 +174,8 @@ app.use(async function (req, res, next) {
     })
   )
   res.locals.allCategories = allCategories
+  res.locals.newProductHighlightMinutes =
+    config?.newProductHighlightMinutes || 30
   if (req.session.showOtpModal) {
     res.locals.showOtpModal = true
     res.locals.otpModalType = req.session.otpModalType

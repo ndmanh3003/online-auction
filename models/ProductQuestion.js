@@ -36,13 +36,13 @@ const productQuestionSchema = new mongoose.Schema(
 )
 
 productQuestionSchema.pre('find', function () {
-  this.populate('askerId')
+  this.populate('askerId').populate('productId')
 })
 productQuestionSchema.pre('findOne', function () {
-  this.populate('askerId')
+  this.populate('askerId').populate('productId')
 })
 productQuestionSchema.pre('findOneAndUpdate', function () {
-  this.populate('askerId')
+  this.populate('askerId').populate('productId')
 })
 
 productQuestionSchema.plugin(paginationPlugin)

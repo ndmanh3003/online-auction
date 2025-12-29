@@ -22,9 +22,8 @@ router.get('/', async function (req, res) {
 })
 
 router.get('/:id', async function (req, res) {
-  const user = await User.findById(req.params.id)
   res.render('vwAdmin/users/detail', {
-    user,
+    user: await User.findById(req.params.id),
   })
 })
 
