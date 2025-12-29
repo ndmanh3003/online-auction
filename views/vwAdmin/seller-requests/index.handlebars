@@ -7,10 +7,10 @@
         class="px-4 py-2 border border-gray-200/60 rounded-xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900 bg-white"
         onchange="this.form.submit()"
       >
-        <option value="" {{#unless selectedStatus}}selected{{/unless}}>All Status</option>
-        <option value="pending" {{#if (eq selectedStatus 'pending')}}selected{{/if}}>Pending</option>
-        <option value="approved" {{#if (eq selectedStatus 'approved')}}selected{{/if}}>Approved</option>
-        <option value="denied" {{#if (eq selectedStatus 'denied')}}selected{{/if}}>Denied</option>
+        <option value="" {{#unless req.query.status}}selected{{/unless}}>All Status</option>
+        <option value="pending" {{#if (eq req.query.status 'pending')}}selected{{/if}}>Pending</option>
+        <option value="approved" {{#if (eq req.query.status 'approved')}}selected{{/if}}>Approved</option>
+        <option value="denied" {{#if (eq req.query.status 'denied')}}selected{{/if}}>Denied</option>
       </select>
     </form>
   </div>

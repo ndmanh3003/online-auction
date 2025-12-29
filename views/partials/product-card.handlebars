@@ -1,7 +1,7 @@
 <div
   class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 overflow-hidden hover:scale-105 transition-all duration-300 ease-out relative flex flex-col h-full"
 >
-  {{#if (isNewProduct createdAt 30)}}
+  {{#if (isNewProduct createdAt newProductHighlightMinutes)}}
   <span
     class="absolute top-4 right-4 bg-red-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10"
     >NEW</span
@@ -22,15 +22,15 @@
     <p class="text-green-600 font-semibold text-sm mb-1">
       Buy Now: ${{format_currency buyNowPrice}}
     </p>
-    {{/if}} {{#if topBidder}}
+    {{/if}} {{#if currentWinnerId}}
     <p class="text-gray-500 text-sm mb-1">
-      Top bidder: {{maskBidderName topBidder.name}}
+      Top bidder: {{maskBidderName currentWinnerId.name}}
     </p>
     {{/if}}
     <div
       class="flex justify-between items-center mt-auto pt-3 text-sm text-gray-500 border-t border-gray-100"
     >
-      <span>{{bidCount}} bids</span>
+      <span>{{bids.length}} bids</span>
       <span>{{formatDate endTime}}</span>
     </div>
   </div>

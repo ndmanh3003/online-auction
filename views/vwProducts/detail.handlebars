@@ -62,7 +62,7 @@
           <div class="flex justify-between items-center">
             <span class="text-gray-600">Number of Bids:</span>
             <span class="text-gray-900 font-semibold"
-              >{{product.bidCount}}</span
+              >{{product.bids.length}}</span
             >
           </div>
           <div class="flex justify-between items-center">
@@ -80,12 +80,14 @@
         <p class="text-gray-600">{{product.sellerId.name}}</p>
         <p class="text-gray-500 text-sm">{{product.sellerId.email}}</p>
       </div>
-      {{#if product.topBidder}}
+      {{#if product.currentWinnerId}}
       <div
         class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-6 mb-6"
       >
         <h3 class="text-gray-900 font-semibold mb-4">Current Top Bidder</h3>
-        <p class="text-gray-600">{{maskBidderName product.topBidder.name}}</p>
+        <p class="text-gray-600">
+          {{maskBidderName product.currentWinnerId.name}}
+        </p>
       </div>
       {{/if}} {{#if isAuthenticated}}
       <div class="flex gap-2">
@@ -450,24 +452,13 @@ id="placeBidModal" title="Place a Bid"}}
       >{{#if userBid}}Update Maximum Auto-Bid Amount{{else}}Maximum Auto-Bid
       Amount (Required){{/if}}</label
     >
-    <input
-      type="number"
-      id="maxBidAmount"
-      name="maxBidAmount"
-      min="{{minBidAmount}}"
-      step="0.01"
-      class="w-full px-4 py-3 border border-gray-200/60 rounded-xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
-      placeholder="Enter maximum auto-bid amount"
-      {{#if userBid}}
-        value="{{userBid.maxBidAmount}}"
-      {{/if}}
-      required
-      {{#if userBid}}
-        autofocus
-      {{else}}
-        autofocus
-      {{/if}}
-    />
+    <input type="number" id="maxBidAmount" name="maxBidAmount"
+    min="{{minBidAmount}}" step="0.01" class="w-full px-4 py-3 border
+    border-gray-200/60 rounded-xl focus:ring-2 focus:ring-black/10
+    focus:outline-none transition-all duration-300 text-gray-900"
+    placeholder="Enter maximum auto-bid amount" {{#if userBid}}
+    value="{{userBid.maxBidAmount}}" {{/if}} required {{#if userBid}} autofocus
+    {{else}} autofocus {{/if}} />
     <p class="text-gray-500 text-sm mt-1">
       System will automatically bid up to this amount for you. Minimum:
       ${{format_currency minBidAmount}}

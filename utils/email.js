@@ -163,20 +163,15 @@ export async function sendQuestionPostedEmail(product, question, asker) {
   })
 }
 
-export async function sendQuestionAnsweredEmail(product, question, bids) {
+export async function sendQuestionAnsweredEmail(question) {
   const productUrl = `${
     process.env.BASE_URL || 'http://localhost:3000'
-  }/products/${product._id}`
-  const bidderEmails = [...new Set(bids.map((bid) => bid.bidderId.email))]
+  }/products/${question.productId._id}`
 
-  for (const email of bidderEmails) {
-    await sendOrLog({
-      from: process.env.SMTP_USER || 'noreply@example.com',
-      to: email,
-      subject: `Question Answered: ${product.name}`,
-      text: `A question about "${product.name}" has been answered by the seller.\n\nQuestion: ${question.question}\nAnswer: ${question.answer}\n\nView product: ${productUrl}`,
-    })
-  }
-
-  return true
+  return await sendOrLog({
+    from: process.env.SMTP_USER || 'noreply@example.com',
+    to: question.askerId.email,
+    subject: `Question Answered: ${question.productId.name}`,
+    text: `A question about "${question.productId.name}" has been answered by the seller.\n\nQuestion: ${question.question}\nAnswer: ${question.answer}\n\nView product: ${productUrl}`,
+  })
 }

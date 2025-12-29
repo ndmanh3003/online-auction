@@ -83,6 +83,12 @@
       Edit Profile
     </button>
     <button
+      onclick="document.getElementById('changeEmailModal').classList.remove('hidden')"
+      class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
+    >
+      Change Email
+    </button>
+    <button
       onclick="document.getElementById('changePasswordModal').classList.remove('hidden')"
       class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
     >
@@ -110,16 +116,17 @@
   {{/unless}} {{/unless}} {{/if}} {{/unless}}
 </div>
 {{> rating/rating-history-modal modalId="ratingsModal" title="My Ratings"
-userId=authUser._id userName=authUser.name staticRatings=ratings }} {{#if
-showOtpModal}} {{#> modal id="otpModal" title=otpModalTitle}}
+userId=authUser._id userName=authUser.name staticRatings=ratings }} {{#> modal
+id="otpModal" title="Verify Email Change"}}
 <form
   method="post"
-  action="{{otpModalAction}}"
+  action="/account/verify-email-change"
   id="frmVerifyOTP"
   class="space-y-6"
 >
-  <input type="hidden" name="type" value="{{otpModalType}}" />
-  <p class="text-gray-600 text-center mb-6">{{otpModalMessage}}</p>
+  <p class="text-gray-600 text-center mb-6">
+    Please enter the OTP code sent to your new email address.
+  </p>
   <div class="relative mb-6">
     <input
       type="text"
@@ -139,7 +146,7 @@ showOtpModal}} {{#> modal id="otpModal" title=otpModalTitle}}
     Verify
   </button>
 </form>
-{{/modal}} {{/if}} {{#> modal id="editProfileModal" title="Edit Profile"}}
+{{/modal}} {{#> modal id="editProfileModal" title="Edit Profile"}}
 <form method="post" action="/account/edit" id="frmEdit" class="space-y-4">
   <div>
     <label for="name" class="block text-sm font-medium text-gray-900 mb-2"
@@ -152,20 +159,6 @@ showOtpModal}} {{#> modal id="otpModal" title=otpModalTitle}}
       class="w-full px-4 py-3 border border-gray-200/60 rounded-xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
       placeholder="Full Name"
       value="{{authUser.name}}"
-      required
-    />
-  </div>
-  <div>
-    <label for="email" class="block text-sm font-medium text-gray-900 mb-2"
-      >Email</label
-    >
-    <input
-      type="email"
-      id="email"
-      name="email"
-      class="w-full px-4 py-3 border border-gray-200/60 rounded-xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
-      placeholder="Email"
-      value="{{authUser.email}}"
       required
     />
   </div>
@@ -255,6 +248,47 @@ showOtpModal}} {{#> modal id="otpModal" title=otpModalTitle}}
     Change Password
   </button>
 </form>
+{{/modal}} {{#> modal id="changeEmailModal" title="Change Email"}}
+<form
+  method="post"
+  action="/account/change-email"
+  id="frmChangeEmail"
+  class="space-y-4"
+>
+  <div>
+    <label
+      for="currentEmail"
+      class="block text-sm font-medium text-gray-900 mb-2"
+      >Current Email</label
+    >
+    <input
+      type="email"
+      id="currentEmail"
+      class="w-full px-4 py-3 border border-gray-200/60 rounded-xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900 bg-gray-50"
+      value="{{authUser.email}}"
+      disabled
+    />
+  </div>
+  <div>
+    <label for="newEmail" class="block text-sm font-medium text-gray-900 mb-2"
+      >New Email</label
+    >
+    <input
+      type="email"
+      id="newEmail"
+      name="email"
+      class="w-full px-4 py-3 border border-gray-200/60 rounded-xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
+      placeholder="Enter new email address"
+      required
+    />
+  </div>
+  <button
+    type="submit"
+    class="w-full px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
+  >
+    Send Verification Code
+  </button>
+</form>
 {{/modal}} {{#section "js"}}
 <script>
   const requestSellerBtn = document.getElementById('requestSellerBtn')
@@ -278,18 +312,47 @@ showOtpModal}} {{#> modal id="otpModal" title=otpModalTitle}}
         return false
       }
     })
-    {{#if showOtpModal}}
-    const otpModal = document.getElementById('otpModal')
-    if (otpModal) {
-      otpModal.classList.remove('hidden')
-      const otpCodeInput = document.getElementById('otpCode')
-      if (otpCodeInput) {
-        otpCodeInput.focus()
-        otpCodeInput.addEventListener('input', function (e) {
-          this.value = this.value.replace(/[^0-9]/g, '')
-        })
+
+  document
+    .getElementById('frmChangeEmail')
+    .addEventListener('submit', function (e) {
+      const currentEmail = document.getElementById('currentEmail').value
+      const newEmail = document.getElementById('newEmail').value
+      if (newEmail === currentEmail) {
+        e.preventDefault()
+        alert('New email must be different from current email.')
+        return false
       }
-    }
-    {{/if}}
+      e.preventDefault()
+      const form = this
+      const formData = new FormData(form)
+      fetch(form.action, {
+        method: 'POST',
+        body: formData,
+      })
+        .then(function (response) {
+          if (response.ok || response.redirected) {
+            const otpModal = document.getElementById('otpModal')
+            if (otpModal) {
+              otpModal.classList.remove('hidden')
+              const otpCodeInput = document.getElementById('otpCode')
+              if (otpCodeInput) {
+                otpCodeInput.focus()
+                otpCodeInput.addEventListener('input', function (e) {
+                  this.value = this.value.replace(/[^0-9]/g, '')
+                })
+              }
+            }
+            document.getElementById('changeEmailModal').classList.add('hidden')
+          } else {
+            alert('An error occurred. Please try again.')
+          }
+        })
+        .catch(function (error) {
+          console.error('Error:', error)
+          alert('An error occurred. Please try again.')
+        })
+      return false
+    })
 </script>
 {{/section}}

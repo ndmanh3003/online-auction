@@ -35,15 +35,16 @@
     >
   </div>
 </div>
-{{#if showOtpModal}} {{#> modal id="otpModal" title=otpModalTitle}}
+{{#> modal id="otpModal" title="Password Reset Verification"}}
 <form
   method="post"
-  action="{{otpModalAction}}"
+  action="/auth/verify-password-reset"
   id="frmVerifyOTP"
   class="space-y-6"
 >
-  <input type="hidden" name="type" value="{{otpModalType}}" />
-  <p class="text-gray-600 text-center mb-6">{{otpModalMessage}}</p>
+  <p class="text-gray-600 text-center mb-6">
+    Please enter the OTP code sent to your email.
+  </p>
   <div class="relative mb-6">
     <input
       type="text"
@@ -63,20 +64,38 @@
     Verify
   </button>
 </form>
-{{/modal}} {{/if}} {{#section 'js'}}
+{{/modal}} {{#section 'js'}}
 <script>
-  {{#if showOtpModal}}
-  const otpModal = document.getElementById('otpModal')
-  if (otpModal) {
-    otpModal.classList.remove('hidden')
-    const otpCodeInput = document.getElementById('otpCode')
-    if (otpCodeInput) {
-      otpCodeInput.focus()
-      otpCodeInput.addEventListener('input', function (e) {
-        this.value = this.value.replace(/[^0-9]/g, '')
+  document.getElementById('frmForgot').addEventListener('submit', function(e) {
+    e.preventDefault()
+    const form = this
+    const formData = new FormData(form)
+    fetch(form.action, {
+      method: 'POST',
+      body: formData,
+    })
+      .then(function (response) {
+        if (response.ok || response.redirected) {
+          const otpModal = document.getElementById('otpModal')
+          if (otpModal) {
+            otpModal.classList.remove('hidden')
+            const otpCodeInput = document.getElementById('otpCode')
+            if (otpCodeInput) {
+              otpCodeInput.focus()
+              otpCodeInput.addEventListener('input', function (e) {
+                this.value = this.value.replace(/[^0-9]/g, '')
+              })
+            }
+          }
+        } else {
+          alert('An error occurred. Please try again.')
+        }
       })
-    }
-  }
-  {{/if}}
+      .catch(function (error) {
+        console.error('Error:', error)
+        alert('An error occurred. Please try again.')
+      })
+    return false
+  })
 </script>
 {{/section}}

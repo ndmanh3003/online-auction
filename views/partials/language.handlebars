@@ -1,0 +1,120 @@
+<div class="relative" style="z-index: 9999">
+  <button
+    id="languageBtn"
+    class="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-gray-50 transition-all duration-300 ease-out text-gray-700 hover:text-gray-900"
+    style="pointer-events: auto"
+  >
+    <span
+      id="languageText"
+      translate="no"
+      class="inline-flex items-center justify-center px-2 py-1 rounded-lg bg-blue-100 text-blue-700 text-xs font-semibold"
+      >EN</span
+    >
+    <i class="fas fa-chevron-down text-xs"></i>
+  </button>
+  <div
+    id="languageMenu"
+    class="hidden absolute right-0 mt-2 w-40 bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.15)] border border-gray-200/60 overflow-hidden"
+    style="z-index: 10000; pointer-events: auto"
+  >
+    <button
+      type="button"
+      data-lang="en"
+      translate="no"
+      class="language-option w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
+      style="pointer-events: auto; cursor: pointer"
+    >
+      <i class="fas fa-check text-blue-600 text-xs hidden" id="check-en"></i>
+      <span translate="no">English</span>
+    </button>
+    <button
+      type="button"
+      data-lang="vi"
+      translate="no"
+      class="language-option w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
+      style="pointer-events: auto; cursor: pointer"
+    >
+      <i class="fas fa-check text-blue-600 text-xs hidden" id="check-vi"></i>
+      <span translate="no">Tiếng Việt</span>
+    </button>
+  </div>
+</div>
+<script>
+  ;(function () {
+    const languageBtn = document.getElementById('languageBtn')
+    const languageMenu = document.getElementById('languageMenu')
+    if (languageBtn && languageMenu) {
+      languageBtn.addEventListener('click', function (e) {
+        e.stopPropagation()
+        languageMenu.classList.toggle('hidden')
+      })
+      document.addEventListener('click', function () {
+        languageMenu.classList.add('hidden')
+      })
+      languageMenu.addEventListener('click', function (e) {
+        e.stopPropagation()
+      })
+    }
+    function switchLanguage(lang) {
+      localStorage.setItem('language', lang)
+      const languageText = document.getElementById('languageText')
+      const checkEn = document.getElementById('check-en')
+      const checkVi = document.getElementById('check-vi')
+      if (lang === 'vi') {
+        languageText.textContent = 'VI'
+        languageText.className =
+          'inline-flex items-center justify-center px-2 py-1 rounded-lg bg-green-100 text-green-700 text-xs font-semibold'
+        checkEn.classList.add('hidden')
+        checkVi.classList.remove('hidden')
+      } else {
+        languageText.textContent = 'EN'
+        languageText.className =
+          'inline-flex items-center justify-center px-2 py-1 rounded-lg bg-blue-100 text-blue-700 text-xs font-semibold'
+        checkEn.classList.remove('hidden')
+        checkVi.classList.add('hidden')
+      }
+      function triggerTranslate() {
+        const select = document.querySelector('.goog-te-combo')
+        if (!select) {
+          setTimeout(triggerTranslate, 300)
+          return
+        }
+        select.value = lang
+        select.dispatchEvent(new Event('change', { bubbles: true }))
+      }
+      triggerTranslate()
+      languageMenu.classList.add('hidden')
+      return false
+    }
+    window.switchLanguage = switchLanguage
+    const languageOptions = document.querySelectorAll('.language-option')
+    languageOptions.forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.preventDefault()
+        e.stopPropagation()
+        const lang = this.getAttribute('data-lang')
+        switchLanguage(lang)
+      })
+    })
+    const savedLang = localStorage.getItem('language') || 'en'
+    if (savedLang === 'vi') {
+      const languageTextEl = document.getElementById('languageText')
+      languageTextEl.textContent = 'VI'
+      languageTextEl.className =
+        'inline-flex items-center justify-center px-2 py-1 rounded-lg bg-green-100 text-green-700 text-xs font-semibold'
+      document.getElementById('check-vi').classList.remove('hidden')
+      function initTranslate() {
+        const select = document.querySelector('.goog-te-combo')
+        if (!select) {
+          setTimeout(initTranslate, 300)
+          return
+        }
+        select.value = 'vi'
+        select.dispatchEvent(new Event('change', { bubbles: true }))
+      }
+      setTimeout(initTranslate, 1000)
+    } else {
+      document.getElementById('check-en').classList.remove('hidden')
+    }
+  })()
+</script>

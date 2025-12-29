@@ -8,7 +8,9 @@ export function paginationPlugin(schema) {
     const limit = parseInt(req.query.limit) || 10
     const skip = (page - 1) * limit
     const total = await this.countDocuments(filter)
-    const items = await this.find(filter).sort(sort).skip(skip).limit(limit)
+    let query = this.find(filter).sort(sort).skip(skip).limit(limit)
+
+    const items = await query
     return {
       items,
       pagination: {

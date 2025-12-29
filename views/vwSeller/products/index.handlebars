@@ -11,14 +11,14 @@
     </div>
     <div class="flex gap-4">
       <a
-        href="/seller/products"
-        class="px-6 py-3 bg-white text-gray-900 border-b-2 border-blue-600 font-medium"
+        href="/seller/products?status=active"
+        class="px-6 py-3 font-medium transition-colors {{#if (eq req.query.status 'ended')}}text-gray-600 hover:text-gray-900 border-b-2 border-transparent hover:border-gray-300{{else}}bg-white text-gray-900 border-b-2 border-blue-600{{/if}}"
       >
         Active Products
       </a>
       <a
-        href="/seller/products/ended"
-        class="px-6 py-3 text-gray-600 hover:text-gray-900 border-b-2 border-transparent hover:border-gray-300 transition-colors font-medium"
+        href="/seller/products?status=ended"
+        class="px-6 py-3 font-medium transition-colors {{#if (eq req.query.status 'ended')}}bg-white text-gray-900 border-b-2 border-blue-600{{else}}text-gray-600 hover:text-gray-900 border-b-2 border-transparent hover:border-gray-300{{/if}}"
       >
         Ended Auctions
       </a>

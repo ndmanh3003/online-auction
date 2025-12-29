@@ -11,7 +11,7 @@
           <input
             type='text'
             name='q'
-            value='{{query}}'
+            value='{{req.query.q}}'
             class='w-full px-4 py-4 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900'
             placeholder='Search products...'
           />
@@ -21,7 +21,7 @@
             id='categoryId'
             name='categoryId'
             placeholder='All Categories'
-            selectedValue=categoryId
+            selectedValue=req.query.categoryId
           }}
         </div>
         <div>
@@ -29,15 +29,15 @@
             name='sortBy'
             class='w-full px-4 py-4 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900 bg-white'
           >
-            <option value='' {{#unless sortBy}}selected{{/unless}}>Sort By:
+            <option value='' {{#unless req.query.sortBy}}selected{{/unless}}>Sort By:
               Newest</option>
             <option
               value='endTime_asc'
-              {{#if (eq sortBy 'endTime_asc')}}selected{{/if}}
+              {{#if (eq req.query.sortBy 'endTime_asc')}}selected{{/if}}
             >Ending Soon</option>
             <option
               value='currentPrice_asc'
-              {{#if (eq sortBy 'currentPrice_asc')}}selected{{/if}}
+              {{#if (eq req.query.sortBy 'currentPrice_asc')}}selected{{/if}}
             >Price: Low to High</option>
           </select>
         </div>

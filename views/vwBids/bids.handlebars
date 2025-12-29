@@ -3,19 +3,19 @@
     <h1 class="text-[36px] font-semibold text-gray-900 mb-6">My Bids</h1>
     <div class="flex gap-2 border-b border-gray-200">
       <a
-        href="/account/bids?tab=all"
+        href="/bids?tab=all"
         class="px-6 py-3 text-sm font-medium transition-colors {{#if (eq activeTab 'all')}}text-blue-600 border-b-2 border-blue-600{{else}}text-gray-600 hover:text-gray-900{{/if}}"
       >
         All
       </a>
       <a
-        href="/account/bids?tab=active"
+        href="/bids?tab=active"
         class="px-6 py-3 text-sm font-medium transition-colors {{#if (eq activeTab 'active')}}text-blue-600 border-b-2 border-blue-600{{else}}text-gray-600 hover:text-gray-900{{/if}}"
       >
         Active Bids
       </a>
       <a
-        href="/account/bids?tab=won"
+        href="/bids?tab=won"
         class="px-6 py-3 text-sm font-medium transition-colors {{#if (eq activeTab 'won')}}text-blue-600 border-b-2 border-blue-600{{else}}text-gray-600 hover:text-gray-900{{/if}}"
       >
         Won Bids
@@ -47,3 +47,4 @@
   </div>
   {{/if}}
 </div>
+

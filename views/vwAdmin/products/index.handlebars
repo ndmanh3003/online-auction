@@ -7,10 +7,10 @@
         class="px-4 py-2 border border-gray-200/60 rounded-xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900 bg-white"
         onchange="this.form.submit()"
       >
-        <option value="" {{#unless selectedStatus}}selected{{/unless}}>All Status</option>
-        <option value="active" {{#if (eq selectedStatus 'active')}}selected{{/if}}>Active</option>
-        <option value="ended" {{#if (eq selectedStatus 'ended')}}selected{{/if}}>Ended</option>
-        <option value="cancelled" {{#if (eq selectedStatus 'cancelled')}}selected{{/if}}>Cancelled</option>
+        <option value="" {{#unless req.query.status}}selected{{/unless}}>All Status</option>
+        <option value="active" {{#if (eq req.query.status 'active')}}selected{{/if}}>Active</option>
+        <option value="ended" {{#if (eq req.query.status 'ended')}}selected{{/if}}>Ended</option>
+        <option value="cancelled" {{#if (eq req.query.status 'cancelled')}}selected{{/if}}>Cancelled</option>
       </select>
     </form>
   </div>
