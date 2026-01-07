@@ -22,8 +22,8 @@ export const seedUsers = async () => {
     })
 
     const user1 = await User.create({
-      name: 'User1',
-      email: 'user1@gmail.com',
+      name: 'Seller 1',
+      email: 'user5@gmail.com',
       password: hashedPassword,
       role: null,
       isEmailVerified: true,
@@ -33,8 +33,8 @@ export const seedUsers = async () => {
     })
 
     const user2 = await User.create({
-      name: 'User2',
-      email: 'user2@gmail.com',
+      name: 'Bidder 1',
+      email: 'user1@gmail.com',
       password: hashedPassword,
       role: null,
       isEmailVerified: true,
@@ -42,7 +42,16 @@ export const seedUsers = async () => {
     })
 
     const user3 = await User.create({
-      name: 'User3',
+      name: 'Bidder 2',
+      email: 'user2@gmail.com',
+      password: hashedPassword,
+      role: null,
+      isEmailVerified: true,
+      address: '',
+    })
+
+    const user4 = await User.create({
+      name: 'Bidder 3',
       email: 'user3@gmail.com',
       password: hashedPassword,
       role: null,
@@ -50,9 +59,20 @@ export const seedUsers = async () => {
       address: '',
     })
 
-    console.log('Created: 1 admin, 1 seller (user1), 2 bidders (user2, user3)')
+    const user5 = await User.create({
+      name: 'Bidder 4',
+      email: 'user4@gmail.com',
+      password: hashedPassword,
+      role: null,
+      isEmailVerified: true,
+      address: '',
+    })
 
-    return { admin, sellers: [user1], bidders: [user2, user3] }
+    console.log(
+      'Created: 1 admin, 1 seller (user1), 4 bidders (user2, user3, user4, user5)'
+    )
+
+    return { admin, sellers: [user1], bidders: [user2, user3, user4, user5] }
   } catch (error) {
     console.error('Error seeding users:', error)
     throw error

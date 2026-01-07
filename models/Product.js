@@ -31,9 +31,9 @@ const productSchema = new mongoose.Schema(
       required: true,
       validate: {
         validator: function (v) {
-          return v && v.length >= 4
+          return v && v.length >= 3
         },
-        message: 'At least 4 images are required',
+        message: 'At least 3 images are required',
       },
     },
     categoryId: {
@@ -120,7 +120,14 @@ const productSchema = new mongoose.Schema(
   }
 )
 
-productSchema.index({ name: 'text', description: 'text' })
+productSchema.index(
+  { name: 'text' },
+  {
+    weights: {
+      name: 500,
+    },
+  }
+)
 
 productSchema.pre('find', function () {
   this.populate('categoryId')

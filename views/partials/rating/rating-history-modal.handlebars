@@ -107,7 +107,7 @@
       isLoading_{{modalId}} = true
 
       try {
-        const response = await fetch(`/admin/users/${userId}/ratings?page=${page}`)
+        const response = await fetch(`/products/users/${userId}/ratings?page=${page}`)
         const data = await response.json()
 
         const content = document.getElementById(modalId_{{modalId}} + 'Content')
@@ -201,4 +201,3 @@
   })()
 </script>
 {{/unless}}
-

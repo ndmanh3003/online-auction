@@ -22,26 +22,6 @@
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     />
-    <script type="text/javascript">
-      function googleTranslateElementInit() {
-        new google.translate.TranslateElement(
-          {
-            pageLanguage: 'auto',
-            includedLanguages: 'en,vi',
-            autoDisplay: false,
-          },
-          'google_translate_element'
-        )
-      }
-    </script>
-    <script
-      type="text/javascript"
-      src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
-    ></script>
-    <div
-      id="google_translate_element"
-      style="position: absolute; left: -9999px; top: -9999px"
-    ></div>
     <style>
       * {
         font-family: 'Momo Trust Sans', sans-serif;
@@ -67,30 +47,12 @@
       .scrollbar-hide::-webkit-scrollbar {
         display: none;
       }
-      .goog-te-banner-frame,
-      .goog-te-menu-frame,
-      #google_translate_element {
-        display: none !important;
-      }
-      body {
-        top: 0 !important;
-      }
-      .skiptranslate {
-        display: none !important;
-      }
-      .goog-te-banner-frame.skiptranslate {
-        display: none !important;
-      }
-      body {
-        position: static !important;
-        top: auto !important;
-      }
     </style>
     {{{_sections.css}}}
   </head>
   <body>
     {{#if success_messages}}
-    <div class="fixed top-4 right-4 z-50 space-y-3" id="successAlerts">
+    <div class="fixed top-4 right-4 z-[9999] space-y-3" id="successAlerts">
       {{#each success_messages}}
       <div
         role="alert"
@@ -108,7 +70,7 @@
       {{/each}}
     </div>
     {{/if}} {{#if err_messages}}
-    <div class="fixed top-4 right-4 z-50 space-y-3" id="errorAlerts">
+    <div class="fixed top-4 right-4 z-[9999] space-y-3" id="errorAlerts">
       {{#each err_messages}}
       <div
         role="alert"
@@ -126,31 +88,17 @@
       {{/each}}
     </div>
     {{/if}}
-    <div id="windowErrorAlert" class="fixed top-4 right-4 z-50 hidden">
-      <div
-        role="alert"
-        class="flex items-center gap-3 px-6 py-4 bg-red-50 border border-red-200 rounded-2xl shadow-[0_4px_20px_rgba(239,68,68,0.15)] max-w-md"
-      >
-        <i class="fas fa-exclamation-circle text-red-600 shrink-0 text-xl"></i>
-        <span
-          id="windowErrorText"
-          class="flex-1 text-red-900 font-medium"
-        ></span>
-        <button
-          onclick="document.getElementById('windowErrorAlert').classList.add('hidden')"
-          class="text-red-400 hover:text-red-600 transition-colors"
-        >
-          <i class="fas fa-times text-lg"></i>
-        </button>
-      </div>
-    </div>
+    <div
+      id="windowErrorAlerts"
+      class="fixed top-4 right-4 z-[9999] space-y-3"
+    ></div>
     <header
       class="bg-white border-b border-gray-200/60 shadow-sm sticky top-0 z-40"
     >
       <div class="max-w-[2000px] mx-auto px-6">
         <div class="flex items-center justify-between h-16">
           <div class="flex items-center">
-            <a href="/products" class="flex items-center">
+            <a href="/" class="flex items-center gap-3">
               <img
                 src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Logo_of_Twitter.svg/1245px-Logo_of_Twitter.svg.png"
                 alt="Logo"
@@ -159,7 +107,7 @@
             </a>
           </div>
           <div class="flex items-center gap-4">
-            {{> language}} {{#if isAuthenticated}}
+            {{#if isAuthenticated}}
             <a
               href="/bidder/watchlist"
               class="flex items-center gap-2 px-4 py-2 {{#if (startsWith req.path '/bidder/watchlist')}}text-blue-600 font-semibold{{else}}text-gray-700 hover:text-blue-600{{/if}} transition-colors font-medium"
@@ -180,24 +128,215 @@
       </div>
     </header>
     <main class="max-w-[2000px] mx-auto px-6">{{{body}}}</main>
+
+    <!-- Custom Alert Modal -->
+    <div
+      id="customAlertModal"
+      class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] items-center justify-center p-4"
+      onclick="if(event.target === this) window.closeCustomAlert()"
+    >
+      <div
+        class="bg-white rounded-3xl shadow-2xl max-w-md w-full transform transition-all"
+        onclick="event.stopPropagation()"
+      >
+        <div class="p-6">
+          <div class="flex items-start gap-4 mb-6">
+            <div
+              class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center"
+              id="alertIcon"
+            >
+              <i class="fas fa-info-circle text-2xl"></i>
+            </div>
+            <div class="flex-1">
+              <h3
+                class="text-xl font-semibold text-gray-900 mb-2"
+                id="alertTitle"
+              >
+                Alert
+              </h3>
+              <p class="text-gray-600" id="alertMessage"></p>
+            </div>
+          </div>
+          <div class="flex justify-end">
+            <button
+              onclick="window.closeCustomAlert()"
+              class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Custom Confirm Modal -->
+    <div
+      id="customConfirmModal"
+      class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] items-center justify-center p-4"
+      onclick="if(event.target === this) window.cancelCustomConfirm()"
+    >
+      <div
+        class="bg-white rounded-3xl shadow-2xl max-w-md w-full transform transition-all"
+        onclick="event.stopPropagation()"
+      >
+        <div class="p-6">
+          <div class="flex items-start gap-4 mb-6">
+            <div
+              class="flex-shrink-0 w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center"
+            >
+              <i class="fas fa-question-circle text-2xl text-yellow-600"></i>
+            </div>
+            <div class="flex-1">
+              <h3 class="text-xl font-semibold text-gray-900 mb-2">
+                Confirm Action
+              </h3>
+              <p class="text-gray-600" id="confirmMessage"></p>
+            </div>
+          </div>
+          <div class="flex justify-end gap-3">
+            <button
+              onclick="window.cancelCustomConfirm()"
+              class="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-colors font-medium"
+            >
+              Cancel
+            </button>
+            <button
+              onclick="window.confirmCustomConfirm()"
+              class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
+            >
+              Confirm
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     {{{_sections.js}}}
     <script>
+      window.showError = function (message) {
+        const container = document.getElementById('windowErrorAlerts')
+        const backendErrors = document.getElementById('errorAlerts')
+        if (!container) return
+
+        const alertEl = document.createElement('div')
+        alertEl.setAttribute('role', 'alert')
+        alertEl.className =
+          'flex items-center gap-3 px-6 py-4 bg-red-50 border border-red-200 rounded-2xl shadow-[0_4px_20px_rgba(239,68,68,0.15)] max-w-md'
+        alertEl.innerHTML =
+          '<i class="fas fa-exclamation-circle text-red-600 shrink-0 text-xl"></i>' +
+          '<span class="flex-1 text-red-900 font-medium">' +
+          message +
+          '</span>' +
+          '<button onclick="this.parentElement.remove()" class="text-red-400 hover:text-red-600 transition-colors">' +
+          '<i class="fas fa-times text-lg"></i>' +
+          '</button>'
+
+        container.appendChild(alertEl)
+
+        setTimeout(function () {
+          alertEl.remove()
+        }, 5000)
+      }
       ;(function () {
         if (window.errorMessage) {
-          const alertEl = document.getElementById('windowErrorAlert')
-          const textEl = document.getElementById('windowErrorText')
-          const backendErrors = document.getElementById('errorAlerts')
-          if (alertEl && textEl) {
-            textEl.textContent = window.errorMessage
-            if (backendErrors) {
-              alertEl.style.top = backendErrors.children.length * 88 + 'px'
-            } else {
-              alertEl.style.top = '16px'
-            }
-            alertEl.classList.remove('hidden')
-          }
+          window.showError(window.errorMessage)
         }
       })()
+
+      // Custom Alert System
+      window.customAlert = function (message, type = 'info') {
+        const modal = document.getElementById('customAlertModal')
+        const icon = document.getElementById('alertIcon')
+        const title = document.getElementById('alertTitle')
+        const messageEl = document.getElementById('alertMessage')
+
+        // Set content
+        messageEl.textContent = message
+
+        // Set style based on type
+        if (type === 'error') {
+          icon.className =
+            'flex-shrink-0 w-12 h-12 bg-red-100 rounded-full flex items-center justify-center'
+          icon.innerHTML =
+            '<i class="fas fa-exclamation-circle text-2xl text-red-600"></i>'
+          title.textContent = 'Error'
+        } else if (type === 'success') {
+          icon.className =
+            'flex-shrink-0 w-12 h-12 bg-green-100 rounded-full flex items-center justify-center'
+          icon.innerHTML =
+            '<i class="fas fa-check-circle text-2xl text-green-600"></i>'
+          title.textContent = 'Success'
+        } else if (type === 'warning') {
+          icon.className =
+            'flex-shrink-0 w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center'
+          icon.innerHTML =
+            '<i class="fas fa-exclamation-triangle text-2xl text-yellow-600"></i>'
+          title.textContent = 'Warning'
+        } else {
+          icon.className =
+            'flex-shrink-0 w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center'
+          icon.innerHTML =
+            '<i class="fas fa-info-circle text-2xl text-blue-600"></i>'
+          title.textContent = 'Information'
+        }
+
+        modal.style.display = 'flex'
+        setTimeout(() => modal.classList.add('opacity-100'), 10)
+      }
+
+      window.closeCustomAlert = function () {
+        const modal = document.getElementById('customAlertModal')
+        modal.classList.remove('opacity-100')
+        setTimeout(() => (modal.style.display = 'none'), 200)
+      }
+
+      // Custom Confirm System
+      let confirmCallback = null
+
+      window.customConfirm = function (message) {
+        return new Promise(function (resolve) {
+          const modal = document.getElementById('customConfirmModal')
+          const messageEl = document.getElementById('confirmMessage')
+
+          messageEl.textContent = message
+          confirmCallback = resolve
+
+          modal.style.display = 'flex'
+          setTimeout(() => modal.classList.add('opacity-100'), 10)
+        })
+      }
+
+      window.confirmCustomConfirm = function () {
+        const modal = document.getElementById('customConfirmModal')
+        modal.classList.remove('opacity-100')
+        setTimeout(() => (modal.style.display = 'none'), 200)
+        if (confirmCallback) {
+          confirmCallback(true)
+          confirmCallback = null
+        }
+      }
+
+      window.cancelCustomConfirm = function () {
+        const modal = document.getElementById('customConfirmModal')
+        modal.classList.remove('opacity-100')
+        setTimeout(() => (modal.style.display = 'none'), 200)
+        if (confirmCallback) {
+          confirmCallback(false)
+          confirmCallback = null
+        }
+      }
+
+      // Override native alert and confirm
+      window.alert = function (message) {
+        window.customAlert(message, 'warning')
+      }
+
+      window.confirm = function (message) {
+        // For synchronous confirm calls, we need to handle specially
+        // Store the message for async handling
+        window._confirmMessage = message
+        return true // Allow form submission, we'll handle async
+      }
     </script>
   </body>
 </html>

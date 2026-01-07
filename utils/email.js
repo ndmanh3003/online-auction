@@ -2,6 +2,12 @@ import 'dotenv/config'
 import nodemailer from 'nodemailer'
 
 const EMAIL_MODE = process.env.EMAIL_MODE || 'log'
+const SMTP_FROM = process.env.SMTP_FROM || 'Auction Web <noreply@auction.com>'
+
+function formatCurrency(value) {
+  if (!value && value !== 0) return '0'
+  return new Intl.NumberFormat('vi-VN').format(value)
+}
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
@@ -51,7 +57,7 @@ export async function sendOTPEmail(email, code, type) {
       : `Your password reset code is: ${code}. This code will expire in 10 minutes.`
 
   return await sendOrLog({
-    from: process.env.SMTP_USER || 'noreply@example.com',
+    from: SMTP_FROM,
     to: email,
     subject,
     text,
@@ -66,17 +72,25 @@ export async function sendBidPlacedEmail(product, bid, topBid, currentUser) {
   }/products/${product._id}`
 
   await sendOrLog({
-    from: process.env.SMTP_USER || 'noreply@example.com',
+    from: SMTP_FROM,
     to: sellerEmail,
     subject: `New Bid on Your Product: ${product.name}`,
-    text: `A new bid has been placed on your product "${product.name}".\n\nBid Amount: $${bid.bidAmount}\nBidder: ${currentUser.name}\n\nView product: ${productUrl}`,
+    text: `A new bid has been placed on your product "${
+      product.name
+    }".\n\nBid Amount: đ${formatCurrency(bid.bidAmount)}\nBidder: ${
+      currentUser.name
+    }\n\nView product: ${productUrl}`,
   })
 
   await sendOrLog({
-    from: process.env.SMTP_USER || 'noreply@example.com',
+    from: SMTP_FROM,
     to: bidderEmail,
     subject: `Bid Confirmation: ${product.name}`,
-    text: `Your bid of $${bid.bidAmount} has been successfully placed on "${product.name}".\n\nView product: ${productUrl}`,
+    text: `Your bid of đ${formatCurrency(
+      bid.bidAmount
+    )} has been successfully placed on "${
+      product.name
+    }".\n\nView product: ${productUrl}`,
   })
 
   return true
@@ -88,7 +102,7 @@ export async function sendBidderBlockedEmail(product, bidder) {
   }/products/${product._id}`
 
   return await sendOrLog({
-    from: process.env.SMTP_USER || 'noreply@example.com',
+    from: SMTP_FROM,
     to: bidder.email,
     subject: `Bidding Restriction: ${product.name}`,
     text: `You have been blocked from bidding on "${product.name}" by the seller.\n\nView product: ${productUrl}`,
@@ -101,10 +115,14 @@ export async function sendOutbidEmail(product, previousBidder, newBidAmount) {
   }/products/${product._id}`
 
   return await sendOrLog({
-    from: process.env.SMTP_USER || 'noreply@example.com',
+    from: SMTP_FROM,
     to: previousBidder.email,
     subject: `You've been outbid: ${product.name}`,
-    text: `Someone has placed a higher bid on "${product.name}".\n\nNew bid: $${newBidAmount}\nYou can place a new bid to stay in the competition.\n\nView product: ${productUrl}`,
+    text: `Someone has placed a higher bid on "${
+      product.name
+    }".\n\nNew bid: đ${formatCurrency(
+      newBidAmount
+    )}\nYou can place a new bid to stay in the competition.\n\nView product: ${productUrl}`,
   })
 }
 
@@ -115,7 +133,7 @@ export async function sendAuctionEndedNoWinnerEmail(product) {
   }/products/${product._id}`
 
   return await sendOrLog({
-    from: process.env.SMTP_USER || 'noreply@example.com',
+    from: SMTP_FROM,
     to: sellerEmail,
     subject: `Auction Ended: ${product.name}`,
     text: `Your auction for "${product.name}" has ended without any bids.\n\nView product: ${productUrl}`,
@@ -133,17 +151,25 @@ export async function sendAuctionEndedWithWinnerEmail(product, winner) {
   }/checkout/${product._id}`
 
   await sendOrLog({
-    from: process.env.SMTP_USER || 'noreply@example.com',
+    from: SMTP_FROM,
     to: sellerEmail,
     subject: `Auction Won: ${product.name}`,
-    text: `Your auction for "${product.name}" has ended.\n\nWinner: ${winner.name}\nWinning Bid: $${product.currentPrice}\n\nComplete the transaction: ${checkoutUrl}`,
+    text: `Your auction for "${product.name}" has ended.\n\nWinner: ${
+      winner.name
+    }\nWinning Bid: đ${formatCurrency(
+      product.currentPrice
+    )}\n\nComplete the transaction: ${checkoutUrl}`,
   })
 
   await sendOrLog({
-    from: process.env.SMTP_USER || 'noreply@example.com',
+    from: SMTP_FROM,
     to: winnerEmail,
     subject: `Congratulations! You Won: ${product.name}`,
-    text: `Congratulations! You won the auction for "${product.name}".\n\nWinning Bid: $${product.currentPrice}\n\nComplete your purchase: ${checkoutUrl}`,
+    text: `Congratulations! You won the auction for "${
+      product.name
+    }".\n\nWinning Bid: đ${formatCurrency(
+      product.currentPrice
+    )}\n\nComplete your purchase: ${checkoutUrl}`,
   })
 
   return true
@@ -156,7 +182,7 @@ export async function sendQuestionPostedEmail(product, question, asker) {
   }/products/${product._id}`
 
   return await sendOrLog({
-    from: process.env.SMTP_USER || 'noreply@example.com',
+    from: SMTP_FROM,
     to: sellerEmail,
     subject: `New Question on Your Product: ${product.name}`,
     text: `A buyer has asked a question about your product "${product.name}".\n\nQuestion: ${question.question}\nAsked by: ${asker.name}\n\nAnswer the question: ${productUrl}`,
@@ -169,9 +195,39 @@ export async function sendQuestionAnsweredEmail(question) {
   }/products/${question.productId._id}`
 
   return await sendOrLog({
-    from: process.env.SMTP_USER || 'noreply@example.com',
+    from: SMTP_FROM,
     to: question.askerId.email,
     subject: `Question Answered: ${question.productId.name}`,
     text: `A question about "${question.productId.name}" has been answered by the seller.\n\nQuestion: ${question.question}\nAnswer: ${question.answer}\n\nView product: ${productUrl}`,
+  })
+}
+
+export async function sendDescriptionUpdatedEmail(product, currentWinner) {
+  const productUrl = `${
+    process.env.BASE_URL || 'http://localhost:3000'
+  }/products/${product._id}`
+
+  return await sendOrLog({
+    from: SMTP_FROM,
+    to: currentWinner.email,
+    subject: `Product Description Updated: ${product.name}`,
+    text: `The seller has updated the description for "${product.name}" that you are currently winning.\n\nView updated product: ${productUrl}`,
+  })
+}
+
+export async function sendPasswordResetNotificationEmail(
+  email,
+  name,
+  newPassword
+) {
+  const loginUrl = `${
+    process.env.BASE_URL || 'http://localhost:3000'
+  }/auth/login`
+
+  return await sendOrLog({
+    from: SMTP_FROM,
+    to: email,
+    subject: 'Password Reset Notification',
+    text: `Hello ${name},\n\nYour password has been reset by an administrator.\n\nYour new password is: ${newPassword}\n\nPlease login and change your password as soon as possible for security reasons.\n\nLogin: ${loginUrl}\n\nIf you did not request this password reset, please contact support immediately.`,
   })
 }

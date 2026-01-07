@@ -104,7 +104,7 @@ export function paginationHelper(currentPage, totalPages, total) {
   return `
     <div class="flex items-center justify-between gap-4 mt-6 px-4 pb-4">
       <div class="text-gray-600 text-sm">
-        Showing ${currentPage} of ${totalPages} pages (${total} total items)
+        Showing ${currentPage} of ${totalPages} pages (${total} items total)
       </div>
 
       <div class="flex items-center gap-2">

@@ -1,6 +1,8 @@
 import express from 'express'
 import AutoBid from '../../models/AutoBid.js'
 import Product from '../../models/Product.js'
+import Rating from '../../models/Rating.js'
+import Transaction from '../../models/Transaction.js'
 
 const router = express.Router()
 
@@ -33,6 +35,7 @@ router.get('/', async function (req, res) {
           populate: [
             { path: 'categoryId' },
             { path: 'currentWinnerId' },
+            { path: 'sellerId' },
             { path: 'bids.bidderId' },
           ],
         })
@@ -44,11 +47,38 @@ router.get('/', async function (req, res) {
         const latestBid = userBids.sort(
           (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
         )[0]
-        return {
+        const isCurrentWinner =
+          product.currentWinnerId &&
+          product.currentWinnerId._id.toString() === userId.toString()
+        const productObj = product.toObject()
+        if (
+          productObj.currentWinnerId &&
+          typeof productObj.currentWinnerId === 'object'
+        ) {
+          if (productObj.currentWinnerId._id) {
+            productObj.currentWinnerId = {
+              _id: productObj.currentWinnerId._id,
+              name: productObj.currentWinnerId.name || 'Unknown',
+            }
+          }
+        }
+        const item = {
           bidAmount: latestBid?.bidAmount || product.currentPrice,
           createdAt: latestBid?.createdAt || autoBid.createdAt,
-          productId: product.toObject(),
+          productId: productObj,
+          isCurrentWinner,
         }
+        if (tab === 'won' && product.status === 'ended' && product.sellerId) {
+          item.existingRating = await Rating.findOne({
+            productId: product._id,
+            fromUserId: userId,
+            toUserId: product.sellerId._id,
+          })
+          item.transaction = await Transaction.findOne({
+            productId: product._id,
+          })
+        }
+        return item
       })
     ).then((items) => items.filter((item) => item !== null)),
     pagination: result.pagination,

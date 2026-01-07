@@ -1,37 +1,65 @@
 <div
-  class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 overflow-hidden hover:scale-105 transition-all duration-300 ease-out relative flex flex-col h-full"
+  class="rounded-3xl overflow-hidden hover:scale-105 transition-all duration-300 ease-out relative flex flex-col h-full {{#if isCurrentWinner}}bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-500 shadow-[0_4px_20px_rgba(34,197,94,0.25)]{{else}}bg-white border border-gray-200/60 shadow-[0_4px_20px_rgba(0,0,0,0.08)]{{/if}}"
 >
-  {{#if (isNewProduct createdAt newProductHighlightMinutes)}}
+  {{#if isCurrentWinner}}
   <span
-    class="absolute top-4 right-4 bg-red-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10"
+    class="absolute top-4 left-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-4 py-2 rounded-full text-xs font-bold shadow-[0_4px_12px_rgba(34,197,94,0.4)] z-10 flex items-center gap-2"
+  >
+    <i class="fas fa-crown text-yellow-300"></i>
+    <span>{{#if (hasAuctionEnded endTime)}}You've Won{{else}}You're Winning{{/if}}</span>
+  </span>
+  {{/if}} {{#if (isNewProduct createdAt newProductHighlightMinutes)}}
+  <span
+    class="absolute top-4 {{#if isCurrentWinner}}right-4{{else}}right-4{{/if}} bg-red-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10"
     >NEW</span
   >
   {{/if}}
-  <a href="/products/{{_id}}">
-    <img src="{{images.[0]}}" alt="{{name}}" class="w-full h-48 object-cover" />
-  </a>
+  <div class="relative">
+    <a href="/products/{{_id}}">
+      <img src="{{images.[0]}}" alt="{{name}}" class="w-full h-48 object-cover" />
+    </a>
+    <!-- Posted Date Badge - Bottom Right Corner -->
+    <span class="absolute bottom-2 right-2 bg-black/40 text-white px-2 py-1 rounded-lg text-xs backdrop-blur-sm">
+      <i class="fas fa-calendar-plus mr-1"></i>{{formatDateOnly createdAt}}
+    </span>
+  </div>
   <div class="p-4 flex flex-col flex-grow">
     <a href="/products/{{_id}}" class="block">
       <h3 class="text-gray-900 font-semibold mb-2 truncate">{{name}}</h3>
     </a>
-    <p class="text-gray-600 text-sm mb-2">{{categoryId.name}}</p>
+    <a
+      href="/products?categoryId={{categoryId._id}}"
+      class="inline-block mb-2"
+    >
+      <span
+        class="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-medium hover:bg-gray-200 transition-colors"
+      >
+        <i class="fas fa-tag"></i>
+        {{categoryId.name}}
+      </span>
+    </a>
     <p class="text-blue-600 font-bold text-lg mb-1">
-      ${{format_currency currentPrice }}
+      {{format_currency (displayPrice currentPrice startPrice) }}
     </p>
     {{#if buyNowPrice}}
     <p class="text-green-600 font-semibold text-sm mb-1">
-      Buy Now: ${{format_currency buyNowPrice}}
+      Buy Now: {{format_currency buyNowPrice}}
     </p>
     {{/if}} {{#if currentWinnerId}}
-    <p class="text-gray-500 text-sm mb-1">
+    <p class="text-gray-500 text-sm mb-2">
       Top bidder: {{maskBidderName currentWinnerId.name}}
     </p>
     {{/if}}
+    
     <div
-      class="flex justify-between items-center mt-auto pt-3 text-sm text-gray-500 border-t border-gray-100"
+      class="flex justify-between items-center mt-auto pt-3 text-xs border-t border-gray-100"
     >
-      <span>{{bids.length}} bids</span>
-      <span>{{formatDate endTime}}</span>
+      <span class="text-gray-500">
+        <i class="fas fa-gavel mr-1"></i>{{bids.length}} bids
+      </span>
+      <span class="{{#if (isEndingSoon endTime)}}text-red-600 font-semibold{{else}}text-gray-500{{/if}}">
+        <i class="fas fa-clock mr-1"></i>{{#if (isEndingSoon endTime)}}{{timeRemaining endTime}}{{else}}{{formatDate endTime}}{{/if}}
+      </span>
     </div>
   </div>
 </div>

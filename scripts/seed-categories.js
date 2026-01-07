@@ -63,9 +63,28 @@ export const seedCategories = async () => {
       parentId: luxury._id,
     })
 
+    const electronics = await Category.create({
+      name: 'Electronics',
+    })
+
+    await Category.create({
+      name: 'Smartphones',
+      parentId: electronics._id,
+    })
+
+    await Category.create({
+      name: 'Tablets',
+      parentId: electronics._id,
+    })
+
+    await Category.create({
+      name: 'Laptops',
+      parentId: electronics._id,
+    })
+
     console.log(`Total categories created: ${await Category.countDocuments()}`)
 
-    return { collectibles, art, luxury }
+    return { collectibles, art, luxury, electronics }
   } catch (error) {
     console.error('Error seeding categories:', error)
     throw error

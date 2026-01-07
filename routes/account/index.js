@@ -12,12 +12,16 @@ const router = express.Router()
 router.get('/profile', async function (req, res) {
   const user = await User.findById(req.session.authUser._id)
 
+  const ratingsResult = await Rating.paginate(req, {
+    toUserId: req.session.authUser._id,
+  })
+
+  const ratings = ratingsResult.items.map((rating) => rating.toObject())
+
   res.render('vwAccount/profile', {
     sellerRequest: await user.getSellerRequest(),
     ratingStats: await user.getRatingStats(),
-    ratings: await Rating.paginate(req, {
-      toUserId: req.session.authUser._id,
-    }).items,
+    ratings,
   })
 })
 
@@ -36,7 +40,25 @@ router.post('/edit', async function (req, res) {
 })
 
 router.post('/change-email', async function (req, res) {
-  const { email } = req.body
+  const isAjaxRequest = req.headers['x-requested-with'] === 'XMLHttpRequest'
+  const { email } = req.body || {}
+
+  if (!email || email.trim() === '') {
+    if (isAjaxRequest) {
+      return res.status(400).json({ error: 'Email is required.' })
+    }
+    return res.error('Email is required.')
+  }
+
+  const existingUser = await User.findOne({ email })
+  if (existingUser) {
+    if (isAjaxRequest) {
+      return res
+        .status(400)
+        .json({ error: 'Email already exists. Please use a different email.' })
+    }
+    return res.error('Email already exists. Please use a different email.')
+  }
 
   const otpCode = generateOTP()
   await OTP.updateMany(

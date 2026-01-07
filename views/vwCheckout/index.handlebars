@@ -8,11 +8,20 @@
       <span>Back</span>
     </a>
   </div>
-  <div class="mb-8">
+  <div class="mb-8 flex items-center justify-between">
+    <div>
     <h1 class="text-[36px] font-semibold text-gray-900 mb-2">
-      Complete Transaction
+        Transaction Details
     </h1>
     <p class="text-gray-600">{{product.name}}</p>
+    </div>
+    <button
+      onclick="window.location.reload()"
+      class="px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-colors"
+      title="Reload Transaction"
+    >
+      <i class="fas fa-sync-alt"></i>
+    </button>
   </div>
   <div
     class="mb-8 bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-6"
@@ -32,10 +41,10 @@
       <div class="flex-1 h-1 bg-gray-200 mx-4"></div>
       <div class="flex items-center gap-4">
         <div
-          class="w-12 h-12 rounded-full {{#if (eq transaction.status 'payment_confirmed')}}bg-yellow-100{{else if (eq transaction.status 'shipped')}}bg-green-100{{else if (eq transaction.status 'delivered')}}bg-green-100{{else if (eq transaction.status 'completed')}}bg-green-100{{else}}bg-gray-200{{/if}} flex items-center justify-center"
+          class="w-12 h-12 rounded-full {{#if (or (eq transaction.status 'shipped') (eq transaction.status 'delivered') (eq transaction.status 'completed'))}}bg-green-100{{else if (eq transaction.status 'payment_confirmed')}}bg-yellow-100{{else}}bg-gray-200{{/if}} flex items-center justify-center"
         >
           <span
-            class="text-lg font-bold {{#if (eq transaction.status 'payment_confirmed')}}text-yellow-600{{else if (eq transaction.status 'shipped')}}text-green-600{{else if (eq transaction.status 'delivered')}}text-green-600{{else if (eq transaction.status 'completed')}}text-green-600{{else}}text-gray-400{{/if}}"
+            class="text-lg font-bold {{#if (or (eq transaction.status 'shipped') (eq transaction.status 'delivered') (eq transaction.status 'completed'))}}text-green-600{{else if (eq transaction.status 'payment_confirmed')}}text-yellow-600{{else}}text-gray-400{{/if}}"
             >2</span
           >
         </div>
@@ -44,10 +53,10 @@
       <div class="flex-1 h-1 bg-gray-200 mx-4"></div>
       <div class="flex items-center gap-4">
         <div
-          class="w-12 h-12 rounded-full {{#if (eq transaction.status 'delivered')}}bg-yellow-100{{else if (eq transaction.status 'completed')}}bg-green-100{{else}}bg-gray-200{{/if}} flex items-center justify-center"
+          class="w-12 h-12 rounded-full {{#if (or (eq transaction.status 'delivered') (eq transaction.status 'completed'))}}bg-green-100{{else if (eq transaction.status 'shipped')}}bg-yellow-100{{else}}bg-gray-200{{/if}} flex items-center justify-center"
         >
           <span
-            class="text-lg font-bold {{#if (eq transaction.status 'delivered')}}text-yellow-600{{else if (eq transaction.status 'completed')}}text-green-600{{else}}text-gray-400{{/if}}"
+            class="text-lg font-bold {{#if (or (eq transaction.status 'delivered') (eq transaction.status 'completed'))}}text-green-600{{else if (eq transaction.status 'shipped')}}text-yellow-600{{else}}text-gray-400{{/if}}"
             >3</span
           >
         </div>
@@ -56,10 +65,10 @@
       <div class="flex-1 h-1 bg-gray-200 mx-4"></div>
       <div class="flex items-center gap-4">
         <div
-          class="w-12 h-12 rounded-full {{#if (eq transaction.status 'completed')}}bg-green-100{{else}}bg-gray-200{{/if}} flex items-center justify-center"
+          class="w-12 h-12 rounded-full {{#if (eq transaction.status 'completed')}}bg-green-100{{else if isSeller}}{{#if transaction.ratings.sellerRated}}bg-green-100{{else if (eq transaction.status 'delivered')}}bg-yellow-100{{else}}bg-gray-200{{/if}}{{else}}{{#if transaction.ratings.bidderRated}}bg-green-100{{else if (eq transaction.status 'delivered')}}bg-yellow-100{{else}}bg-gray-200{{/if}}{{/if}} flex items-center justify-center"
         >
           <span
-            class="text-lg font-bold {{#if (eq transaction.status 'completed')}}text-green-600{{else}}text-gray-400{{/if}}"
+            class="text-lg font-bold {{#if (eq transaction.status 'completed')}}text-green-600{{else if isSeller}}{{#if transaction.ratings.sellerRated}}text-green-600{{else if (eq transaction.status 'delivered')}}text-yellow-600{{else}}text-gray-400{{/if}}{{else}}{{#if transaction.ratings.bidderRated}}text-green-600{{else if (eq transaction.status 'delivered')}}text-yellow-600{{else}}text-gray-400{{/if}}{{/if}}"
             >4</span
           >
         </div>
@@ -79,7 +88,7 @@
       />
       <h3 class="text-gray-900 font-semibold text-lg mb-2">{{product.name}}</h3>
       <p class="text-blue-600 font-bold text-2xl">
-        ${{format_currency product.currentPrice}}
+        {{format_currency product.currentPrice}}
       </p>
     </div>
     <div
@@ -88,12 +97,51 @@
       <h2 class="text-xl font-semibold text-gray-900 mb-4">
         Transaction Status
       </h2>
-      <div class="space-y-4">
-        {{#if (eq transaction.status 'pending_payment')}} {{#if isWinner}}
+      <div class="space-y-6">
+        {{#if (or (eq transaction.status 'payment_confirmed') (eq
+        transaction.status 'shipped') (eq transaction.status 'delivered') (eq
+        transaction.status 'completed'))}}
+        <div class="space-y-4 pb-6 border-b border-gray-200">
+          <div>
+            <label class="block text-sm font-medium text-gray-900 mb-3"
+              >Payment Proof</label
+            >
+            {{#if transaction.paymentProof}}
+            <input
+              type="text"
+              value="{{transaction.paymentProof}}"
+              class="w-full px-4 py-3 border border-gray-200/60 rounded-2xl bg-gray-50 text-gray-900"
+              readonly
+            />
+            {{else}}
+            <p class="text-gray-500 text-sm">Not submitted yet</p>
+            {{/if}}
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-900 mb-3"
+              >Shipping Address</label
+            >
+            {{#if transaction.shippingInfo.address}}
+            <textarea
+              rows="3"
+              class="w-full px-4 py-3 border border-gray-200/60 rounded-2xl bg-gray-50 text-gray-900"
+              readonly
+            >
+{{transaction.shippingInfo.address}}</textarea
+            >
+            {{else}}
+            <p class="text-gray-500 text-sm">Not submitted yet</p>
+            {{/if}}
+          </div>
+        </div>
+        {{/if}}
+        {{#if (eq transaction.status 'pending_payment')}}
+        {{#if isWinner}}
+        {{#unless transaction.paymentProof}}
         <form
           method="post"
           action="/checkout/{{product._id}}/payment"
-          class="space-y-4"
+          class="space-y-4 pb-6 border-b border-gray-200"
         >
           <div>
             <label class="block text-sm font-medium text-gray-900 mb-2"
@@ -126,16 +174,71 @@
             Submit Payment Info
           </button>
         </form>
+        {{/unless}}
         {{else}}
-        <p class="text-gray-600">
+        <p class="text-gray-600 pb-6 border-b border-gray-200">
           Waiting for buyer to submit payment information...
         </p>
-        {{/if}} {{else if (eq transaction.status 'payment_confirmed')}} {{#if
-        isSeller}}
+        {{/if}}
+        {{/if}}
+        {{#if (or (eq transaction.status 'payment_confirmed') (eq
+        transaction.status 'shipped') (eq transaction.status 'delivered') (eq
+        transaction.status 'completed'))}}
+        {{#if (or (eq transaction.status 'shipped') (eq transaction.status
+        'delivered') (eq transaction.status 'completed'))}}
+        <div class="space-y-4 pb-6 border-b border-gray-200">
+          {{#if transaction.paymentConfirmedAt}}
+          <div>
+            <label class="block text-sm font-medium text-gray-900 mb-3"
+              >Payment Confirmed & Shipped At</label
+            >
+            <input
+              type="text"
+              value="{{formatDate transaction.paymentConfirmedAt}}"
+              class="w-full px-4 py-3 border border-gray-200/60 rounded-2xl bg-gray-50 text-gray-900"
+              readonly
+            />
+          </div>
+          {{/if}}
+          <div>
+            <label class="block text-sm font-medium text-gray-900 mb-3"
+              >Tracking Number</label
+            >
+            {{#if transaction.shippingInfo.trackingNumber}}
+            <input
+              type="text"
+              value="{{transaction.shippingInfo.trackingNumber}}"
+              class="w-full px-4 py-3 border border-gray-200/60 rounded-2xl bg-gray-50 text-gray-900"
+              readonly
+            />
+            {{else}}
+            <p class="text-gray-500 text-sm">Not submitted yet</p>
+            {{/if}}
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-900 mb-3"
+              >Carrier</label
+            >
+            {{#if transaction.shippingInfo.carrier}}
+            <input
+              type="text"
+              value="{{transaction.shippingInfo.carrier}}"
+              class="w-full px-4 py-3 border border-gray-200/60 rounded-2xl bg-gray-50 text-gray-900"
+              readonly
+            />
+            {{else}}
+            <p class="text-gray-500 text-sm">Not submitted yet</p>
+            {{/if}}
+          </div>
+        </div>
+        {{/if}}
+        {{/if}}         {{#if (eq transaction.status 'payment_confirmed')}}
+        {{#if isSeller}}
+        {{#unless transaction.shippingInfo.trackingNumber}}
         <form
           method="post"
-          action="/checkout/{{product._id}}/confirm-payment"
-          class="space-y-4"
+          action="/checkout/{{product._id}}/confirm-payment-and-ship"
+          class="space-y-4 pb-6 border-b border-gray-200"
         >
           <div>
             <label class="block text-sm font-medium text-gray-900 mb-2"
@@ -161,91 +264,136 @@
           </div>
           <button
             type="submit"
-            class="w-full px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
+            class="w-full px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors font-medium {{#unless transaction.paymentProof}}opacity-50 cursor-not-allowed{{/unless}}"
+            {{#unless transaction.paymentProof}}disabled{{/unless}}
           >
-            Confirm Shipment
+            Confirm Payment & Ship
           </button>
         </form>
+        {{/unless}}
         {{else}}
-        <p class="text-gray-600">
-          Payment confirmed. Waiting for seller to ship...
+        <p class="text-gray-600 pb-6 border-b border-gray-200">
+          Waiting for seller to confirm payment and ship...
         </p>
-        {{/if}} {{else if (eq transaction.status 'shipped')}} {{#if isWinner}}
-        <form method="post" action="/checkout/{{product._id}}/confirm-delivery">
+        {{/if}}
+        {{/if}}
+        {{#if (or (eq transaction.status 'delivered') (eq
+        transaction.status 'completed'))}}
+        <div class="pb-6 border-b border-gray-200">
+          <label class="block text-sm font-medium text-gray-900 mb-3"
+            >Delivery Confirmed</label
+          >
+          {{#if transaction.deliveryConfirmedAt}}
+          <input
+            type="text"
+            value="{{formatDate transaction.deliveryConfirmedAt}}"
+            class="w-full px-4 py-3 border border-gray-200/60 rounded-2xl bg-gray-50 text-gray-900"
+            readonly
+          />
+          {{else}}
+          <p class="text-gray-500 text-sm">Not confirmed yet</p>
+          {{/if}}
+        </div>
+        {{/if}}
+        {{#if (eq transaction.status 'shipped')}}
+        {{#if isWinner}}
+        {{#unless transaction.deliveryConfirmedAt}}
+        <form
+          method="post"
+          action="/checkout/{{product._id}}/confirm-delivery"
+          class="pb-6 border-b border-gray-200"
+        >
           <button
             type="submit"
-            class="w-full px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors font-medium"
+            class="w-full px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors font-medium {{#unless transaction.shippingInfo.trackingNumber}}opacity-50 cursor-not-allowed{{/unless}}"
+            {{#unless transaction.shippingInfo.trackingNumber}}disabled{{/unless}}
           >
             Confirm Delivery Received
           </button>
         </form>
         {{else}}
-        <p class="text-gray-600">
+        <div class="pb-6 border-b border-gray-200">
+          <label class="block text-sm font-medium text-gray-900 mb-3"
+            >Delivery Confirmed At</label
+          >
+          <input
+            type="text"
+            value="{{formatDate transaction.deliveryConfirmedAt}}"
+            class="w-full px-4 py-3 border border-gray-200/60 rounded-2xl bg-gray-50 text-gray-900"
+            readonly
+          />
+        </div>
+        {{/unless}}
+        {{else}}
+        <p class="text-gray-600 pb-6 border-b border-gray-200">
           Item shipped. Waiting for buyer to confirm delivery...
         </p>
-        {{/if}} {{else if (or (eq transaction.status 'delivered') (eq
-        transaction.status 'completed'))}} {{#if existingRating}}
-        <p class="text-gray-600 mb-4">
-          Current rating: {{#if (eq existingRating.rating 1)}}
-          <span class="text-green-600 font-semibold">Positive (+1)</span>
-          {{else}}
-          <span class="text-red-600 font-semibold">Negative (-1)</span>
           {{/if}}
-        </p>
         {{/if}}
-        <form
-          method="post"
-          action="/checkout/{{product._id}}/rate"
-          class="space-y-4"
-        >
-          <div>
-            <label class="block text-sm font-medium text-gray-900 mb-3"
-              >{{#if existingRating}}Update Rating{{else}}Rating{{/if}}</label
+        <div class="space-y-4 pb-6">
+          <div class="flex items-center justify-between">
+            <label class="block text-sm font-medium text-gray-900"
+              >Rating</label
             >
-            <div class="flex gap-3">
-              <label
-                class="flex-1 flex items-center justify-center cursor-pointer px-4 py-4 border-2 border-gray-200 rounded-xl hover:border-green-400 hover:bg-green-50 transition-all has-[:checked]:border-green-600 has-[:checked]:bg-green-50"
+            {{#if existingRating}}
+            <button
+              onclick="document.getElementById('ratingModal-{{product._id}}').classList.remove('hidden')"
+              class="px-4 py-2 text-sm bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
               >
-                <input type="radio" name="rating" value="1" class="sr-only"
-                {{#if existingRating}} {{#if (eq existingRating.rating
-                1)}}checked{{/if}} {{/if}} required />
-                <i class="fas fa-thumbs-up text-green-600 text-xl mr-2"></i>
-                <span class="text-gray-900 font-medium">Positive</span>
-              </label>
-              <label
-                class="flex-1 flex items-center justify-center cursor-pointer px-4 py-4 border-2 border-gray-200 rounded-xl hover:border-red-400 hover:bg-red-50 transition-all has-[:checked]:border-red-600 has-[:checked]:bg-red-50"
+              Update Rating
+            </button>
+            {{else}}
+            <button
+              onclick="document.getElementById('ratingModal-{{product._id}}').classList.remove('hidden')"
+              class="px-4 py-2 text-sm bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
               >
-                <input type="radio" name="rating" value="-1" class="sr-only"
-                {{#if existingRating}} {{#if (eq existingRating.rating
-                -1)}}checked{{/if}} {{/if}} required />
-                <i class="fas fa-thumbs-down text-red-600 text-xl mr-2"></i>
-                <span class="text-gray-900 font-medium">Negative</span>
-              </label>
+              Rate
+            </button>
+            {{/if}}
+          </div>
+          {{#if existingRating}}
+          <div class="space-y-2">
+            <div class="flex items-center gap-2">
+              {{#if (eq existingRating.rating 1)}}
+              <i class="fas fa-thumbs-up text-green-600"></i>
+              <span class="text-green-600 font-semibold">Positive (+1)</span>
+              {{else}}
+              <i class="fas fa-thumbs-down text-red-600"></i>
+              <span class="text-red-600 font-semibold">Negative (-1)</span>
+              {{/if}}
             </div>
+            {{#if existingRating.comment}}
+            <p class="text-gray-700 text-sm">{{existingRating.comment}}</p>
+            {{/if}}
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-900 mb-2"
-              >Comment</label
-            >
-            <textarea
-              name="comment"
-              rows="3"
-              class="w-full px-4 py-3 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
-            >
-{{#if existingRating}}{{existingRating.comment}}{{/if}}</textarea
-            >
-          </div>
+          {{else}}
+          <p class="text-gray-500 text-sm">Not rated yet</p>
+          {{/if}}
+        </div>
+        {{#if (eq transaction.status 'cancelled')}}
+        <div class="pb-6 border-b border-gray-200">
+          <p class="text-red-600 font-semibold">
+            Transaction cancelled by seller.
+          </p>
+        </div>
+        {{/if}}
+        {{#if isSeller}}
+        {{#if (eq transaction.status 'pending_payment')}}
+        <div class="mt-4 pt-4 border-t border-gray-200">
+          <form
+            method="post"
+            action="/checkout/{{product._id}}/cancel"
+            onsubmit="event.preventDefault(); customConfirm('Cancel transaction? This will automatically give -1 rating with comment: Buyer did not complete payment').then(result => { if(result) this.submit(); });"
+          >
           <button
             type="submit"
-            class="w-full px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
+              class="w-full px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors font-medium"
           >
-            {{#if existingRating}}Update Rating{{else}}Submit Rating{{/if}}
+              Cancel Transaction
           </button>
         </form>
-        {{else if (eq transaction.status 'cancelled')}}
-        <p class="text-red-600 font-semibold">
-          Transaction cancelled by seller.
-        </p>
+        </div>
+        {{/if}}
         {{/if}}
       </div>
     </div>
@@ -272,6 +420,7 @@
       method="post"
       action="/checkout/{{product._id}}/chat"
       class="flex gap-2"
+      onsubmit="setTimeout(() => { window.location.reload(); }, 500);"
     >
       <input
         type="text"
@@ -287,5 +436,97 @@
         Send
       </button>
     </form>
+  </div>
+  <div
+    id="ratingModal-{{product._id}}"
+    class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+  >
+    <div
+      class="bg-white rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] max-w-4xl w-full max-h-[90vh] overflow-hidden"
+    >
+      <div
+        class="flex items-center justify-between p-6 border-b border-gray-200/60"
+      >
+        <h3 class="text-[24px] font-semibold text-gray-900">
+          {{#if existingRating}}Update Rating{{else}}Rate{{#if isSeller}}
+          Winner{{else}} Seller{{/if}}{{/if}}
+        </h3>
+        <button
+          onclick="document.getElementById('ratingModal-{{product._id}}').classList.add('hidden')"
+          class="text-gray-400 hover:text-gray-600 transition-colors"
+        >
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+      <div class="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+        <div class="mb-4">
+          <p class="text-gray-900 font-medium">Product: {{product.name}}</p>
+          <p class="text-gray-600 text-sm">
+            {{#if isSeller}}Winner:
+            {{product.currentWinnerId.name}}{{else}}Seller:
+            {{product.sellerId.name}}{{/if}}
+          </p>
+        </div>
+        <form
+          method="post"
+          action="/checkout/{{product._id}}/rate"
+          class="space-y-4"
+        >
+          <div>
+            <label class="block text-sm font-medium text-gray-900 mb-3"
+              >Rating</label
+            >
+            <div class="flex gap-3">
+              <label
+                class="flex-1 flex items-center justify-center cursor-pointer px-4 py-4 border-2 rounded-xl transition-all has-[:checked]:bg-green-50 has-[:checked]:border-green-500"
+              >
+                <input type="radio" name="rating" value="1" class="hidden" {{#if
+                existingRating}} {{#if (eq existingRating.rating
+                1)}}checked{{/if}} {{/if}} required />
+                <i class="fas fa-thumbs-up text-green-600 mr-2 text-lg"></i>
+                <span class="text-gray-900 font-medium">Positive (+1)</span>
+              </label>
+              <label
+                class="flex-1 flex items-center justify-center cursor-pointer px-4 py-4 border-2 rounded-xl transition-all has-[:checked]:bg-red-50 has-[:checked]:border-red-500"
+              >
+                <input type="radio" name="rating" value="-1" class="hidden"
+                {{#if existingRating}} {{#if (eq existingRating.rating
+                -1)}}checked{{/if}} {{/if}} required />
+                <i class="fas fa-thumbs-down text-red-600 mr-2 text-lg"></i>
+                <span class="text-gray-900 font-medium">Negative (-1)</span>
+              </label>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-900 mb-2"
+              >Comment (optional)</label
+            >
+            <textarea
+              name="comment"
+              rows="3"
+              class="w-full px-4 py-3 border border-gray-200/60 rounded-xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
+              placeholder="Add a comment about the transaction..."
+            >
+{{#if existingRating}}{{existingRating.comment}}{{/if}}</textarea
+            >
+          </div>
+          <div class="flex gap-3">
+            <button
+              type="submit"
+              class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
+            >
+              {{#if existingRating}}Update Rating{{else}}Submit Rating{{/if}}
+            </button>
+            <button
+              type="button"
+              onclick="document.getElementById('ratingModal-{{product._id}}').classList.add('hidden')"
+              class="px-6 py-3 bg-gray-200 text-gray-900 rounded-xl hover:bg-gray-300 transition-colors font-medium"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </div>

@@ -1,7 +1,7 @@
 import mongoose from 'mongoose'
+import { paginationPlugin } from '../utils/mongoose-plugins.js'
 import Rating from './Rating.js'
 import SellerRequest from './SellerRequest.js'
-import { paginationPlugin } from '../utils/mongoose-plugins.js'
 
 const userSchema = new mongoose.Schema(
   {
@@ -30,7 +30,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['admin'],
+      enum: ['admin', 'bidder'],
       default: null,
     },
     sellerActivatedAt: {
@@ -66,7 +66,9 @@ userSchema.methods.getRatingStats = async function () {
 }
 
 userSchema.methods.getSellerRequest = async function () {
-  return await SellerRequest.findOne({ userId: this._id }).sort({ createdAt: -1 })
+  return await SellerRequest.findOne({ userId: this._id }).sort({
+    createdAt: -1,
+  })
 }
 
 userSchema.plugin(paginationPlugin)

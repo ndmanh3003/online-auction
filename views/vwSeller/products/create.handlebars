@@ -29,7 +29,6 @@
           name="name"
           class="w-full px-4 py-4 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
           placeholder="Enter product name"
-          required
         />
       </div>
       <div class="relative mb-6">
@@ -39,54 +38,64 @@
           >Category</label
         >
         {{> category-dropdown id="categoryId" name="categoryId"
-        placeholder="Select Category" required=true}}
+        placeholder="Select Category" hideParents=true}}
       </div>
       <div class="relative mb-6">
-        <label for="images" class="block text-sm font-medium text-gray-900 mb-2"
-          >Images (min 4, comma-separated URLs)</label
+        <label
+          for="imageUpload"
+          class="block text-sm font-medium text-gray-900 mb-2"
+          >Images (at least 3 images)</label
         >
-        <textarea
-          id="images"
-          name="images"
-          rows="3"
-          class="w-full px-4 py-4 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
-          placeholder="Enter at least 4 image URLs separated by commas"
-          required
-        ></textarea>
+        <div class="flex items-center gap-4 mb-4">
+          <input
+            type="file"
+            id="imageUpload"
+            accept="image/*"
+            class="w-full px-4 py-4 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
+          />
+          <button
+            type="button"
+            id="uploadBtn"
+            class="px-6 py-4 bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium whitespace-nowrap"
+          >
+            Upload Image
+          </button>
+        </div>
+        <p class="text-gray-600 text-sm mb-2">
+          Click "Upload Image" to upload each image individually
+        </p>
+        <div id="imagePreview" class="grid grid-cols-4 gap-4 mt-4"></div>
+        <input type="hidden" id="images" name="images" />
       </div>
       <div class="grid grid-cols-2 gap-4">
         <div class="relative mb-6">
           <label
             for="startPrice"
             class="block text-sm font-medium text-gray-900 mb-2"
-            >Start Price ($)</label
+            >Start Price (VND)</label
           >
           <input
-            type="number"
+            type="text"
             id="startPrice"
             name="startPrice"
-            min="0"
-            step="0.01"
             class="w-full px-4 py-4 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
-            placeholder="0.00"
-            required
+            placeholder="0"
+            inputmode="numeric"
           />
         </div>
         <div class="relative mb-6">
           <label
             for="stepPrice"
             class="block text-sm font-medium text-gray-900 mb-2"
-            >Step Price ($)</label
+            >Step Price (VND)</label
           >
           <input
-            type="number"
+            type="text"
             id="stepPrice"
             name="stepPrice"
-            min="0"
-            step="0.01"
             class="w-full px-4 py-4 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
-            placeholder="0.00"
-            required
+            placeholder="0"
+            inputmode="numeric"
           />
         </div>
       </div>
@@ -98,13 +107,12 @@
             >Buy Now Price (Optional)</label
           >
           <input
-            type="number"
+            type="text"
             id="buyNowPrice"
             name="buyNowPrice"
-            min="0"
-            step="0.01"
             class="w-full px-4 py-4 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
-            placeholder="0.00"
+            placeholder="0"
+            inputmode="numeric"
           />
         </div>
         <div class="relative mb-6">
@@ -118,7 +126,6 @@
             id="endTime"
             name="endTime"
             class="w-full px-4 py-4 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
-            required
           />
         </div>
       </div>
@@ -189,37 +196,210 @@
     },
   })
 
+  var uploadedImages = []
+  var imageUpload = document.getElementById('imageUpload')
+  var uploadBtn = document.getElementById('uploadBtn')
+  var imagePreview = document.getElementById('imagePreview')
+  var imagesInput = document.getElementById('images')
+
+  function updateImagesInput() {
+    imagesInput.value = JSON.stringify(uploadedImages)
+  }
+
+  function addImageToPreview(url) {
+    var container = document.createElement('div')
+    container.className = 'relative'
+
+    var img = document.createElement('img')
+    img.src = url
+    img.className =
+      'w-full h-24 object-cover rounded-xl border-2 border-gray-200'
+
+    var removeBtn = document.createElement('button')
+    removeBtn.type = 'button'
+    removeBtn.className =
+      'absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-700 transition-colors'
+    removeBtn.innerHTML = '<i class="fas fa-times text-xs"></i>'
+    removeBtn.onclick = function () {
+      var index = uploadedImages.indexOf(url)
+      if (index > -1) {
+        uploadedImages.splice(index, 1)
+        container.remove()
+        updateImagesInput()
+      }
+    }
+
+    container.appendChild(img)
+    container.appendChild(removeBtn)
+    imagePreview.appendChild(container)
+  }
+
+  uploadBtn.addEventListener('click', async function () {
+    var file = imageUpload.files[0]
+    if (!file) {
+      if (window.showError) {
+        window.showError('Please select an image first')
+      } else {
+        alert('Please select an image first')
+      }
+      return
+    }
+
+    var formData = new FormData()
+    formData.append('image', file)
+
+    uploadBtn.disabled = true
+    uploadBtn.textContent = 'Uploading...'
+
+    try {
+      var response = await fetch('/seller/products/upload-image', {
+        method: 'POST',
+        body: formData,
+      })
+
+      var data = await response.json()
+
+      if (response.ok && data.url) {
+        uploadedImages.push(data.url)
+        addImageToPreview(data.url)
+        updateImagesInput()
+        imageUpload.value = ''
+      } else {
+        var errorMsg = data.error || 'Failed to upload image'
+        if (window.showError) {
+          window.showError(errorMsg)
+        } else {
+          alert(errorMsg)
+        }
+      }
+    } catch (error) {
+      if (window.showError) {
+        window.showError('Error uploading image: ' + error.message)
+      } else {
+        alert('Error uploading image: ' + error.message)
+      }
+    } finally {
+      uploadBtn.disabled = false
+      uploadBtn.textContent = 'Upload Image'
+    }
+  })
+
+  function formatCurrency(value) {
+    if (!value) return ''
+    var num = value.toString().replace(/[^\d]/g, '')
+    if (!num) return ''
+    return new Intl.NumberFormat('vi-VN').format(parseInt(num))
+  }
+
+  function parseCurrency(value) {
+    if (!value) return 0
+    return parseInt(value.toString().replace(/[^\d]/g, '')) || 0
+  }
+
+  var startPriceInput = document.getElementById('startPrice')
+  var stepPriceInput = document.getElementById('stepPrice')
+  var buyNowPriceInput = document.getElementById('buyNowPrice')
+
+  startPriceInput.addEventListener('input', function (e) {
+    var cursorPos = e.target.selectionStart
+    var oldValue = e.target.value
+    var newValue = formatCurrency(e.target.value)
+    e.target.value = newValue
+    var diff = newValue.length - oldValue.length
+    e.target.setSelectionRange(cursorPos + diff, cursorPos + diff)
+  })
+
+  stepPriceInput.addEventListener('input', function (e) {
+    var cursorPos = e.target.selectionStart
+    var oldValue = e.target.value
+    var newValue = formatCurrency(e.target.value)
+    e.target.value = newValue
+    var diff = newValue.length - oldValue.length
+    e.target.setSelectionRange(cursorPos + diff, cursorPos + diff)
+  })
+
+  buyNowPriceInput.addEventListener('input', function (e) {
+    var cursorPos = e.target.selectionStart
+    var oldValue = e.target.value
+    var newValue = formatCurrency(e.target.value)
+    e.target.value = newValue
+    var diff = newValue.length - oldValue.length
+    e.target.setSelectionRange(cursorPos + diff, cursorPos + diff)
+  })
+
   var form = document.getElementById('createProductForm')
   form.onsubmit = function (e) {
+    var errors = []
+
+    var name = document.getElementById('name').value.trim()
+    if (!name) {
+      errors.push('Product name is required')
+    }
+
+    var categoryId = document.getElementById('categoryId').value
+    if (!categoryId) {
+      errors.push('Category is required')
+    }
+
+    if (uploadedImages.length < 3) {
+      errors.push('Please upload at least 3 images')
+    }
+
     var descriptionInput = document.getElementById('description')
     var content = quill.root.innerHTML
     var text = quill.getText().trim()
 
     if (!text || text === '' || content === '<p><br></p>') {
+      errors.push('Product description is required')
+    } else {
+      descriptionInput.value = content
+    }
+
+    var startPrice = parseCurrency(startPriceInput.value)
+    if (!startPriceInput.value || startPrice <= 0) {
+      errors.push('Start price must be greater than 0')
+    } else {
+      startPriceInput.value = startPrice.toString()
+    }
+
+    var stepPrice = parseCurrency(stepPriceInput.value)
+    if (!stepPriceInput.value || stepPrice <= 0) {
+      errors.push('Step price must be greater than 0')
+    } else {
+      stepPriceInput.value = stepPrice.toString()
+    }
+
+    var buyNowPrice = buyNowPriceInput.value
+      ? parseCurrency(buyNowPriceInput.value)
+      : null
+    if (buyNowPrice && buyNowPrice <= startPrice) {
+      errors.push('Buy now price must be greater than start price')
+    } else if (buyNowPrice) {
+      buyNowPriceInput.value = buyNowPrice.toString()
+    }
+
+    var endTime = document.getElementById('endTime').value
+    if (!endTime) {
+      errors.push('Auction end time is required')
+    } else {
+      var endTimeDate = new Date(endTime)
+      if (endTimeDate <= new Date()) {
+        errors.push('Auction end time must be in the future')
+      }
+    }
+
+    if (errors.length > 0) {
       e.preventDefault()
-      alert('Please enter a product description')
+      errors.forEach(function (error) {
+        if (window.showError) {
+          window.showError(error)
+        } else {
+          alert(error)
+        }
+      })
       return false
     }
 
-    var imagesInput = document.getElementById('images').value.trim()
-    var imageUrls = imagesInput
-      .split(',')
-      .map((url) => url.trim())
-      .filter((url) => url !== '')
-    if (imageUrls.length < 4) {
-      e.preventDefault()
-      alert('Please provide at least 4 image URLs')
-      return false
-    }
-
-    var endTime = new Date(document.getElementById('endTime').value)
-    if (endTime <= new Date()) {
-      e.preventDefault()
-      alert('Auction end time must be in the future')
-      return false
-    }
-
-    descriptionInput.value = content
     return true
   }
 </script>

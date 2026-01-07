@@ -1,5 +1,8 @@
+import bcrypt from 'bcryptjs'
 import express from 'express'
+import Rating from '../../models/Rating.js'
 import User from '../../models/User.js'
+import * as emailService from '../../utils/email.js'
 
 const router = express.Router()
 
@@ -47,6 +50,30 @@ router.get('/:id/ratings', async function (req, res) {
     toUserId: req.params.id,
   })
   res.json(ratingsResult)
+})
+
+router.post('/:id/reset-password', async function (req, res) {
+  const user = await User.findById(req.params.id)
+  if (!user) {
+    return res.error('User not found')
+  }
+
+  const newPassword =
+    Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8)
+  const hashedPassword = bcrypt.hashSync(newPassword, 10)
+
+  await User.findByIdAndUpdate(req.params.id, { password: hashedPassword })
+
+  await emailService.sendPasswordResetNotificationEmail(
+    user.email,
+    user.name,
+    newPassword
+  )
+
+  req.session.success_messages = [
+    'Password reset successfully. New password has been sent to user email.',
+  ]
+  res.redirect('/admin/users')
 })
 
 export default router

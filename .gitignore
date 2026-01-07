@@ -122,6 +122,5 @@ public
 .vscode-test
 
 # Static files (if you have a static folder that shouldn't be committed)
-# static/uploads/
-# static/temp/
-
+static/uploads/
+static/temp/

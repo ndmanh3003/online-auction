@@ -33,8 +33,9 @@ router.get('/:productId', async function (req, res) {
   const isSeller = userId === sellerId
   const isWinner = userId === winnerId
 
-  const topBid = product.bids
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0]
+  const topBid = product.bids.sort(
+    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+  )[0]
 
   res.render('vwCheckout/index', {
     product,
@@ -67,7 +68,7 @@ router.post('/:productId/payment', async function (req, res) {
   res.redirect(`/checkout/${req.params.productId}`)
 })
 
-router.post('/:productId/confirm-payment', async function (req, res) {
+router.post('/:productId/confirm-payment-and-ship', async function (req, res) {
   const { trackingNumber, carrier } = req.body
   const transaction = await Transaction.findOne({
     productId: req.params.productId,
@@ -75,6 +76,7 @@ router.post('/:productId/confirm-payment', async function (req, res) {
   await Transaction.findByIdAndUpdate(
     transaction._id,
     {
+      paymentConfirmedAt: new Date(),
       'shippingInfo.trackingNumber': trackingNumber,
       'shippingInfo.carrier': carrier,
       status: 'shipped',
@@ -105,13 +107,17 @@ router.post('/:productId/rate', async function (req, res) {
     productId: req.params.productId,
   })
   const userId = req.session.authUser._id.toString()
-  const isSeller = transaction.sellerId.toString() === userId
+  const sellerId =
+    transaction.sellerId._id?.toString() || transaction.sellerId.toString()
+  const winnerId =
+    transaction.winnerId._id?.toString() || transaction.winnerId.toString()
+  const isSeller = sellerId === userId
   const ratingValue = parseInt(rating)
   if (isSeller) {
     const existing = await Rating.findOne({
       productId: req.params.productId,
       fromUserId: userId,
-      toUserId: transaction.winnerId,
+      toUserId: winnerId,
     })
     if (existing) {
       existing.rating = ratingValue
@@ -121,7 +127,7 @@ router.post('/:productId/rate', async function (req, res) {
       await new Rating({
         productId: req.params.productId,
         fromUserId: userId,
-        toUserId: transaction.winnerId,
+        toUserId: winnerId,
         rating: ratingValue,
         comment: comment || '',
         type: 'seller_to_bidder',
@@ -136,7 +142,7 @@ router.post('/:productId/rate', async function (req, res) {
     const existing = await Rating.findOne({
       productId: req.params.productId,
       fromUserId: userId,
-      toUserId: transaction.sellerId,
+      toUserId: sellerId,
     })
     if (existing) {
       existing.rating = ratingValue
@@ -146,7 +152,7 @@ router.post('/:productId/rate', async function (req, res) {
       await new Rating({
         productId: req.params.productId,
         fromUserId: userId,
-        toUserId: transaction.sellerId,
+        toUserId: sellerId,
         rating: ratingValue,
         comment: comment || '',
         type: 'bidder_to_seller',
@@ -155,6 +161,18 @@ router.post('/:productId/rate', async function (req, res) {
     await Transaction.findByIdAndUpdate(
       transaction._id,
       { 'ratings.bidderRated': true },
+      { new: true }
+    )
+  }
+  const updatedTransaction = await Transaction.findById(transaction._id)
+  if (
+    updatedTransaction.ratings.sellerRated &&
+    updatedTransaction.ratings.bidderRated &&
+    updatedTransaction.status !== 'completed'
+  ) {
+    await Transaction.findByIdAndUpdate(
+      transaction._id,
+      { status: 'completed' },
       { new: true }
     )
   }
@@ -186,15 +204,23 @@ router.post('/:productId/cancel', async function (req, res) {
   const transaction = await Transaction.findOne({
     productId: req.params.productId,
   })
+  const userId = req.session.authUser._id.toString()
+  const sellerId =
+    transaction.sellerId._id?.toString() || transaction.sellerId.toString()
+  if (userId !== sellerId) {
+    return res.error('Only seller can cancel transaction')
+  }
   await Transaction.findByIdAndUpdate(
     transaction._id,
     { status: 'cancelled' },
     { new: true }
   )
+  const winnerId =
+    transaction.winnerId._id?.toString() || transaction.winnerId.toString()
   const existing = await Rating.findOne({
     productId: req.params.productId,
-    fromUserId: transaction.sellerId,
-    toUserId: transaction.winnerId,
+    fromUserId: sellerId,
+    toUserId: winnerId,
   })
   if (existing) {
     existing.rating = -1
@@ -203,14 +229,14 @@ router.post('/:productId/cancel', async function (req, res) {
   } else {
     await new Rating({
       productId: req.params.productId,
-      fromUserId: transaction.sellerId,
-      toUserId: transaction.winnerId,
+      fromUserId: sellerId,
+      toUserId: winnerId,
       rating: -1,
       comment: 'Buyer did not complete payment',
       type: 'seller_to_bidder',
     }).save()
   }
-  res.redirect('/seller/products/ended')
+  res.redirect(`/checkout/${req.params.productId}`)
 })
 
 export default router

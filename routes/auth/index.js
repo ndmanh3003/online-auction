@@ -13,7 +13,27 @@ router.get('/register', function (req, res) {
 })
 
 router.post('/register', async function (req, res) {
-  const { name, email, password, dob, address } = req.body
+  const isAjaxRequest = req.headers['x-requested-with'] === 'XMLHttpRequest'
+
+  const { name, email, password, dob, address } = req.body || {}
+
+  if (!email || email.trim() === '') {
+    if (isAjaxRequest) {
+      return res.status(400).json({ error: 'Email is required.' })
+    }
+    return res.error('Email is required.')
+  }
+
+  const existingUser = await User.findOne({ email })
+  if (existingUser) {
+    if (isAjaxRequest) {
+      return res
+        .status(400)
+        .json({ error: 'Email already exists. Please use a different email.' })
+    }
+    return res.error('Email already exists. Please use a different email.')
+  }
+
   const otpCode = generateOTP()
   await OTP.updateMany(
     {
@@ -105,7 +125,7 @@ router.post('/login', async function (req, res) {
 
   req.session.isAuthenticated = true
   req.session.authUser = user
-  const retUrl = req.session.retUrl || '/products'
+  const retUrl = req.session.retUrl || '/'
   delete req.session.retUrl
   res.redirect(retUrl)
 })

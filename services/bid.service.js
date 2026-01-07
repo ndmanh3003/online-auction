@@ -1,12 +1,22 @@
+import mongoose from 'mongoose'
 import AuctionConfig from '../models/AuctionConfig.js'
 import AutoBid from '../models/AutoBid.js'
 import Product from '../models/Product.js'
 
-/* =====================================================
- * Helpers – pure logic / reusable
- * ===================================================== */
+function toObjectId(value) {
+  if (!value) return null
+  if (value instanceof mongoose.Types.ObjectId) return value
+  if (typeof value === 'object' && value._id) return value._id
+  if (typeof value === 'string' && value.length === 24) {
+    return new mongoose.Types.ObjectId(value)
+  }
+  return null
+}
 
 export function computeMinAllowedMax(product) {
+  if (!product.currentPrice || product.currentPrice === 0) {
+    return product.startPrice
+  }
   return product.currentPrice + product.stepPrice
 }
 
@@ -28,60 +38,34 @@ function computeDisplayedPrice({ product, top1, top2 }) {
   const { startPrice, currentPrice, stepPrice } = product
 
   if (!top1) {
+    return { winnerId: null, newPrice: 0 }
+  }
+
+  const winnerId = toObjectId(top1.bidderId)
+  if (!winnerId) {
     return { winnerId: null, newPrice: currentPrice }
   }
 
-  // Only one bidder
   if (!top2) {
     const minPrice = Math.max(startPrice, currentPrice + stepPrice)
     return {
-      winnerId: top1.bidderId,
+      winnerId,
       newPrice: Math.min(top1.maxBidAmount, minPrice),
     }
   }
 
-  // Two or more bidders
   const target = top2.maxBidAmount + stepPrice
   return {
-    winnerId: top1.bidderId,
+    winnerId,
     newPrice: Math.min(top1.maxBidAmount, target),
   }
 }
 
-function applyWinnerChange(product, { winnerId, newPrice }) {
-  const prevWinner = product.currentWinnerId?.toString() ?? null
-  const nextWinner = winnerId?.toString() ?? null
-
-  const priceChanged = Number(product.currentPrice) !== Number(newPrice)
-  const winnerChanged = prevWinner !== nextWinner
-
-  if (!priceChanged && !winnerChanged) {
-    return { priceChanged: false, winnerChanged: false }
-  }
-
-  if (winnerId) {
-    product.bids ??= []
-    product.bids.push({
-      bidderId: winnerId,
-      bidAmount: newPrice,
-      createdAt: new Date(),
-    })
-  }
-
-  product.currentPrice = newPrice
-  product.currentWinnerId = winnerId
-
-  return { priceChanged, winnerChanged }
-}
-
-/* =====================================================
- * Exported APIs
- * ===================================================== */
-
 export async function autoCalculate(productId) {
-  const product = await Product.findById(productId)
+  const product = await Product.findById(productId).lean()
   if (!product || product.status !== 'active') return null
 
+  const currentWinnerIdObj = toObjectId(product.currentWinnerId)
   const blockedIds = (product.blockedBidders ?? []).map(String)
   const candidates = await AutoBid.find({
     productId: product._id,
@@ -90,25 +74,48 @@ export async function autoCalculate(productId) {
     .select({ bidderId: 1, maxBidAmount: 1, createdAt: 1 })
     .lean()
 
+  candidates.forEach((candidate) => {
+    candidate.bidderId = toObjectId(candidate.bidderId)
+  })
+
   const { top1, top2 } = pickTopTwo(candidates)
   const result = computeDisplayedPrice({ product, top1, top2 })
-  const change = applyWinnerChange(product, result)
 
-  if (change.priceChanged || change.winnerChanged) {
-    await product.save()
+  const newPrice = result.newPrice
+  const newWinnerId = result.winnerId
+  const prevWinner = currentWinnerIdObj?.toString() ?? null
+  const nextWinner = newWinnerId?.toString() ?? null
+  const priceChanged = Number(product.currentPrice) !== Number(newPrice)
+  const winnerChanged = prevWinner !== nextWinner
+
+  const updateData = {
+    currentPrice: newPrice,
+    currentWinnerId: newWinnerId,
   }
 
+  if (priceChanged || winnerChanged) {
+    if (newWinnerId) {
+      updateData.$push = {
+        bids: {
+          bidderId: newWinnerId,
+          bidAmount: newPrice,
+          createdAt: new Date(),
+        },
+      }
+    }
+  }
+
+  await Product.findByIdAndUpdate(productId, updateData, { new: false })
+
   return {
-    ...change,
-    currentPrice: product.currentPrice,
-    currentWinnerId: product.currentWinnerId,
+    priceChanged,
+    winnerChanged,
+    currentPrice: newPrice,
+    currentWinnerId: newWinnerId,
   }
 }
 
 export async function placeBid(productId, bidderId, maxBidAmount) {
-  const existingAutoBid = await AutoBid.findOne({ productId, bidderId })
-  const prevMaxBidAmount = existingAutoBid?.maxBidAmount ?? 0
-
   await AutoBid.findOneAndUpdate(
     { productId, bidderId },
     { $set: { maxBidAmount } },
@@ -117,33 +124,30 @@ export async function placeBid(productId, bidderId, maxBidAmount) {
 
   const change = await autoCalculate(productId)
 
-  /* ===== Case: user only updates max bid while already winning ===== */
-  if (
-    !change.priceChanged &&
-    change.currentWinnerId?.toString() === bidderId.toString() &&
-    maxBidAmount > prevMaxBidAmount
-  ) {
-    await Product.findByIdAndUpdate(productId, {
-      $push: {
-        bids: {
-          bidderId,
-          bidAmount: change.currentPrice,
-          createdAt: new Date(),
-        },
-      },
-    })
+  if (!change) {
+    const product = await Product.findById(productId).lean()
+    return {
+      success: true,
+      message: 'Max bid updated',
+      currentPrice: product.currentPrice,
+      currentWinnerId: product.currentWinnerId,
+      endTime: product.endTime,
+    }
   }
 
-  /* ===== Auto extend auction ===== */
+  const updatedProduct = await Product.findById(productId)
+  updatedProduct.currentWinnerId = toObjectId(updatedProduct.currentWinnerId)
+
   const config = await AuctionConfig.findOne()
-  const product = await Product.findById(productId)
-  if (product.autoExtend) {
+  if (updatedProduct && updatedProduct.autoExtend) {
     const thresholdMs = config.autoExtendThresholdMinutes * 60 * 1000
     const extendMs = config.autoExtendDurationMinutes * 60 * 1000
 
-    if (Date.now() >= product.endTime.getTime() - thresholdMs) {
-      product.endTime = new Date(product.endTime.getTime() + extendMs)
-      await product.save()
+    if (Date.now() >= updatedProduct.endTime.getTime() - thresholdMs) {
+      updatedProduct.endTime = new Date(
+        updatedProduct.endTime.getTime() + extendMs
+      )
+      await updatedProduct.save()
     }
   }
 
@@ -155,6 +159,6 @@ export async function placeBid(productId, bidderId, maxBidAmount) {
         : 'Max bid updated',
     currentPrice: change.currentPrice,
     currentWinnerId: change.currentWinnerId,
-    endTime: product.endTime,
+    endTime: updatedProduct.endTime,
   }
 }

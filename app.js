@@ -63,7 +63,7 @@ const handlebarsEngine = engine({
       return args.join('')
     },
     format_currency(value) {
-      return new Intl.NumberFormat('en-US').format(value)
+      return new Intl.NumberFormat('vi-VN').format(value) + ' đ'
     },
     section: expressHandlebarsSections(),
     formatDate(date) {
@@ -74,6 +74,13 @@ const handlebarsEngine = engine({
       const h = ('0' + d.getHours()).slice(-2)
       const min = ('0' + d.getMinutes()).slice(-2)
       return `${d.getFullYear()}-${m}-${day} ${h}:${min}`
+    },
+    formatDateOnly(date) {
+      if (!date) return ''
+      const d = new Date(date)
+      const m = ('0' + (d.getMonth() + 1)).slice(-2)
+      const day = ('0' + d.getDate()).slice(-2)
+      return `${d.getFullYear()}-${m}-${day}`
     },
     toString(value) {
       if (!value) return ''
@@ -117,6 +124,42 @@ const handlebarsEngine = engine({
     roundPercent(value) {
       if (!value && value !== 0) return 0
       return parseFloat(value).toFixed(2)
+    },
+    displayPrice(currentPrice, startPrice) {
+      if (!currentPrice || currentPrice === 0) {
+        return startPrice
+      }
+      return currentPrice
+    },
+    timeRemaining(endTime) {
+      const now = new Date()
+      const end = new Date(endTime)
+      const diff = end.getTime() - now.getTime()
+      
+      if (diff <= 0) return 'Ended'
+      
+      const days = Math.floor(diff / 86400000)
+      const hours = Math.floor((diff % 86400000) / 3600000)
+      const minutes = Math.floor((diff % 3600000) / 60000)
+      
+      if (days > 0) {
+        return `${days}d ${hours}h`
+      } else if (hours > 0) {
+        return `${hours}h ${minutes}m`
+      } else {
+        return `${minutes}m`
+      }
+    },
+    isEndingSoon(endTime) {
+      const now = new Date()
+      const end = new Date(endTime)
+      const diff = end.getTime() - now.getTime()
+      return diff > 0 && diff <= 259200000 // 3 days in milliseconds
+    },
+    hasAuctionEnded(endTime) {
+      const now = new Date()
+      const end = new Date(endTime)
+      return now.getTime() >= end.getTime()
     },
   },
 })

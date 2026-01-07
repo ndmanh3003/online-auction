@@ -9,18 +9,24 @@
         Create Product
       </a>
     </div>
-    <div class="flex gap-4">
+    <div class="flex gap-2 border-b border-gray-200">
       <a
         href="/seller/products?status=active"
-        class="px-6 py-3 font-medium transition-colors {{#if (eq req.query.status 'ended')}}text-gray-600 hover:text-gray-900 border-b-2 border-transparent hover:border-gray-300{{else}}bg-white text-gray-900 border-b-2 border-blue-600{{/if}}"
+        class="px-6 py-3 text-sm font-medium transition-colors {{#if (or (eq req.query.status 'ended') (eq req.query.tab 'sold'))}}text-gray-600 hover:text-gray-900{{else}}text-blue-600 border-b-2 border-blue-600{{/if}}"
       >
         Active Products
       </a>
       <a
         href="/seller/products?status=ended"
-        class="px-6 py-3 font-medium transition-colors {{#if (eq req.query.status 'ended')}}bg-white text-gray-900 border-b-2 border-blue-600{{else}}text-gray-600 hover:text-gray-900 border-b-2 border-transparent hover:border-gray-300{{/if}}"
+        class="px-6 py-3 text-sm font-medium transition-colors {{#if (and (eq req.query.status 'ended') (ne req.query.tab 'sold'))}}text-blue-600 border-b-2 border-blue-600{{else}}text-gray-600 hover:text-gray-900{{/if}}"
       >
         Ended Auctions
+      </a>
+      <a
+        href="/seller/products?tab=sold"
+        class="px-6 py-3 text-sm font-medium transition-colors {{#if (eq req.query.tab 'sold')}}text-blue-600 border-b-2 border-blue-600{{else}}text-gray-600 hover:text-gray-900{{/if}}"
+      >
+        Sold Products
       </a>
     </div>
   </div>

@@ -126,13 +126,32 @@
       }
       e.preventDefault()
       const form = this
-      const formData = new FormData(form)
-      fetch(form.action, {
+      const formData = new URLSearchParams()
+      formData.append('name', document.getElementById('name').value)
+      formData.append('email', document.getElementById('email').value)
+      formData.append('password', document.getElementById('password').value)
+      formData.append('dob', document.getElementById('dob').value || '')
+      formData.append('address', document.getElementById('address').value || '')
+
+      fetch(form.action || '/auth/register', {
         method: 'POST',
         body: formData,
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
       })
         .then(function (response) {
-          if (response.ok || response.redirected) {
+          if (response.status === 400) {
+            return response.json().then(function (data) {
+              if (window.showError) {
+                window.showError(data.error)
+              } else {
+                alert(data.error)
+              }
+            })
+          }
+          if (response.redirected || response.ok) {
             const otpModal = document.getElementById('otpModal')
             if (otpModal) {
               otpModal.classList.remove('hidden')
@@ -144,13 +163,15 @@
                 })
               }
             }
-          } else {
-            alert('An error occurred. Please try again.')
           }
         })
         .catch(function (error) {
           console.error('Error:', error)
-          alert('An error occurred. Please try again.')
+          if (window.showError) {
+            window.showError('An error occurred. Please try again.')
+          } else {
+            alert('An error occurred. Please try again.')
+          }
         })
       return false
     })

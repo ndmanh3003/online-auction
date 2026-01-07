@@ -41,16 +41,20 @@ const transactionSchema = new mongoose.Schema(
     shippingInfo: {
       address: {
         type: String,
-        default: '',
+        default: null,
       },
       trackingNumber: {
         type: String,
-        default: '',
+        default: null,
       },
       carrier: {
         type: String,
-        default: '',
+        default: null,
       },
+    },
+    paymentConfirmedAt: {
+      type: Date,
+      default: null,
     },
     deliveryConfirmedAt: {
       type: Date,

@@ -22,7 +22,7 @@
   </div>
 </div>
 <button
-  onclick="document.getElementById('{{modalId}}').classList.remove('hidden')"
+  onclick="if(window['openRatingModal_{{modalId}}']) { window['openRatingModal_{{modalId}}']('{{userId}}', '{{userName}}'); } else { document.getElementById('{{modalId}}').classList.remove('hidden'); }"
   class="text-blue-600 hover:underline text-sm"
 >
   View all ratings →

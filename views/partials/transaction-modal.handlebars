@@ -1,0 +1,383 @@
+<div
+  id="transactionModal-{{product._id}}"
+  class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+>
+  <div
+    class="bg-white rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] max-w-5xl w-full max-h-[90vh] overflow-hidden"
+  >
+    <div
+      class="flex items-center justify-between p-6 border-b border-gray-200/60"
+    >
+      <h3 class="text-[24px] font-semibold text-gray-900">
+        Transaction Details
+      </h3>
+      <div class="flex items-center gap-3">
+        <button
+          onclick="reloadTransaction('{{product._id}}')"
+          class="px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-colors"
+          title="Reload Transaction"
+        >
+          <i class="fas fa-sync-alt"></i>
+        </button>
+        <button
+          onclick="document.getElementById('transactionModal-{{product._id}}').classList.add('hidden')"
+          class="text-gray-400 hover:text-gray-600 transition-colors"
+        >
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+    </div>
+    <div class="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+      <div
+        class="mb-6 bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-6"
+      >
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-4">
+            <div
+              class="w-12 h-12 rounded-full {{#if (eq transaction.status 'pending_payment')}}bg-yellow-100{{else}}bg-green-100{{/if}} flex items-center justify-center"
+            >
+              <span
+                class="text-lg font-bold {{#if (eq transaction.status 'pending_payment')}}text-yellow-600{{else}}text-green-600{{/if}}"
+                >1</span
+              >
+            </div>
+            <span class="text-gray-900 font-medium">Payment</span>
+          </div>
+          <div class="flex-1 h-1 bg-gray-200 mx-4"></div>
+          <div class="flex items-center gap-4">
+            <div
+              class="w-12 h-12 rounded-full {{#if (eq transaction.status 'payment_confirmed')}}bg-yellow-100{{else if (eq transaction.status 'shipped')}}bg-green-100{{else if (eq transaction.status 'delivered')}}bg-green-100{{else if (eq transaction.status 'completed')}}bg-green-100{{else}}bg-gray-200{{/if}} flex items-center justify-center"
+            >
+              <span
+                class="text-lg font-bold {{#if (eq transaction.status 'payment_confirmed')}}text-yellow-600{{else if (eq transaction.status 'shipped')}}text-green-600{{else if (eq transaction.status 'delivered')}}text-green-600{{else if (eq transaction.status 'completed')}}text-green-600{{else}}text-gray-400{{/if}}"
+                >2</span
+              >
+            </div>
+            <span class="text-gray-900 font-medium">Shipping</span>
+          </div>
+          <div class="flex-1 h-1 bg-gray-200 mx-4"></div>
+          <div class="flex items-center gap-4">
+            <div
+              class="w-12 h-12 rounded-full {{#if (eq transaction.status 'delivered')}}bg-yellow-100{{else if (eq transaction.status 'completed')}}bg-green-100{{else}}bg-gray-200{{/if}} flex items-center justify-center"
+            >
+              <span
+                class="text-lg font-bold {{#if (eq transaction.status 'delivered')}}text-yellow-600{{else if (eq transaction.status 'completed')}}text-green-600{{else}}text-gray-400{{/if}}"
+                >3</span
+              >
+            </div>
+            <span class="text-gray-900 font-medium">Delivery</span>
+          </div>
+          <div class="flex-1 h-1 bg-gray-200 mx-4"></div>
+          <div class="flex items-center gap-4">
+            <div
+              class="w-12 h-12 rounded-full {{#if (eq transaction.status 'completed')}}bg-green-100{{else}}bg-gray-200{{/if}} flex items-center justify-center"
+            >
+              <span
+                class="text-lg font-bold {{#if (eq transaction.status 'completed')}}text-green-600{{else}}text-gray-400{{/if}}"
+                >4</span
+              >
+            </div>
+            <span class="text-gray-900 font-medium">Rating</span>
+          </div>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div
+          class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-6"
+        >
+          <h3 class="text-lg font-semibold text-gray-900 mb-3">
+            Product Details
+          </h3>
+          <img
+            src="{{product.images.[0]}}"
+            alt="{{product.name}}"
+            class="w-full h-32 object-cover rounded-xl mb-3"
+          />
+          <h4 class="text-gray-900 font-semibold text-sm mb-1">
+            {{product.name}}
+          </h4>
+          <p class="text-blue-600 font-bold text-lg">
+            {{format_currency product.currentPrice}}
+          </p>
+        </div>
+        <div
+          class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-6"
+        >
+          <h3 class="text-lg font-semibold text-gray-900 mb-3">
+            Transaction Status
+          </h3>
+          <div class="space-y-3 mb-4">
+            <div>
+              <span class="text-gray-600 text-sm">Status:</span>
+              <p class="text-gray-900 font-semibold">
+                {{formatStatus transaction.status}}
+              </p>
+            </div>
+            {{#if transaction.paymentProof}}
+            <div>
+              <span class="text-gray-600 text-sm">Payment Proof:</span>
+              <p class="text-gray-900 text-sm">{{transaction.paymentProof}}</p>
+            </div>
+            {{/if}} {{#if transaction.shippingInfo.address}}
+            <div>
+              <span class="text-gray-600 text-sm">Shipping Address:</span>
+              <p class="text-gray-900 text-sm">
+                {{transaction.shippingInfo.address}}
+              </p>
+            </div>
+            {{/if}} {{#if transaction.shippingInfo.trackingNumber}}
+            <div>
+              <span class="text-gray-600 text-sm">Tracking Number:</span>
+              <p class="text-gray-900 text-sm">
+                {{transaction.shippingInfo.trackingNumber}}
+              </p>
+            </div>
+            {{/if}} {{#if transaction.shippingInfo.carrier}}
+            <div>
+              <span class="text-gray-600 text-sm">Carrier:</span>
+              <p class="text-gray-900 text-sm">
+                {{transaction.shippingInfo.carrier}}
+              </p>
+            </div>
+            {{/if}} {{#if transaction.deliveryConfirmedAt}}
+            <div>
+              <span class="text-gray-600 text-sm">Delivery Confirmed:</span>
+              <p class="text-gray-900 text-sm">
+                {{formatDate transaction.deliveryConfirmedAt}}
+              </p>
+            </div>
+            {{/if}}
+          </div>
+          {{#if (eq transaction.status 'pending_payment')}} {{#if isWinner}}
+          <form
+            method="post"
+            action="/checkout/{{product._id}}/payment"
+            class="space-y-3"
+          >
+            <div>
+              <label class="block text-sm font-medium text-gray-900 mb-2"
+                >Payment Proof</label
+              >
+              <input type="text" name="paymentProof" class="w-full px-4 py-3
+              border border-gray-200/60 rounded-2xl focus:ring-2
+              focus:ring-black/10 focus:outline-none transition-all duration-300
+              text-gray-900" placeholder="Enter payment reference/proof" {{#if
+              transaction.paymentProof}} value="{{transaction.paymentProof}}"
+              {{/if}} required />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-900 mb-2"
+                >Shipping Address</label
+              >
+              <textarea
+                name="shippingAddress"
+                rows="3"
+                class="w-full px-4 py-3 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
+                placeholder="Enter your shipping address"
+                required
+              >
+{{#if transaction.shippingInfo.address}}{{transaction.shippingInfo.address}}{{/if}}</textarea
+              >
+            </div>
+            <button
+              type="submit"
+              class="w-full px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium text-sm"
+            >
+              Submit Payment Info
+            </button>
+          </form>
+          {{else}}
+          <p class="text-gray-600 text-sm">
+            Waiting for buyer to submit payment information...
+          </p>
+          {{/if}} {{else if (eq transaction.status 'payment_confirmed')}} {{#if
+          isSeller}}
+          <form
+            method="post"
+            action="/checkout/{{product._id}}/confirm-payment"
+            class="space-y-3"
+          >
+            <div>
+              <label class="block text-sm font-medium text-gray-900 mb-2"
+                >Tracking Number</label
+              >
+              <input type="text" name="trackingNumber" class="w-full px-4 py-3
+              border border-gray-200/60 rounded-2xl focus:ring-2
+              focus:ring-black/10 focus:outline-none transition-all duration-300
+              text-gray-900" {{#if transaction.shippingInfo.trackingNumber}}
+              value="{{transaction.shippingInfo.trackingNumber}}" {{/if}}
+              required />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-900 mb-2"
+                >Carrier</label
+              >
+              <input type="text" name="carrier" class="w-full px-4 py-3 border
+              border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10
+              focus:outline-none transition-all duration-300 text-gray-900"
+              {{#if transaction.shippingInfo.carrier}}
+              value="{{transaction.shippingInfo.carrier}}" {{/if}} required />
+            </div>
+            <button
+              type="submit"
+              class="w-full px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium text-sm"
+            >
+              Confirm Shipment
+            </button>
+          </form>
+          {{else}}
+          <p class="text-gray-600 text-sm">
+            Payment confirmed. Waiting for seller to ship...
+          </p>
+          {{/if}} {{else if (eq transaction.status 'shipped')}} {{#if isWinner}}
+          <form
+            method="post"
+            action="/checkout/{{product._id}}/confirm-delivery"
+          >
+            <button
+              type="submit"
+              class="w-full px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors font-medium text-sm"
+            >
+              Confirm Delivery Received
+            </button>
+          </form>
+          {{else}}
+          <p class="text-gray-600 text-sm">
+            Item shipped. Waiting for buyer to confirm delivery...
+          </p>
+          {{/if}} {{else if (or (eq transaction.status 'delivered') (eq
+          transaction.status 'completed'))}} {{#if existingRating}}
+          <p class="text-gray-600 text-sm mb-3">
+            Current rating: {{#if (eq existingRating.rating 1)}}
+            <span class="text-green-600 font-semibold">Positive (+1)</span>
+            {{else}}
+            <span class="text-red-600 font-semibold">Negative (-1)</span>
+            {{/if}}
+          </p>
+          {{/if}}
+          <form
+            method="post"
+            action="/checkout/{{product._id}}/rate"
+            class="space-y-3"
+          >
+            <div>
+              <label class="block text-sm font-medium text-gray-900 mb-2"
+                >{{#if existingRating}}Update Rating{{else}}Rating{{/if}}</label
+              >
+              <div class="flex gap-3">
+                <label
+                  class="flex-1 flex items-center justify-center cursor-pointer px-4 py-3 border-2 rounded-xl transition-all has-[:checked]:bg-green-50 has-[:checked]:border-green-500"
+                >
+                  <input type="radio" name="rating" value="1" class="hidden"
+                  {{#if existingRating}} {{#if (eq existingRating.rating
+                  1)}}checked{{/if}} {{/if}} required />
+                  <i class="fas fa-thumbs-up text-green-600 mr-2"></i>
+                  <span class="text-gray-900 font-medium text-sm"
+                    >Positive (+1)</span
+                  >
+                </label>
+                <label
+                  class="flex-1 flex items-center justify-center cursor-pointer px-4 py-3 border-2 rounded-xl transition-all has-[:checked]:bg-red-50 has-[:checked]:border-red-500"
+                >
+                  <input type="radio" name="rating" value="-1" class="hidden"
+                  {{#if existingRating}} {{#if (eq existingRating.rating
+                  -1)}}checked{{/if}} {{/if}} required />
+                  <i class="fas fa-thumbs-down text-red-600 mr-2"></i>
+                  <span class="text-gray-900 font-medium text-sm"
+                    >Negative (-1)</span
+                  >
+                </label>
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-900 mb-2"
+                >Comment (optional)</label
+              >
+              <textarea
+                name="comment"
+                rows="3"
+                class="w-full px-4 py-3 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
+              >
+{{#if existingRating}}{{existingRating.comment}}{{/if}}</textarea
+              >
+            </div>
+            <button
+              type="submit"
+              class="w-full px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium text-sm"
+            >
+              {{#if existingRating}}Update Rating{{else}}Submit Rating{{/if}}
+            </button>
+          </form>
+          {{else if (eq transaction.status 'cancelled')}}
+          <p class="text-red-600 font-semibold text-sm">
+            Transaction cancelled by seller.
+          </p>
+          {{/if}} {{#if isSeller}} {{#unless (eq transaction.status
+          'cancelled')}} {{#unless (eq transaction.status 'completed')}}
+          <div class="mt-4 pt-4 border-t border-gray-200">
+            <form
+              method="post"
+              action="/checkout/{{product._id}}/cancel"
+              onsubmit="event.preventDefault(); customConfirm('Cancel transaction? This will automatically give -1 rating with comment: Buyer did not complete payment').then(result => { if(result) this.submit(); });"
+            >
+              <button
+                type="submit"
+                class="w-full px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors font-medium text-sm"
+              >
+                Cancel Transaction
+              </button>
+            </form>
+          </div>
+          {{/unless}} {{/unless}} {{/if}}
+        </div>
+      </div>
+      <div
+        class="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-200/60 p-6"
+      >
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Chat</h3>
+        <div
+          class="space-y-3 mb-4 max-h-64 overflow-y-auto"
+          id="chatMessages-{{product._id}}"
+        >
+          {{#each transaction.chat}}
+          <div
+            class="flex {{#if (eq senderId ../authUser._id)}}justify-end{{else}}justify-start{{/if}}"
+          >
+            <div
+              class="max-w-xs px-3 py-2 rounded-xl {{#if (eq senderId ../authUser._id)}}bg-blue-600 text-white{{else}}bg-gray-100 text-gray-900{{/if}}"
+            >
+              <p class="text-sm">{{message}}</p>
+              <p class="text-xs mt-1 opacity-75">{{formatDate timestamp}}</p>
+            </div>
+          </div>
+          {{/each}}
+        </div>
+        <form
+          method="post"
+          action="/checkout/{{product._id}}/chat"
+          class="flex gap-2"
+          onsubmit="setTimeout(() => { reloadTransaction('{{product._id}}'); }, 500);"
+        >
+          <input
+            type="text"
+            name="message"
+            class="flex-1 px-4 py-3 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
+            placeholder="Type a message..."
+            required
+          />
+          <button
+            type="submit"
+            class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
+          >
+            Send
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  function reloadTransaction(productId) {
+    window.location.reload()
+  }
+</script>

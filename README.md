@@ -54,6 +54,8 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your_email@gmail.com
 SMTP_PASS=your_app_password
+SMTP_FROM="Auction Web App <noreply@auction.com>"
+EMAIL_MODE=gmail
 
 # reCAPTCHA
 RECAPTCHA_SITE_KEY=your_recaptcha_site_key
@@ -69,7 +71,7 @@ MIN_BIDDER_RATING_PERCENT=80
 
 4. **Seed Database** (Optional)
 ```bash
-npm run seed:categories
+npm run seed
 ```
 
 5. **Run the Application**
@@ -93,7 +95,8 @@ npm start
 │   ├── User.js
 │   ├── Category.js
 │   ├── Product.js
-│   ├── Bid.js
+│   ├── AutoBid.js
+│   ├── AuctionConfig.js
 │   ├── Watchlist.js
 │   ├── Rating.js
 │   ├── ProductQuestion.js
@@ -101,18 +104,7 @@ npm start
 │   ├── OTP.js
 │   └── SellerRequest.js
 ├── services/            # Business logic layer
-│   ├── user.service.js
-│   ├── category.service.js
-│   ├── product.service.js
-│   ├── bid.service.js
-│   ├── watchlist.service.js
-│   ├── rating.service.js
-│   ├── question.service.js
-│   ├── transaction.service.js
-│   ├── search.service.js
-│   ├── otp.service.js
-│   ├── seller-request.service.js
-│   └── dropdown.service.js
+│   └── bid.service.js
 ├── routes/              # Route handlers
 │   ├── auth.route.js
 │   ├── account.route.js
@@ -156,7 +148,13 @@ npm start
 ├── jobs/                # Background jobs
 │   └── auction-end.job.js
 └── scripts/             # Utility scripts
-    └── seed-categories.js
+    ├── index.js
+    ├── seed-categories.js
+    ├── seed-config.js
+    ├── seed-products.js
+    ├── seed-ratings.js
+    ├── seed-users.js
+    └── send-outbid-email.js
 ```
 
 ## Feature Checklists
@@ -181,7 +179,9 @@ npm start
   - [x] Click category to filter
 
 - [x] **Full-Text Search**
-  - [x] Search by product name
+  - [x] Token-based search in product name and description
+  - [x] MongoDB text index with weighted fields (name: 10, description: 5)
+  - [x] Automatic word tokenization and stemming
   - [x] Filter by category
   - [x] Sort by: ending soon, price low to high
   - [x] Highlight new products (within N minutes)
@@ -456,10 +456,11 @@ npm start
 ### Authenticated Routes (Checkout)
 - `GET /checkout/:productId` - Checkout page
 - `POST /checkout/:productId/payment` - Submit payment
-- `POST /checkout/:productId/confirm-payment` - Confirm shipment
+- `POST /checkout/:productId/confirm-payment-and-ship` - Confirm payment & ship
 - `POST /checkout/:productId/confirm-delivery` - Confirm delivery
 - `POST /checkout/:productId/rate` - Submit rating
 - `POST /checkout/:productId/chat` - Send chat message
+- `POST /checkout/:productId/cancel` - Cancel transaction (seller only)
 
 ### Admin Routes
 - `GET /admin/categories` - Manage categories
@@ -483,18 +484,27 @@ npm start
 - timestamps
 
 ### Product
-- name, description, images (array)
-- categoryId, sellerId
+- name, description, appendedDescriptions (array), images (array)
+- categoryId, sellerId, currentWinnerId
 - startPrice, stepPrice, buyNowPrice, currentPrice
 - autoExtend, allowNonRatedBidders
 - status: active, ended, cancelled
 - endTime, blockedBidders
+- bids (embedded array)
+- Text index: name (weight 10), description (weight 5)
 - timestamps
 
-### Bid
+### AutoBid
 - productId, bidderId
-- bidAmount, maxBidAmount (for auto-bidding)
-- isAutoBid
+- maxBidAmount
+- timestamps
+
+### AuctionConfig
+- autoExtendThresholdMinutes
+- autoExtendDurationMinutes
+- newProductHighlightMinutes
+- defaultAuctionDurationDays
+- minBidderRatingPercent
 - timestamps
 
 ### Watchlist

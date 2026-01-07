@@ -1,5 +1,6 @@
 import express from 'express'
 import AuctionConfig from '../../models/AuctionConfig.js'
+import AutoBid from '../../models/AutoBid.js'
 import Product from '../../models/Product.js'
 import User from '../../models/User.js'
 import * as bidService from '../../services/bid.service.js'
@@ -35,7 +36,16 @@ router.post('/:productId', async function (req, res) {
     return res.error('You are blocked from bidding on this product')
   }
 
-  const config = await AuctionConfig.findOne()
+  let config = await AuctionConfig.findOne()
+  if (!config) {
+    config = await AuctionConfig.create({
+      autoExtendThresholdMinutes: 5,
+      autoExtendDurationMinutes: 10,
+      sellerDurationDays: 7,
+      newProductHighlightMinutes: 30,
+      minRatingPercentForBid: 80,
+    })
+  }
   const bidder = await User.findById(bidderId)
   const rating = await bidder.getRatingStats()
   const minPercent = config.minRatingPercentForBid
@@ -53,15 +63,51 @@ router.post('/:productId', async function (req, res) {
     return res.error(`Maximum bid amount must be at least ${minAllowedMax}`)
   }
 
-  const previousWinnerId = product.currentWinnerId?.toString()
-  const previousPrice = product.currentPrice
+  let previousWinnerIdValue = product.currentWinnerId
+  if (
+    previousWinnerIdValue &&
+    typeof previousWinnerIdValue === 'object' &&
+    previousWinnerIdValue._id
+  ) {
+    previousWinnerIdValue = previousWinnerIdValue._id
+  }
+  const previousWinnerId = previousWinnerIdValue?.toString()
+
+  let currentWinnerIdForCheck = product.currentWinnerId
+  if (
+    currentWinnerIdForCheck &&
+    typeof currentWinnerIdForCheck === 'object' &&
+    currentWinnerIdForCheck._id
+  ) {
+    currentWinnerIdForCheck = currentWinnerIdForCheck._id
+  }
+
+  const isCurrentWinner =
+    currentWinnerIdForCheck &&
+    currentWinnerIdForCheck.toString() === bidderId.toString()
 
   try {
-    const result = await bidService.placeBid(
-      productId,
-      bidderId,
-      parseFloat(maxBidAmount)
-    )
+    let result
+    if (isCurrentWinner) {
+      await AutoBid.findOneAndUpdate(
+        { productId, bidderId },
+        { $set: { maxBidAmount: parseFloat(maxBidAmount) } },
+        { upsert: true, setDefaultsOnInsert: true }
+      )
+      result = {
+        success: true,
+        message: 'Max bid updated',
+        currentPrice: product.currentPrice,
+        currentWinnerId: currentWinnerIdForCheck,
+        endTime: product.endTime,
+      }
+    } else {
+      result = await bidService.placeBid(
+        productId,
+        bidderId,
+        parseFloat(maxBidAmount)
+      )
+    }
 
     if (result.message === 'Max bid updated') {
       req.session.success_messages = [
@@ -71,8 +117,9 @@ router.post('/:productId', async function (req, res) {
     }
 
     const updatedProduct = await Product.findById(productId)
-    const latestBid = updatedProduct.bids
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0]
+    const latestBid = updatedProduct.bids.sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    )[0]
 
     if (latestBid && latestBid.bidderId) {
       emailService.sendBidPlacedEmail(
@@ -83,18 +130,29 @@ router.post('/:productId', async function (req, res) {
       )
     }
 
-    const currentWinnerId = updatedProduct.currentWinnerId?.toString()
+    let currentWinnerIdValue = updatedProduct.currentWinnerId
+    if (
+      currentWinnerIdValue &&
+      typeof currentWinnerIdValue === 'object' &&
+      currentWinnerIdValue._id
+    ) {
+      currentWinnerIdValue = currentWinnerIdValue._id
+    }
+    const currentWinnerId = currentWinnerIdValue?.toString()
+
     if (
       previousWinnerId &&
       currentWinnerId !== previousWinnerId &&
       previousWinnerId !== req.session.authUser._id.toString()
     ) {
       const previousWinner = await User.findById(previousWinnerId)
+      if (previousWinner) {
       emailService.sendOutbidEmail(
         updatedProduct,
         previousWinner,
         updatedProduct.currentPrice
       )
+      }
     }
 
     req.session.success_messages = ['Bid placed successfully.']

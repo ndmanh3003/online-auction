@@ -5,13 +5,12 @@
 >
   <option value=''>None (Top-level category)</option>
   {{#each @root.allCategories}}
-    <option value='{{_id}}' disabled>{{name}}</option>
     {{#each subcategories}}
       <option
         value='{{_id}}'
         {{#if (eq ../../selectedParentId (toString _id))}}selected{{/if}}
       >
-        &nbsp;&nbsp;{{name}}
+        {{name}}
       </option>
     {{/each}}
   {{/each}}
