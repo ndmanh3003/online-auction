@@ -41,6 +41,6 @@ export async function checkEndedAuctions() {
   }
 }
 
-setInterval(checkEndedAuctions, 1 * 1000)
+setInterval(checkEndedAuctions, 60 * 1000)
 
 console.log('Auction end detection job started. Checking every minute...')

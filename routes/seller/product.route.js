@@ -64,6 +64,76 @@ router.get('/create', canCreateProduct, function (req, res) {
   res.render('vwSeller/products/create')
 })
 
+router.get('/:id/edit', async function (req, res) {
+  const product = await Product.findById(req.params.id)
+  
+  if (!product) {
+    return res.render('404')
+  }
+  
+  // Check if user is the seller
+  const sellerIdStr = product.sellerId._id ? product.sellerId._id.toString() : product.sellerId.toString()
+  if (sellerIdStr !== req.session.authUser._id.toString()) {
+    return res.render('403')
+  }
+  
+  // Check if there are no bids
+  if (product.bids && product.bids.length > 0) {
+    req.session.error_messages = ['Cannot edit product with existing bids']
+    return res.redirect(`/products/${req.params.id}`)
+  }
+  
+  const productObj = product.toObject()
+  // Convert categoryId to string if it's an ObjectId
+  if (productObj.categoryId && productObj.categoryId._id) {
+    productObj.categoryId = productObj.categoryId._id.toString()
+  } else if (productObj.categoryId) {
+    productObj.categoryId = productObj.categoryId.toString()
+  }
+  
+  res.render('vwSeller/products/edit', { product: productObj })
+})
+
+router.post('/:id/edit', async function (req, res) {
+  const product = await Product.findById(req.params.id)
+  
+  if (!product) {
+    return res.render('404')
+  }
+  
+  // Check if user is the seller
+  const sellerIdStr = product.sellerId._id ? product.sellerId._id.toString() : product.sellerId.toString()
+  if (sellerIdStr !== req.session.authUser._id.toString()) {
+    return res.render('403')
+  }
+  
+  // Check if there are no bids
+  if (product.bids && product.bids.length > 0) {
+    req.session.error_messages = ['Cannot edit product with existing bids']
+    return res.redirect(`/products/${req.params.id}`)
+  }
+  
+  const startPriceNum = Math.round(parseFloat(req.body.startPrice))
+  
+  product.name = req.body.name
+  product.categoryId = req.body.categoryId
+  product.images = JSON.parse(req.body.images)
+  product.startPrice = startPriceNum
+  product.stepPrice = Math.round(parseFloat(req.body.stepPrice))
+  product.buyNowPrice = req.body.buyNowPrice
+    ? Math.round(parseFloat(req.body.buyNowPrice))
+    : null
+  product.endTime = new Date(req.body.endTime)
+  product.description = req.body.description
+  product.autoExtend = !!req.body.autoExtend
+  product.allowNonRatedBidders = !!req.body.allowNonRatedBidders
+  
+  await product.save()
+  
+  req.session.success_messages = ['Product updated successfully']
+  res.redirect(`/products/${req.params.id}`)
+})
+
 router.post(
   '/upload-image',
   canCreateProduct,

@@ -177,7 +177,7 @@
           <div class="flex justify-between items-center">
             <span class="text-gray-600">Current Price:</span>
             <span class="text-blue-600 font-bold text-2xl"
-              >{{format_currency (displayPrice product.currentPrice product.startPrice) }}</span
+              >{{#if product.currentPrice}}{{format_currency product.currentPrice}}{{else}}{{format_currency product.startPrice}}{{/if}}</span
             >
           </div>
           {{#if product.buyNowPrice}}
@@ -276,6 +276,16 @@
         Auction has ended
       </div>
       {{else}}
+      {{#if (eq authUser._id product.sellerId._id)}}
+      {{#if (eq product.bids.length 0)}}
+      <a
+        href="/seller/products/{{product._id}}/edit"
+        class="block text-center px-6 py-4 bg-orange-600 text-white rounded-xl shadow-[0_4px_20px_rgba(234,88,12,0.3)] hover:bg-orange-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium mb-3"
+      >
+        <i class="fas fa-edit mr-2"></i>Edit Product
+      </a>
+      {{/if}}
+      {{/if}}
       <div class="flex gap-2">
         {{#if (eq authUser._id product.sellerId._id)}}
         <button
@@ -679,6 +689,7 @@ id="placeBidModal" title="Place a Bid"}}
       inputmode="numeric"
       data-min-bid="{{minBidAmount}}"
       data-step-price="{{product.stepPrice}}"
+      data-current-price="{{#if product.currentPrice}}{{product.currentPrice}}{{else}}{{product.startPrice}}{{/if}}"
     />
     <p class="text-gray-500 text-sm mt-1">
       System will automatically bid up to this amount for you. Minimum:
@@ -828,14 +839,7 @@ userName=product.currentWinnerId.name }} {{/if}} {{#section 'js'}}
     var minBid = parseInt(maxBidAmountInput.getAttribute('data-min-bid')) || 0
     var stepPrice =
       parseInt(maxBidAmountInput.getAttribute('data-step-price')) || 0
-
-    var bidForm = maxBidAmountInput.closest('form')
-    var currentPriceEl = bidForm
-      ?.closest('.modal')
-      ?.querySelector('.text-blue-600.font-bold')
-    var currentPrice = currentPriceEl
-      ? parseCurrency(currentPriceEl.textContent)
-      : 0
+    var currentPrice = parseInt(maxBidAmountInput.getAttribute('data-current-price')) || 0
 
     if (parsedValue < minBid) {
       if (window.showError) {
@@ -911,12 +915,7 @@ userName=product.currentWinnerId.name }} {{/if}} {{#section 'js'}}
     if (!bidForm) return
 
     var parsedValue = parseCurrency(maxBidAmountInput.value.trim())
-    var currentPriceEl = bidForm
-      .closest('.modal')
-      ?.querySelector('.text-blue-600.font-bold')
-    var currentPrice = currentPriceEl
-      ? parseCurrency(currentPriceEl.textContent)
-      : 0
+    var currentPrice = parseInt(maxBidAmountInput.getAttribute('data-current-price')) || 0
     var minBid = parseInt(maxBidAmountInput.getAttribute('data-min-bid')) || 0
 
     var confirmBidModal = document.getElementById('confirmBidModal')

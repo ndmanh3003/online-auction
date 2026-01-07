@@ -155,7 +155,13 @@ router.post('/:productId', async function (req, res) {
       }
     }
 
-    req.session.success_messages = ['Bid placed successfully.']
+    // Check if current user is the top bidder
+    const isTopBidder = currentWinnerId === req.session.authUser._id.toString()
+    const successMsg = isTopBidder 
+      ? 'Bid placed successfully.' 
+      : 'Bid placed successfully. You are not the top bidder.'
+    
+    req.session.success_messages = [successMsg]
     res.redirect(`/products/${productId}`)
   } catch (error) {
     return res.error(error.message)

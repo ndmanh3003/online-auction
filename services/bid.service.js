@@ -25,7 +25,8 @@ function pickTopTwo(candidates = []) {
     if (b.maxBidAmount !== a.maxBidAmount) {
       return b.maxBidAmount - a.maxBidAmount
     }
-    return new Date(a.createdAt) - new Date(b.createdAt)
+    // When same maxBid, earlier updatedAt wins
+    return new Date(a.updatedAt) - new Date(b.updatedAt)
   })
 
   return {
@@ -35,7 +36,7 @@ function pickTopTwo(candidates = []) {
 }
 
 function computeDisplayedPrice({ product, top1, top2 }) {
-  const { startPrice, currentPrice, stepPrice } = product
+  const { startPrice, currentPrice, stepPrice, currentWinnerId } = product
 
   if (!top1) {
     return { winnerId: null, newPrice: 0 }
@@ -48,18 +49,43 @@ function computeDisplayedPrice({ product, top1, top2 }) {
 
   if (!top2) {
     const minPrice = Math.max(startPrice, currentPrice + stepPrice)
-    return {
+    const result = {
       winnerId,
       newPrice: Math.min(top1.maxBidAmount, minPrice),
     }
+    return result
   }
 
-  const target = top2.maxBidAmount + stepPrice
-  return {
-    winnerId,
-    newPrice: Math.min(top1.maxBidAmount, target),
+  // If both have the same maxBid, price = their maxBid (no step price added)
+  // top1 wins by timestamp
+  if (top1.maxBidAmount === top2.maxBidAmount) {
+    const result = {
+      winnerId,
+      newPrice: top1.maxBidAmount,
+    }
+    return result
   }
+
+  // top1 > top2: check if winner changes
+  const currentWinnerIdObj = toObjectId(currentWinnerId)
+  const isWinnerChanging = !currentWinnerIdObj || !currentWinnerIdObj.equals(winnerId)
+  
+  let newPrice
+  if (isWinnerChanging) {
+    // Winner changes → add step price
+    newPrice = top2.maxBidAmount + stepPrice
+  } else {
+    // Same winner → just match second-highest bid
+    newPrice = top2.maxBidAmount
+  }
+  
+  const result = {
+    winnerId,
+    newPrice,
+  }
+  return result
 }
+
 
 export async function autoCalculate(productId) {
   const product = await Product.findById(productId).lean()
@@ -71,7 +97,7 @@ export async function autoCalculate(productId) {
     productId: product._id,
     bidderId: { $nin: blockedIds },
   })
-    .select({ bidderId: 1, maxBidAmount: 1, createdAt: 1 })
+    .select({ bidderId: 1, maxBidAmount: 1, createdAt: 1, updatedAt: 1 })
     .lean()
 
   candidates.forEach((candidate) => {

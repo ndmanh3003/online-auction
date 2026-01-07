@@ -82,6 +82,18 @@ const handlebarsEngine = engine({
       const day = ('0' + d.getDate()).slice(-2)
       return `${d.getFullYear()}-${m}-${day}`
     },
+    formatDateTimeLocal(date) {
+      if (!date) return ''
+      const d = new Date(date)
+      const m = ('0' + (d.getMonth() + 1)).slice(-2)
+      const day = ('0' + d.getDate()).slice(-2)
+      const h = ('0' + d.getHours()).slice(-2)
+      const min = ('0' + d.getMinutes()).slice(-2)
+      return `${d.getFullYear()}-${m}-${day}T${h}:${min}`
+    },
+    json(value) {
+      return JSON.stringify(value)
+    },
     toString(value) {
       if (!value) return ''
       return value.toString ? value.toString() : String(value)

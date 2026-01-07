@@ -1,13 +1,13 @@
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
   <div class="mb-8">
     <h1 class="text-[36px] font-semibold text-gray-900 mb-2">
-      Create New Product
+      Edit Product
     </h1>
     <a
-      href="javascript:history.back();"
+      href="/products/{{product._id}}"
       class="text-blue-600 hover:underline mt-2 inline-block"
     >
-      ← Back
+      ← Back to Product
     </a>
   </div>
   <div
@@ -15,9 +15,9 @@
   >
     <form
       method="post"
-      action="/seller/products/create"
+      action="/seller/products/{{product._id}}/edit"
       class="space-y-6"
-      id="createProductForm"
+      id="editProductForm"
     >
       <div class="relative mb-6">
         <label for="name" class="block text-sm font-medium text-gray-900 mb-2"
@@ -27,6 +27,7 @@
           type="text"
           id="name"
           name="name"
+          value="{{product.name}}"
           class="w-full px-4 py-4 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
           placeholder="Enter product name"
         />
@@ -38,7 +39,7 @@
           >Category</label
         >
         {{> category-dropdown id="categoryId" name="categoryId"
-        placeholder="Select Category" hideParents=true}}
+        placeholder="Select Category" hideParents=true selectedValue=product.categoryId}}
       </div>
       <div class="relative mb-6">
         <label
@@ -77,7 +78,8 @@
           Click "Upload Image" to upload each image individually
         </p>
         <div id="imagePreview" class="grid grid-cols-4 gap-4 mt-4"></div>
-        <input type="hidden" id="images" name="images" />
+        <input type="hidden" id="images" name="images" value="" />
+        <script id="initial-images" type="application/json">{{{json product.images}}}</script>
       </div>
       <div class="grid grid-cols-2 gap-4">
         <div class="relative mb-6">
@@ -90,6 +92,8 @@
             type="text"
             id="startPrice"
             name="startPrice"
+            value="{{product.startPrice}}"
+            data-raw-value="{{product.startPrice}}"
             class="w-full px-4 py-4 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
             placeholder="0"
             inputmode="numeric"
@@ -105,6 +109,8 @@
             type="text"
             id="stepPrice"
             name="stepPrice"
+            value="{{product.stepPrice}}"
+            data-raw-value="{{product.stepPrice}}"
             class="w-full px-4 py-4 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
             placeholder="0"
             inputmode="numeric"
@@ -122,6 +128,8 @@
             type="text"
             id="buyNowPrice"
             name="buyNowPrice"
+            {{#if product.buyNowPrice}}value="{{product.buyNowPrice}}"
+            data-raw-value="{{product.buyNowPrice}}"{{/if}}
             class="w-full px-4 py-4 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
             placeholder="0"
             inputmode="numeric"
@@ -137,6 +145,7 @@
             type="datetime-local"
             id="endTime"
             name="endTime"
+            value="{{formatDateTimeLocal product.endTime}}"
             class="w-full px-4 py-4 border border-gray-200/60 rounded-2xl focus:ring-2 focus:ring-black/10 focus:outline-none transition-all duration-300 text-gray-900"
           />
         </div>
@@ -151,13 +160,14 @@
           id="editor"
           class="bg-white max-h-[200px] border border-gray-200/60 rounded-2xl"
         ></div>
-        <input type="hidden" id="description" name="description" />
+        <input type="hidden" id="description" name="description" value="{{{product.description}}}" />
       </div>
       <div class="flex items-center gap-4 mb-6">
         <label class="flex items-center cursor-pointer">
           <input
             type="checkbox"
             name="autoExtend"
+            {{#if product.autoExtend}}checked{{/if}}
             class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
           />
           <span class="ml-2 text-gray-900">Enable Auto-Extend</span>
@@ -168,17 +178,17 @@
           <input
             type="checkbox"
             name="allowNonRatedBidders"
+            {{#if product.allowNonRatedBidders}}checked{{/if}}
             class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-            checked
           />
           <span class="ml-2 text-gray-900">Allow bidders without ratings</span>
         </label>
       </div>
       <button
         type="submit"
-        class="w-full px-6 py-4 bg-blue-600 text-white rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
+        class="w-full px-6 py-4 bg-orange-600 text-white rounded-xl shadow-[0_4px_20px_rgba(234,88,12,0.3)] hover:bg-orange-700 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-out font-medium"
       >
-        Create Product
+        Update Product
       </button>
     </form>
   </div>
@@ -207,6 +217,12 @@
       ],
     },
   })
+
+  // Load existing description
+  var descriptionInput = document.getElementById('description')
+  if (descriptionInput.value) {
+    quill.root.innerHTML = descriptionInput.value
+  }
 
   var uploadedImages = []
   var imageUpload = document.getElementById('imageUpload')
@@ -257,6 +273,20 @@
     container.appendChild(img)
     container.appendChild(removeBtn)
     imagePreview.appendChild(container)
+  }
+
+  // Load existing images after function is defined
+  var initialImagesScript = document.getElementById('initial-images')
+  if (initialImagesScript) {
+    try {
+      uploadedImages = JSON.parse(initialImagesScript.textContent)
+      imagesInput.value = JSON.stringify(uploadedImages)
+      uploadedImages.forEach(function (url) {
+        addImageToPreview(url)
+      })
+    } catch (e) {
+      console.error('Error parsing images:', e)
+    }
   }
 
   uploadBtn.addEventListener('click', async function () {
@@ -330,6 +360,17 @@
   var stepPriceInput = document.getElementById('stepPrice')
   var buyNowPriceInput = document.getElementById('buyNowPrice')
 
+  // Format initial values
+  if (startPriceInput.getAttribute('data-raw-value')) {
+    startPriceInput.value = formatCurrency(startPriceInput.getAttribute('data-raw-value'))
+  }
+  if (stepPriceInput.getAttribute('data-raw-value')) {
+    stepPriceInput.value = formatCurrency(stepPriceInput.getAttribute('data-raw-value'))
+  }
+  if (buyNowPriceInput.getAttribute('data-raw-value')) {
+    buyNowPriceInput.value = formatCurrency(buyNowPriceInput.getAttribute('data-raw-value'))
+  }
+
   startPriceInput.addEventListener('input', function (e) {
     var cursorPos = e.target.selectionStart
     var oldValue = e.target.value
@@ -357,7 +398,7 @@
     e.target.setSelectionRange(cursorPos + diff, cursorPos + diff)
   })
 
-  var form = document.getElementById('createProductForm')
+  var form = document.getElementById('editProductForm')
   form.onsubmit = function (e) {
     var errors = []
 
@@ -375,7 +416,6 @@
       errors.push('Please upload at least 3 images')
     }
 
-    var descriptionInput = document.getElementById('description')
     var content = quill.root.innerHTML
     var text = quill.getText().trim()
 

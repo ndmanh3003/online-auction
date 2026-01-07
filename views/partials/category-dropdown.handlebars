@@ -13,14 +13,14 @@
       <option
         value='{{_id}}'
         {{#if ../hideParents}}disabled{{/if}}
-        {{#if (eq @root.req.query.categoryId (toString _id))}}selected{{/if}}
+        {{#if (or (eq @root.req.query.categoryId (toString _id)) (eq ../selectedValue (toString _id)))}}selected{{/if}}
       >
         {{name}}
       </option>
       {{#each subcategories}}
         <option
           value='{{_id}}'
-          {{#if (eq @root.req.query.categoryId (toString _id))}}selected{{/if}}
+          {{#if (or (eq @root.req.query.categoryId (toString _id)) (eq ../../selectedValue (toString _id)))}}selected{{/if}}
         >
           &nbsp;&nbsp; {{name}}
         </option>
